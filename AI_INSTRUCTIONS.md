@@ -14,6 +14,8 @@ This document serves as a reference for AI agents working on this project. It ou
 - **Single Responsibility**: Each file should ideally export a single class or a set of closely related functions. Avoid "God classes" (monolithic files).
 - **Modularity**: Break down complex entities into smaller, reusable components or separate files.
 - **Strict Typing**: Leverage TypeScript's type system. Avoid `any` unless absolutely necessary. Define interfaces for game object properties and config objects.
+- **Barrel Exports**: Use `index.ts` files in directories (e.g., `src/scenes/index.ts`, `src/objects/index.ts`) to export modules. This simplifies imports in other files.
+- **Meaningful Comments**: Do not add redundant comments (e.g., `// Set x to 5`). Only comment complex logic, algorithms, or non-obvious workarounds. Code should be self-documenting.
 
 ### 2. File & Folder Architecture
 We strictly follow a modular directory structure. All source code resides in `src/`.
