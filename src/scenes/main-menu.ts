@@ -29,7 +29,7 @@ export class MainMenu extends Phaser.Scene {
         .on('pointerover', () => playButton.setStyle({ fill: '#ffff00' }))
         .on('pointerout', () => playButton.setStyle({ fill: '#00ff00' }));
 
-        const settingsButton = this.add.text(width * 0.5, height * 0.65, 'Settings', {
+        const settingsButton = this.add.text(width * 0.5, height * 0.65, 'Character Creator', {
             fontSize: '32px',
             color: '#ffffff',
             fontFamily: 'Arial',
@@ -39,7 +39,7 @@ export class MainMenu extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
-            console.log('Settings clicked');
+            this.scene.start('CharacterCreator');
         })
         .on('pointerover', () => settingsButton.setStyle({ fill: '#ffff00' }))
         .on('pointerout', () => settingsButton.setStyle({ fill: '#ffffff' }));

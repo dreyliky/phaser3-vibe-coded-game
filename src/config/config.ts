@@ -1,0 +1,15 @@
+import Phaser from 'phaser';
+import { Boot, CharacterCreator, Game, MainMenu } from '../scenes';
+
+export const config: Phaser.Types.Core.GameConfig = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    parent: 'app',
+    backgroundColor: '#000000',
+    scene: [Boot, MainMenu, CharacterCreator, Game],
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    }
+};
