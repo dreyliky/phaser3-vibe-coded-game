@@ -23,7 +23,11 @@ We strictly follow a modular directory structure. All source code resides in `sr
 ```
 phaser3-game/
 ├── public/                 # Static assets (images, audio, maps, etc.)
-│   ├── assets/             # Organized by type (sprites, sounds, tilemaps)
+│   ├── assets/             # Main assets directory
+│   │   ├── sprites/        # Character sprites, objects, etc.
+│   │   ├── audio/          # Music and sound effects
+│   │   ├── tilemaps/       # JSON maps and tilesets
+│   │   └── fonts/          # Custom fonts (bitmap or webfonts)
 │   └── ...
 ├── src/
 │   ├── config/             # Game configuration and constants
@@ -53,5 +57,5 @@ phaser3-game/
 
 ## Development Workflow
 1. **Adding New Entities**: When adding a new game object (e.g., a new enemy type), create a new file in `src/objects/` rather than adding to the Scene file.
-2. **Asset Management**: Place raw assets in `public/assets/`. Load them in a `Boot` or `Preload` scene.
+2. **Asset Management**: Place raw assets in `public/assets/` subdirectories (e.g., `public/assets/sprites/`). Load them in a `Boot` or `Preload` scene using the path `assets/sprites/filename.png`.
 3. **Clean Code**: Ensure unused imports are removed and code is formatted consistently.
