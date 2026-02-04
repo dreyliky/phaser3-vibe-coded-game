@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { CharacterDefinition } from '../../types/character';
 import { CharacterVisual } from './character-visual';
+import { InventoryItem } from '../../systems/inventory-system';
+import { BaseRangeWeapon } from '../items';
+import { Shotgun, AssaultRifle, Pistol } from '../items';
 
 export class Player extends Phaser.GameObjects.Container {
     private visual: CharacterVisual;
@@ -12,6 +15,12 @@ export class Player extends Phaser.GameObjects.Container {
         right: Phaser.Input.Keyboard.Key;
     };
     private speed: number = 200;
+    
+    // Weapon
+    private equippedItem: InventoryItem | null = null;
+    private weaponSprite: Phaser.GameObjects.Sprite | null = null;
+    private lastFiredTime: number = 0;
+    private isFiring: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, definition: CharacterDefinition) {
         super(scene, x, y);
@@ -19,6 +28,11 @@ export class Player extends Phaser.GameObjects.Container {
         // Visual
         this.visual = new CharacterVisual(scene, 0, 0, definition);
         this.add(this.visual);
+
+        // Weapon Sprite
+        this.weaponSprite = scene.add.sprite(0, 0, '');
+        this.weaponSprite.setVisible(false);
+        this.add(this.weaponSprite);
 
         // Physics
         scene.physics.add.existing(this);
@@ -38,6 +52,10 @@ export class Player extends Phaser.GameObjects.Container {
             }) as any;
         }
 
+        // Mouse Input for Shooting
+        scene.input.on('pointerdown', () => { this.isFiring = true; });
+        scene.input.on('pointerup', () => { this.isFiring = false; });
+
         // Add to scene
         scene.add.existing(this);
     }
@@ -45,6 +63,91 @@ export class Player extends Phaser.GameObjects.Container {
     update() {
         this.handleMovement();
         this.handleRotation();
+        this.handleShooting();
+    }
+
+    public equipWeapon(item: InventoryItem) {
+        this.equippedItem = item;
+        if (this.weaponSprite) {
+            this.weaponSprite.setTexture(item.item.getTexture());
+            this.weaponSprite.setVisible(true);
+            this.weaponSprite.setDisplaySize(40, 20); // Scale down a bit
+            // Adjust position slightly
+            this.weaponSprite.x = 10;
+            this.weaponSprite.y = 10;
+        }
+    }
+
+    public unequipWeapon() {
+        this.equippedItem = null;
+        if (this.weaponSprite) {
+            this.weaponSprite.setVisible(false);
+        }
+    }
+
+    private handleShooting() {
+        if (!this.isFiring || !this.equippedItem) return;
+
+        const weapon = this.equippedItem.item;
+        if (weapon instanceof BaseRangeWeapon) {
+            // Check fire rate
+            const now = this.scene.time.now;
+            if (now - this.lastFiredTime < weapon.getFireRate()) return;
+
+            // Check ammo
+            if (this.equippedItem.extraData.currentAmmo <= 0) {
+                // Out of ammo
+                // Maybe play click sound
+                this.isFiring = false; // Stop firing if out of ammo (simplification)
+                return;
+            }
+
+            // Fire
+            this.lastFiredTime = now;
+            this.equippedItem.extraData.currentAmmo--;
+
+            // Auto-fire check
+            // If weapon is not auto, we need to release the button to fire again.
+            // But Phaser's pointerdown/up logic above is simple state.
+            // For semi-auto, we should only fire on 'pointerdown' event, not continuously in update loop.
+            // But since we are in update loop, we need to know if it's auto.
+            // Let's assume AssaultRifle is auto, others are semi.
+            const isAuto = weapon instanceof AssaultRifle;
+            
+            if (!isAuto) {
+                this.isFiring = false; // Force release for semi-auto
+            }
+
+            this.fireBullet(weapon);
+        }
+    }
+
+    private fireBullet(weapon: BaseRangeWeapon) {
+        // Calculate direction
+        const pointer = this.scene.input.activePointer;
+        const worldPoint = pointer.positionToCamera(this.scene.cameras.main) as Phaser.Math.Vector2;
+        const angle = Phaser.Math.Angle.Between(this.x, this.y, worldPoint.x, worldPoint.y);
+
+        // Projectile count (Shotgun = 6, others = 1)
+        const projectileCount = weapon instanceof Shotgun ? 6 : 1;
+        
+        for (let i = 0; i < projectileCount; i++) {
+            // Spread
+            const spread = 0.1; // Radians
+            const finalAngle = angle + (Math.random() - 0.5) * spread;
+
+            // Create bullet (using graphics for now)
+            const bullet = this.scene.add.rectangle(this.x, this.y, 4, 4, 0xffff00);
+            this.scene.physics.add.existing(bullet);
+            const body = bullet.body as Phaser.Physics.Arcade.Body;
+            
+            const speed = 600;
+            const velocity = this.scene.physics.velocityFromRotation(finalAngle, speed);
+            body.setVelocity(velocity.x, velocity.y);
+
+            // Destroy after 1 second
+            this.scene.time.delayedCall(1000, () => bullet.destroy());
+        }
     }
 
     private handleMovement() {

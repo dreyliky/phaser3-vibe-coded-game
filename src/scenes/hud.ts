@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { InventoryWindow, QuickBar } from '../objects/ui';
+import { inventorySystem } from '../systems/inventory-system';
+import { InventorySlot } from '../objects/ui/inventory-slot';
 
 export class HUD extends Phaser.Scene {
     private inventoryWindow!: InventoryWindow;
@@ -34,6 +36,55 @@ export class HUD extends Phaser.Scene {
                 this.quickBar.selectSlot(1);
             });
         }
+
+        // Drag and Drop
+        this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite) => {
+            this.children.bringToTop(gameObject);
+            gameObject.setAlpha(0.8);
+        });
+
+        this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dragX: number, dragY: number) => {
+            gameObject.x = dragX;
+            gameObject.y = dragY;
+        });
+
+        this.input.on('drop', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropZone: InventorySlot) => {
+            const fromType = gameObject.getData('slotType');
+            const fromIndex = gameObject.getData('slotIndex');
+            const toType = dropZone.slotType;
+            const toIndex = dropZone.slotIndex;
+
+            inventorySystem.moveItem(fromType, fromIndex, toType, toIndex);
+            
+            // Reset visual immediately (though update will handle it)
+            gameObject.x = 0;
+            gameObject.y = 0;
+            gameObject.setAlpha(1);
+        });
+
+        this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropped: boolean) => {
+            if (!dropped) {
+                // Drop to world
+                const fromType = gameObject.getData('slotType');
+                const fromIndex = gameObject.getData('slotIndex');
+                
+                const item = inventorySystem.dropItem(fromType, fromIndex);
+                if (item) {
+                    // Notify Game scene to spawn item
+                    const gameScene = this.scene.get('GameScene') as any;
+                    if (gameScene && gameScene.spawnPlayerDrop) {
+                        gameScene.spawnPlayerDrop(item.item, item.quantity, item.extraData);
+                    }
+                }
+            }
+            
+            // Ensure visual reset if not destroyed
+            if (gameObject.active) {
+                gameObject.x = 0;
+                gameObject.y = 0;
+                gameObject.setAlpha(1);
+            }
+        });
 
         // Clean up input on scene shutdown (if needed, though HUD usually persists)
         this.events.on('shutdown', () => {

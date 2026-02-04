@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BodyType, FaceType, Gender, HairType } from '../types/character';
 import { ASSETS } from '../config/constants';
+import { TextureGenerator } from '../utils/texture-generator';
 
 export class Boot extends Phaser.Scene {
     constructor() {
@@ -8,6 +9,12 @@ export class Boot extends Phaser.Scene {
     }
 
     preload() {
+        // Generate Ammo Textures
+        TextureGenerator.createSquareTexture(this, 'ammo_light', 0x00ff00, 16);
+        TextureGenerator.createSquareTexture(this, 'ammo_standard', 0xffff00, 16);
+        TextureGenerator.createSquareTexture(this, 'ammo_heavy', 0xff0000, 16);
+        TextureGenerator.createSquareTexture(this, 'ammo_buckshot', 0xffaa00, 16);
+
         const basePath = ASSETS.SPRITES.HUMANLIKE_BASE_PATH;
         const directions = ['south', 'north', 'east'];
 
@@ -45,6 +52,11 @@ export class Boot extends Phaser.Scene {
                 this.load.image(key, path);
             });
         });
+
+        // Load Weapons
+        this.load.image('weapon_assault_rifle', 'assets/sprites/things/item/equipment/WeaponRanged/AssaultRifle.png');
+        this.load.image('weapon_pistol', 'assets/sprites/things/item/equipment/WeaponRanged/Autopistol.png');
+        this.load.image('weapon_shotgun', 'assets/sprites/things/item/equipment/WeaponRanged/Shotgun.png');
     }
 
     create() {

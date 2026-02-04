@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { InventorySlot } from './inventory-slot';
+import { inventorySystem } from '../../systems/inventory-system';
 
 export class InventoryWindow extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Rectangle;
@@ -43,7 +44,7 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
             const slotX = startX + col * (this.SLOT_SIZE + this.GAP);
             const slotY = startY + row * (this.SLOT_SIZE + this.GAP);
 
-            const slot = new InventorySlot(scene, slotX, slotY, this.SLOT_SIZE);
+            const slot = new InventorySlot(scene, slotX, slotY, this.SLOT_SIZE, 'main', i);
             
             // First 4 slots enabled, rest disabled
             if (i >= 4) {
@@ -55,6 +56,13 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
         }
 
         this.setVisible(false);
+
+        // Listen for inventory updates
+        inventorySystem.on('update', (data: { type: string, index: number, item: any }) => {
+            if (data.type === 'main') {
+                this.slots[data.index].setItem(data.item);
+            }
+        });
     }
 
     public toggle() {
