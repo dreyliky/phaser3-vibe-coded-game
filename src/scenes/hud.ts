@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
-import { InventoryWindow, QuickBar } from '../objects/ui';
+import { InventoryWindow, QuickBar, PauseMenu } from '../objects/ui';
 import { inventorySystem } from '../systems/inventory-system';
 import { InventorySlot } from '../objects/ui/inventory-slot';
 
 export class HUD extends Phaser.Scene {
     private inventoryWindow!: InventoryWindow;
     private quickBar!: QuickBar;
+    private pauseMenu!: PauseMenu;
 
     constructor() {
         super('HUD');
@@ -22,10 +23,22 @@ export class HUD extends Phaser.Scene {
         this.inventoryWindow = new InventoryWindow(this, width * 0.5, height * 0.5);
         this.add.existing(this.inventoryWindow);
 
+        // Pause Menu (Center)
+        this.pauseMenu = new PauseMenu(this, width * 0.5, height * 0.5, () => {
+            this.scene.stop('GameScene');
+            this.scene.stop('HUD');
+            this.scene.start('MainMenu');
+        });
+        this.add.existing(this.pauseMenu);
+
         // Input Handling
         if (this.input.keyboard) {
             this.input.keyboard.on('keydown-I', () => {
                 this.inventoryWindow.toggle();
+            });
+
+            this.input.keyboard.on('keydown-ESC', () => {
+                this.pauseMenu.toggle();
             });
 
             this.input.keyboard.on('keydown-ONE', () => {
