@@ -25,6 +25,9 @@ export class Game extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
         
+        // Launch HUD
+        this.scene.launch('HUD');
+
         // Create Player
         this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
 
