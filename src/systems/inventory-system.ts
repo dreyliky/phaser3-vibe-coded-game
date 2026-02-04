@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BaseItem } from '../objects/items/base-item';
 import { BaseRangeWeapon } from '../objects/items/weapons/base-range-weapon';
+import { Hands } from '../objects/items/weapons/hands';
 
 export interface InventoryItem {
     item: BaseItem;
@@ -12,19 +13,22 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
     private slots: (InventoryItem | null)[];
     private quickSlots: (InventoryItem | null)[];
     private readonly INVENTORY_SIZE = 16;
-    private readonly QUICK_SIZE = 2;
+    private readonly QUICK_SIZE = 3;
 
     constructor() {
         super();
         this.slots = new Array(this.INVENTORY_SIZE).fill(null);
         this.quickSlots = new Array(this.QUICK_SIZE).fill(null);
+        
+        // Initialize Hands in slot 0
+        this.quickSlots[0] = this.createInventoryItem(new Hands(), 1);
     }
 
     public addItem(item: BaseItem, quantity: number = 1, extraData?: any): boolean {
         // Weapon Logic: Try Quick Slots first
         if (item instanceof BaseRangeWeapon) {
-            // Find empty quick slot
-            for (let i = 0; i < this.quickSlots.length; i++) {
+            // Find empty quick slot (SKIP SLOT 0 - HANDS)
+            for (let i = 1; i < this.quickSlots.length; i++) {
                 if (this.quickSlots[i] === null) {
                     this.quickSlots[i] = this.createInventoryItem(item, quantity, extraData);
                     this.emit('update', { type: 'quick', index: i, item: this.quickSlots[i] });
@@ -68,7 +72,7 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
 
         // Weapon check for quick slots
         if (item instanceof BaseRangeWeapon) {
-             for (let i = 0; i < this.quickSlots.length; i++) {
+             for (let i = 1; i < this.quickSlots.length; i++) { // Skip slot 0
                 if (this.quickSlots[i] === null) {
                     return true;
                 }
@@ -121,6 +125,21 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
     }
 
     public setItemAt(type: 'main' | 'quick', index: number, item: InventoryItem | null) {
+        // Protect Slot 0 of Quick Bar
+        if (type === 'quick' && index === 0) {
+            // Only allow setting if it's Hands (initialization) or if we are explicitly handling it (logic wise, we shouldn't replace it).
+            // Actually, for simplicity: If we try to set null to slot 0, ignore it unless we are doing something very specific.
+            // But strict rule: "Hands is the only item that will always exist... impossible to throw away".
+            // So we just prevent setting it to null or another item if it's already Hands.
+            
+            // If we are trying to clear it (item is null), prevent it.
+            if (item === null) return;
+            
+            // If we are trying to put something else there... prevent it?
+            // "Slot for hands is unique that nothing else can be put there".
+            if (!(item.item instanceof Hands)) return;
+        }
+
         if (type === 'main') {
             this.slots[index] = item;
         } else {
@@ -130,6 +149,8 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
     }
 
     public removeItem(type: 'main' | 'quick', index: number): InventoryItem | null {
+        if (type === 'quick' && index === 0) return null; // Cannot remove Hands
+
         const item = this.getItemAt(type, index);
         this.setItemAt(type, index, null);
         return item;
@@ -164,6 +185,11 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
         }
 
         // Swap
+        // Prevent swapping if one of them is Quick Slot 0 and the other is NOT Hands (which is always true basically)
+        if ((fromType === 'quick' && fromIndex === 0) || (toType === 'quick' && toIndex === 0)) {
+            return false; // Cannot move Hands
+        }
+
         this.setItemAt(toType, toIndex, fromItem);
         this.setItemAt(fromType, fromIndex, toItem);
 
@@ -171,6 +197,7 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
     }
 
     public dropItem(type: 'main' | 'quick', index: number): InventoryItem | null {
+        if (type === 'quick' && index === 0) return null; // Cannot drop Hands
         return this.removeItem(type, index);
     }
 }

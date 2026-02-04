@@ -15,6 +15,10 @@ export class Boot extends Phaser.Scene {
         TextureGenerator.createSquareTexture(this, 'ammo_heavy', 0xff0000, 16);
         TextureGenerator.createSquareTexture(this, 'ammo_buckshot', 0xffaa00, 16);
 
+        // Generate Weapon Textures
+        TextureGenerator.createCircleTexture(this, 'weapon_hands', 0xffffff, 8); // White circle for hands
+
+
         const basePath = ASSETS.SPRITES.HUMANLIKE_BASE_PATH;
         const directions = ['south', 'north', 'east'];
 

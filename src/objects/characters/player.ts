@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { CharacterDefinition } from '../../types/character';
 import { CharacterVisual } from './character-visual';
 import { InventoryItem } from '../../systems/inventory-system';
-import { BaseRangeWeapon } from '../items';
+import { BaseRangeWeapon, BaseMeleeWeapon, Hands } from '../items';
 import { Shotgun, AssaultRifle, Pistol } from '../items';
+import { Damageable } from '../../interfaces/damageable';
 
 export class Player extends Phaser.GameObjects.Container {
     private visual: CharacterVisual;
@@ -19,8 +20,17 @@ export class Player extends Phaser.GameObjects.Container {
     // Weapon
     private equippedItem: InventoryItem | null = null;
     private weaponSprite: Phaser.GameObjects.Sprite | null = null;
+    private holdingHand: Phaser.GameObjects.Sprite | null = null;
     private lastFiredTime: number = 0;
     private isFiring: boolean = false;
+    private recoilOffset: { x: number, y: number } = { x: 0, y: 0 };
+
+    // Hands (Melee)
+    private handsContainer: Phaser.GameObjects.Container;
+    private leftHand: Phaser.GameObjects.Sprite;
+    private rightHand: Phaser.GameObjects.Sprite;
+    private nextHandToAttack: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
+    private isMeleeAttacking: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, definition: CharacterDefinition) {
         super(scene, x, y);
@@ -33,6 +43,32 @@ export class Player extends Phaser.GameObjects.Container {
         this.weaponSprite = scene.add.sprite(0, 0, '');
         this.weaponSprite.setVisible(false);
         this.add(this.weaponSprite);
+        
+        const skinColorInt = parseInt(definition.skinColor.replace('#', '0x'), 16);
+
+        // Holding Hand (for range weapons)
+        // Positioned relative to weapon or center.
+        // It should be rendered ABOVE the weapon.
+        this.holdingHand = scene.add.sprite(0, 0, 'weapon_hands');
+        this.holdingHand.setTint(skinColorInt);
+        this.holdingHand.setVisible(false);
+        this.add(this.holdingHand);
+
+        // Hands Visuals (Melee)
+        this.handsContainer = scene.add.container(0, 0);
+        this.handsContainer.setVisible(false);
+        this.add(this.handsContainer);
+
+        // Position hands relative to center. Assuming facing East (0 deg) is +X.
+        // Left hand is at top (-Y), Right hand is at bottom (+Y).
+        // Slightly forward (+X).
+        this.leftHand = scene.add.sprite(10, -12, 'weapon_hands');
+        this.leftHand.setTint(skinColorInt);
+        
+        this.rightHand = scene.add.sprite(10, 12, 'weapon_hands');
+        this.rightHand.setTint(skinColorInt);
+
+        this.handsContainer.add([this.leftHand, this.rightHand]);
 
         // Physics
         scene.physics.add.existing(this);
@@ -68,7 +104,16 @@ export class Player extends Phaser.GameObjects.Container {
 
     public equipWeapon(item: InventoryItem) {
         this.equippedItem = item;
-        if (this.weaponSprite) {
+        
+        if (item.item instanceof Hands) {
+            // Equip Hands
+            if (this.weaponSprite) this.weaponSprite.setVisible(false);
+            if (this.holdingHand) this.holdingHand.setVisible(false);
+            this.handsContainer.setVisible(true);
+        } else if (this.weaponSprite) {
+            // Equip Range Weapon
+            this.handsContainer.setVisible(false);
+            
             this.weaponSprite.setTexture(item.item.getTexture());
             this.weaponSprite.setVisible(true);
             
@@ -78,7 +123,21 @@ export class Player extends Phaser.GameObjects.Container {
             
             // Adjust position: Center of body
             this.weaponSprite.x = 0;
-            this.weaponSprite.y = 13; // Lowered by 8px from 5 to 13
+            this.weaponSprite.y = 11; // Raised by 2px from 13 to 11
+            
+            // Show Holding Hand
+            if (this.holdingHand) {
+                this.holdingHand.setVisible(true);
+                // Position "under" the weapon along Y axis (visualy below) but layered above
+                // "під зброєю по Y" means Y coordinate is larger (downwards in Phaser)
+                // Let's place it at weapon Y + offset.
+                // Assuming gun grip is somewhere below the center.
+                // Or user meant "under" as in "lower Y value" (visually higher)?
+                // "під зброєю" usually means "beneath" (higher Y value).
+                // Let's try putting it slightly below the weapon center.
+                this.holdingHand.x = -10; // Slightly back near grip
+                this.holdingHand.y = this.weaponSprite.y + 5; 
+            }
         }
     }
 
@@ -87,12 +146,74 @@ export class Player extends Phaser.GameObjects.Container {
         if (this.weaponSprite) {
             this.weaponSprite.setVisible(false);
         }
+        if (this.holdingHand) {
+            this.holdingHand.setVisible(false);
+        }
+        this.handsContainer.setVisible(false);
+    }
+
+    private checkMeleeHit(damage: number) {
+        // Calculate hit position based on cursor direction
+        const pointer = this.scene.input.activePointer;
+        const worldPoint = pointer.positionToCamera(this.scene.cameras.main) as Phaser.Math.Vector2;
+        const angle = Phaser.Math.Angle.Between(this.x, this.y, worldPoint.x, worldPoint.y);
+        
+        const reach = 40; // Range of punch
+        const hitX = this.x + Math.cos(angle) * reach;
+        const hitY = this.y + Math.sin(angle) * reach;
+        
+        // Check for overlap
+        // overlapCirc(x, y, radius, includeDynamic, includeStatic)
+        const bodies = this.scene.physics.overlapCirc(hitX, hitY, 20, true, true) as Phaser.Physics.Arcade.Body[];
+        
+        for (const body of bodies) {
+            // Skip self
+            if (body.gameObject === this) continue;
+            
+            const gameObject = body.gameObject;
+            if (!gameObject) continue;
+            
+            // Check for Damageable interface
+            if ('takeDamage' in gameObject && typeof (gameObject as any).takeDamage === 'function') {
+                (gameObject as any).takeDamage(damage);
+                
+                // Visual feedback (optional)
+                // console.log(`Hit ${gameObject.name || 'object'} for ${damage} damage`);
+            }
+        }
     }
 
     private handleShooting() {
         if (!this.isFiring || !this.equippedItem) return;
 
         const weapon = this.equippedItem.item;
+        
+        // Melee Attack (Hands)
+        if (weapon instanceof BaseMeleeWeapon) {
+            if (this.isMeleeAttacking) return;
+
+            // Attack Logic
+            this.isMeleeAttacking = true;
+            const hand = this.nextHandToAttack === 'left' ? this.leftHand : this.rightHand;
+            const originalX = hand.x;
+
+            this.scene.tweens.add({
+                targets: hand,
+                x: originalX + 20, // Punch forward
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    this.isMeleeAttacking = false;
+                    this.nextHandToAttack = this.nextHandToAttack === 'left' ? 'right' : 'left';
+                    hand.x = originalX; // Ensure reset
+                }
+            });
+            
+            // Deal damage
+            this.checkMeleeHit(weapon.getDamage());
+            return;
+        }
+
         if (weapon instanceof BaseRangeWeapon) {
             // Check fire rate
             const now = this.scene.time.now;
@@ -143,13 +264,20 @@ export class Player extends Phaser.GameObjects.Container {
             // Recoil Effect
             if (this.weaponSprite) {
                 const recoilDist = 5;
+                // Calculate recoil vector relative to current weapon rotation
+                // Angle is the shooting angle.
                 const recoilX = Math.cos(finalAngle) * -recoilDist;
                 const recoilY = Math.sin(finalAngle) * -recoilDist;
                 
+                // We tween the recoilOffset object
+                // Reset first
+                this.recoilOffset.x = 0;
+                this.recoilOffset.y = 0;
+                
                 this.scene.tweens.add({
-                    targets: this.weaponSprite,
-                    x: this.weaponSprite.x + recoilX,
-                    y: this.weaponSprite.y + recoilY,
+                    targets: this.recoilOffset,
+                    x: recoilX,
+                    y: recoilY,
                     duration: 50,
                     yoyo: true,
                     ease: 'Quad.easeOut'
@@ -222,14 +350,134 @@ export class Player extends Phaser.GameObjects.Container {
         if (this.weaponSprite && this.weaponSprite.visible) {
             this.weaponSprite.setRotation(angle);
             
-            // Flip weapon if on the left side to avoid being upside down
-            if (Math.abs(angle) > Math.PI / 2) {
-                this.weaponSprite.setFlipY(true);
-                // Adjust offset to keep it "in hand" correctly when flipped?
-                // Might need fine tuning.
-            } else {
-                this.weaponSprite.setFlipY(false);
+            // Apply recoil to weapon
+            // Base position is (0, 11)
+            this.weaponSprite.x = 0 + this.recoilOffset.x;
+            this.weaponSprite.y = 11 + this.recoilOffset.y;
+            
+            // Rotate holding hand with weapon
+            if (this.holdingHand && this.holdingHand.visible) {
+                 // We need to orbit the hand around the body center to match weapon rotation?
+                 // No, weapon rotates around its center (0,0 of player container + offset).
+                 // Weapon is at (0, 11).
+                 // Hand is at (-10, 16) (11+5).
+                 // If we rotate the weapon sprite, it rotates around its origin (center).
+                 // If we want the hand to follow, we need to calculate its position based on rotation.
+                 
+                 // However, Player container doesn't rotate. Only sprites do?
+                 // No, we are setting rotation on weaponSprite.
+                 // weaponSprite is added to Player container.
+                 // Player container moves but doesn't rotate (it uses visual direction).
+                 // Actually, "weaponSprite.setRotation(angle)" rotates the sprite around its own origin.
+                 // Weapon is at (0, 11).
+                 
+                 // If we want the hand to stay attached to the gun, we should probably put them in a Container?
+                 // But user asked to render hand OVER weapon.
+                 // If they are separate sprites in Player container:
+                 // Hand must also rotate.
+                 
+                 // Let's rotate hand too.
+                 this.holdingHand.setRotation(angle);
+                 
+                 // Also need to adjust position to orbit?
+                 // Weapon origin is center. Hand is offset.
+                 // If we just rotate hand around its own center, it stays at (-10, 16).
+                 // It won't look attached to the gun if the gun rotates around (0,11).
+                 
+                 // Better approach:
+                 // Create a "WeaponContainer" inside Player.
+                 // Add WeaponSprite and HoldingHand to WeaponContainer.
+                 // Rotate WeaponContainer.
+                 // But wait, existing code rotates `weaponSprite`.
+                 // Refactoring to Container might be safer.
+                 
+                 // Let's do manual orbit calculation for now to avoid big refactor.
+                 // Pivot is weapon position (0, 11).
+                 // Hand offset from weapon center is (-10, 5).
+                 // We need to rotate this offset vector by `angle`.
+                 
+                 // RECOIL: Pivot moves!
+                 const pivotX = this.weaponSprite.x;
+                 const pivotY = this.weaponSprite.y;
+                 const offsetX = -10;
+                 const offsetY = 5; // relative to weapon center
+                 
+                 // Rotate offset
+                 // Phaser rotation is clockwise? Yes.
+                 // x' = x cos - y sin
+                 // y' = x sin + y cos
+                 
+                 // Adjust for flip
+                 let effectiveAngle = angle;
+                 let effectiveOffsetX = offsetX;
+                 let effectiveOffsetY = offsetY;
+
+                 if (Math.abs(angle) > Math.PI / 2) {
+                    this.weaponSprite.setFlipY(true);
+                    this.holdingHand.setFlipY(true); // Flip hand too
+                    // When flipped, Y offset should be inverted relative to rotated frame?
+                    // Or X offset?
+                    // FlipY on sprite flips texture.
+                    // If we rotate 180 deg (facing left):
+                    // Normal: Hand is "below" gun.
+                    // Flipped: Hand should still be "below" gun visually?
+                    // If gun is upside down (flipped), "below" in texture space is "above" in screen space?
+                    // No, FlipY makes it look right side up when rotated > 90.
+                    // So "bottom" of gun is still "bottom".
+                    
+                    // However, we need to mirror the offset position relative to the pivot?
+                    // If we flip Y, the texture is mirrored.
+                    // The "grip" on the texture moves?
+                    // If texture is symmetric-ish, it's fine.
+                    // Let's assume just rotation is enough, but check flip.
+                    
+                    effectiveOffsetY = -offsetY; // Mirror Y offset if flipped?
+                 } else {
+                    this.weaponSprite.setFlipY(false);
+                    this.holdingHand.setFlipY(false);
+                 }
+                 
+                 const r = Math.sqrt(effectiveOffsetX*effectiveOffsetX + effectiveOffsetY*effectiveOffsetY);
+                 const offsetAngle = Math.atan2(effectiveOffsetY, effectiveOffsetX);
+                 
+                 const finalAngle = angle + offsetAngle;
+                 
+                 // Wait, simple rotation matrix:
+                 // x' = x*cos(theta) - y*sin(theta)
+                 // y' = x*sin(theta) + y*cos(theta)
+                 // applied to offset (offsetX, offsetY)
+                 
+                 // If flipped, we might need to change offset.
+                 // Let's try simple rotation first.
+                 
+                 const rotX = offsetX * Math.cos(angle) - offsetY * Math.sin(angle);
+                 const rotY = offsetX * Math.sin(angle) + offsetY * Math.cos(angle);
+                 
+                 // Calculate final position by adding rotated offset to PIVOT (which has recoil)
+                 this.holdingHand.x = pivotX + rotX;
+                 this.holdingHand.y = pivotY + rotY;
+                 
+                 // If flipped, we need to adjust because "offsetY = 5" (down) might need to be "up" if texture is flipped?
+                 // If FlipY is true, the texture is mirrored vertically.
+                 // So "down" in texture space becomes "up" in local space before rotation?
+                 // Actually, FlipY is applied AFTER rotation in Phaser usually? Or before?
+                 // Usually it's local.
+                 
+                 if (this.weaponSprite.flipY) {
+                     // If weapon is flipped, the grip moves to the other side of the centerline?
+                     // Let's just try mirroring the Y offset.
+                     const rotX2 = offsetX * Math.cos(angle) - (-offsetY) * Math.sin(angle);
+                     const rotY2 = offsetX * Math.sin(angle) + (-offsetY) * Math.cos(angle);
+                     this.holdingHand.x = pivotX + rotX2;
+                     this.holdingHand.y = pivotY + rotY2;
+                 }
             }
+        }
+        
+        // Hands Rotation
+        if (this.handsContainer && this.handsContainer.visible) {
+            this.handsContainer.setRotation(angle);
+            // No flipY needed for simple circle hands, as they are symmetric
         }
 
         // Determine direction based on angle

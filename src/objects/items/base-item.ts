@@ -57,7 +57,18 @@ export class WorldItem extends Phaser.GameObjects.Container {
 
         // Sprite
         this.sprite = scene.add.sprite(0, 0, item.getTexture());
-        this.sprite.setScale(0.5); // Reduce size by 2
+        
+        // Determine scale
+        // Reduce size for weapons by 30% from 0.5 -> 0.35
+        // We can check if maxStack is 1 as a heuristic for equipment/weapons vs stackable items
+        // Or check ID pattern or implement type check.
+        // Assuming maxStack 1 = equipment/weapon for now as per current definitions.
+        // Or better: check if it's NOT ammo. Ammo has maxStack > 1.
+        let scale = 0.5;
+        if (item.getMaxStack() === 1) {
+             scale = 0.35;
+        }
+        this.sprite.setScale(scale); 
         this.add(this.sprite);
 
         scene.add.existing(this);
@@ -98,14 +109,37 @@ export class WorldItem extends Phaser.GameObjects.Container {
 
     private createGradientHighlight(color: number) {
         this.highlight.clear();
-        // Simulate radial gradient with concentric circles
+        // Simulate linear gradient from center (100%) to edge (0%)
         const radius = 24;
         const steps = 10;
         for (let i = 0; i < steps; i++) {
-            const alpha = 0.5 * (1 - i / steps);
+            const alpha = 1 - (i / steps); // 1.0 to 0.0
             const r = radius * (1 - i / steps);
-            this.highlight.fillStyle(color, alpha);
-            this.highlight.fillCircle(0, 0, r);
+            this.highlight.fillStyle(color, alpha * 0.2); // Base alpha factor to avoid too intense center
+            // Actually, to simulate gradient correctly with circles, we draw from outside in or inside out?
+            // If we draw multiple circles on top, alphas add up.
+            // Better approach: draw largest circle with low alpha? No.
+            // Correct way with primitive shapes:
+            // Draw many circles.
+            // But standard way:
+            // Center alpha 1, Edge alpha 0.
+            // We can just use steps.
+            // Let's stick to previous implementation but adjust alpha logic as requested: "Center 100% opacity, Edge 0% opacity".
+            // Since we fill circles, if we fill a circle with alpha 0.1, it's uniform.
+            // We need a texture really, but graphics is requested.
+            // Let's try drawing rings instead of filled circles to avoid overdraw.
+        }
+        
+        // Simpler approximation with rings
+        for (let i = 0; i < steps; i++) {
+            const ratio = i / steps;
+            const alpha = 1 - ratio; // 1 at center (i=0), 0 at edge
+            const r = radius * ratio;
+            const nextR = radius * ((i + 1) / steps);
+            const thickness = nextR - r;
+            
+            this.highlight.lineStyle(thickness, color, alpha);
+            this.highlight.strokeCircle(0, 0, r + thickness/2);
         }
     }
 
@@ -119,5 +153,9 @@ export class WorldItem extends Phaser.GameObjects.Container {
 
     public getExtraData(): any {
         return this.extraData;
+    }
+
+    public getScale(): number {
+        return this.sprite.scaleX;
     }
 }

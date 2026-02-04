@@ -45,15 +45,32 @@ export class Game extends Phaser.Scene {
         this.spawnItem(new LightAmmo(), 450, 400);
         this.spawnItem(new BuckshotAmmo(), 550, 400);
 
-        // Add some instructions
-        this.add.text(10, 10, 'WASD to move\nMouse to aim\nE to pick up\nI for inventory\n1-2 for weapons', {
-            fontSize: '16px',
-            color: '#ffffff'
-        }).setScrollFactor(0);
-
         // Input for interaction
         if (this.input.keyboard) {
+            this.input.keyboard.addCapture('TAB'); // Prevent default browser tab behavior
+
             this.input.keyboard.on('keydown-E', () => this.tryPickupItem());
+            
+            // Inventory Toggle (TAB)
+            this.input.keyboard.on('keydown-TAB', () => {
+                const inventoryWindow = this.scene.get('InventoryScene') as any; // Assuming inventory is in HUD or separate
+                // Wait, InventoryWindow is likely in HUD scene or Game scene?
+                // Based on previous context, InventoryWindow was created in HUD scene or Game scene?
+                // Let's check where InventoryWindow is created. 
+                // In my memory, I asked to create InventoryWindow. 
+                // The Read output of Game.ts didn't show InventoryWindow creation.
+                // It showed `this.scene.launch('HUD');`.
+                // So InventoryWindow is probably in HUD scene.
+                const hudScene = this.scene.get('HUD') as any;
+                if (hudScene && hudScene.inventoryWindow) {
+                    hudScene.inventoryWindow.toggle();
+                }
+            });
+
+            // Quick Slot Selection (1, 2, 3)
+            this.input.keyboard.on('keydown-ONE', () => this.selectQuickSlot(0));
+            this.input.keyboard.on('keydown-TWO', () => this.selectQuickSlot(1));
+            this.input.keyboard.on('keydown-THREE', () => this.selectQuickSlot(2));
         }
 
         // Listen for HUD events (weapon equip/unequip)
@@ -78,11 +95,25 @@ export class Game extends Phaser.Scene {
                 }
             }
         });
+
+        // Sync initial weapon state (ensure Hands or default slot 0 is equipped)
+        // We do this after listeners are set up, but we can also force it directly.
+        const initialQuickItem = inventorySystem.getItemAt('quick', 0);
+        if (initialQuickItem) {
+            this.player.equipWeapon(initialQuickItem);
+        }
     }
 
     update() {
         this.player.update();
         this.updateItemHighlight();
+    }
+
+    private selectQuickSlot(index: number) {
+        const hudScene = this.scene.get('HUD') as any;
+        if (hudScene && hudScene.quickBar) {
+            hudScene.quickBar.selectSlot(index);
+        }
     }
 
     private updateItemHighlight() {
@@ -112,13 +143,40 @@ export class Game extends Phaser.Scene {
     }
 
     public spawnPlayerDrop(item: any, quantity: number, extraData?: any) {
-        // Drop near player
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 50;
-        const x = this.player.x + Math.cos(angle) * dist;
-        const y = this.player.y + Math.sin(angle) * dist;
+        // Get drop direction (mouse pointer)
+        const pointer = this.input.activePointer;
+        const worldPoint = pointer.positionToCamera(this.cameras.main) as Phaser.Math.Vector2;
+        const baseAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
         
-        this.spawnItem(item, x, y, quantity, extraData);
+        // Add random variation to angle (+- 20 degrees)
+        const angleVar = Phaser.Math.DegToRad(Phaser.Math.Between(-20, 20));
+        const finalAngle = baseAngle + angleVar;
+
+        const dist = 50 + Phaser.Math.Between(-10, 20); // Random distance variation
+        const targetX = this.player.x + Math.cos(finalAngle) * dist;
+        const targetY = this.player.y + Math.sin(finalAngle) * dist;
+        
+        // Spawn at player position
+        const worldItem = new WorldItem(this, this.player.x, this.player.y, item, quantity, extraData);
+        this.worldItems.add(worldItem);
+        
+        // Animation: Start larger (Container scale 0.8), move to position, scale back to 1 (Container scale)
+        // Note: The internal sprite is already scaled (0.35 or 0.5) by WorldItem constructor.
+        // We only animate the Container scale.
+        worldItem.setScale(0.8); 
+        
+        const randomSpin = Phaser.Math.Between(180, 540) * (Math.random() > 0.5 ? 1 : -1);
+
+        this.tweens.add({
+            targets: worldItem,
+            x: targetX,
+            y: targetY,
+            scaleX: 1, // Reset container scale to 1
+            scaleY: 1,
+            angle: worldItem.angle + randomSpin, // Spin
+            duration: 300,
+            ease: 'Power2'
+        });
     }
 
     private spawnItem(item: any, x: number, y: number, quantity: number = 1, extraData?: any) {

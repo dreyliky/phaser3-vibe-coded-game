@@ -55,6 +55,14 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
             this.slots.push(slot);
         }
 
+        // Load initial state
+        for (let i = 0; i < 16; i++) {
+            const item = inventorySystem.getItemAt('main', i);
+            if (item) {
+                this.slots[i].setItem(item);
+            }
+        }
+
         this.setVisible(false);
 
         // Listen for inventory updates
