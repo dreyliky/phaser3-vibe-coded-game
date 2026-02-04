@@ -36,16 +36,30 @@ export abstract class BaseItem {
     }
 }
 
-export class WorldItem extends Phaser.Physics.Arcade.Sprite {
+export class WorldItem extends Phaser.GameObjects.Container {
     private item: BaseItem;
     private quantity: number;
     private extraData: any;
+    private sprite: Phaser.GameObjects.Sprite;
+    private highlight: Phaser.GameObjects.Graphics;
 
     constructor(scene: Phaser.Scene, x: number, y: number, item: BaseItem, quantity: number = 1, extraData?: any) {
-        super(scene, x, y, item.getTexture());
+        super(scene, x, y);
         this.item = item;
         this.quantity = quantity;
         this.extraData = extraData;
+
+        // Highlight (Green shadow/glow)
+        this.highlight = scene.add.graphics();
+        this.highlight.fillStyle(0x00ff00, 0.5); // Green with 50% opacity
+        this.highlight.fillCircle(0, 0, 24); // Circle shadow
+        this.highlight.setVisible(false);
+        this.add(this.highlight);
+
+        // Sprite
+        this.sprite = scene.add.sprite(0, 0, item.getTexture());
+        this.sprite.setScale(0.5); // Reduce size by 2
+        this.add(this.sprite);
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
@@ -56,16 +70,26 @@ export class WorldItem extends Phaser.Physics.Arcade.Sprite {
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setDrag(100);
         body.setAngularDrag(100);
+        // Adjust body size for the scaled down sprite
+        body.setSize(20, 20);
+        body.setOffset(-10, -10);
         
-        this.setInteractive();
+        this.setInteractive(new Phaser.Geom.Rectangle(-16, -16, 32, 32), Phaser.Geom.Rectangle.Contains);
 
         // Optional: Display quantity if > 1
         if (this.quantity > 1) {
-            // This is a sprite, adding text child isn't direct for Sprite (it's not a Container).
-            // But we can just rely on picking it up to see quantity.
-            // Or convert WorldItem to Container?
-            // For now, let's keep it simple.
+            const qtyText = scene.add.text(10, 10, this.quantity.toString(), {
+                fontSize: '10px',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(1, 1);
+            this.add(qtyText);
         }
+    }
+
+    public setHighlight(active: boolean) {
+        this.highlight.setVisible(active);
     }
 
     public getItem(): BaseItem {

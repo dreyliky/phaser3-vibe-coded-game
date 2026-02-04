@@ -57,17 +57,56 @@ export class Game extends Phaser.Scene {
         }
 
         // Listen for HUD events (weapon equip/unequip)
-        const hudScene = this.scene.get('HUD');
+        const hudScene = this.scene.get('HUD') as any; // Cast to any to access custom properties/events easier if types missing
         hudScene.events.on('weapon-equipped', (item: any) => {
             this.player.equipWeapon(item);
         });
         hudScene.events.on('weapon-unequipped', () => {
             this.player.unequipWeapon();
         });
+
+        // Drop Weapon (G)
+        this.input.keyboard.on('keydown-G', () => {
+            const quickBar = hudScene.quickBar; // Access quickBar from HUD
+            if (quickBar) {
+                const selectedIndex = quickBar.getSelectedIndex();
+                if (selectedIndex !== -1) {
+                    const item = inventorySystem.dropItem('quick', selectedIndex);
+                    if (item) {
+                        this.spawnPlayerDrop(item.item, item.quantity, item.extraData);
+                    }
+                }
+            }
+        });
     }
 
     update() {
         this.player.update();
+        this.updateItemHighlight();
+    }
+
+    private updateItemHighlight() {
+        // Reset all highlights
+        this.worldItems.getChildren().forEach((child) => {
+            (child as WorldItem).setHighlight(false);
+        });
+
+        // Find nearest item
+        let nearestItem: WorldItem | null = null;
+        let minDist = 100; // Pickup range
+
+        this.worldItems.getChildren().forEach((child) => {
+            const item = child as WorldItem;
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, item.x, item.y);
+            if (dist < minDist) {
+                minDist = dist;
+                nearestItem = item;
+            }
+        });
+
+        if (nearestItem) {
+            (nearestItem as WorldItem).setHighlight(true);
+        }
     }
 
     public spawnPlayerDrop(item: any, quantity: number, extraData?: any) {

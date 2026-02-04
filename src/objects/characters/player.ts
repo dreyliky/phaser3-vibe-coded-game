@@ -71,10 +71,14 @@ export class Player extends Phaser.GameObjects.Container {
         if (this.weaponSprite) {
             this.weaponSprite.setTexture(item.item.getTexture());
             this.weaponSprite.setVisible(true);
-            this.weaponSprite.setDisplaySize(40, 20); // Scale down a bit
-            // Adjust position slightly
-            this.weaponSprite.x = 10;
-            this.weaponSprite.y = 10;
+            
+            // Set width to 60 and maintain aspect ratio
+            this.weaponSprite.displayWidth = 60;
+            this.weaponSprite.scaleY = this.weaponSprite.scaleX;
+            
+            // Adjust position: Center of body
+            this.weaponSprite.x = 0;
+            this.weaponSprite.y = 5; // Slightly lower than center to look like held in hands
         }
     }
 
@@ -136,8 +140,35 @@ export class Player extends Phaser.GameObjects.Container {
             const spread = 0.1; // Radians
             const finalAngle = angle + (Math.random() - 0.5) * spread;
 
+            // Recoil Effect
+            if (this.weaponSprite) {
+                const recoilDist = 5;
+                const recoilX = Math.cos(finalAngle) * -recoilDist;
+                const recoilY = Math.sin(finalAngle) * -recoilDist;
+                
+                this.scene.tweens.add({
+                    targets: this.weaponSprite,
+                    x: this.weaponSprite.x + recoilX,
+                    y: this.weaponSprite.y + recoilY,
+                    duration: 50,
+                    yoyo: true,
+                    ease: 'Quad.easeOut'
+                });
+            }
+
+            // Calculate muzzle position
+            let startX = this.x;
+            let startY = this.y;
+            
+            if (this.weaponSprite) {
+                const weaponLen = this.weaponSprite.displayWidth;
+                const muzzleOffset = weaponLen * 0.5;
+                startX = this.x + this.weaponSprite.x + Math.cos(finalAngle) * muzzleOffset;
+                startY = this.y + this.weaponSprite.y + Math.sin(finalAngle) * muzzleOffset;
+            }
+
             // Create bullet (using graphics for now)
-            const bullet = this.scene.add.rectangle(this.x, this.y, 4, 4, 0xffff00);
+            const bullet = this.scene.add.rectangle(startX, startY, 4, 4, 0xffff00);
             this.scene.physics.add.existing(bullet);
             const body = bullet.body as Phaser.Physics.Arcade.Body;
             
@@ -186,6 +217,20 @@ export class Player extends Phaser.GameObjects.Container {
         
         const angle = Phaser.Math.Angle.Between(this.x, this.y, worldPoint.x, worldPoint.y);
         const deg = Phaser.Math.RadToDeg(angle);
+
+        // Weapon Rotation
+        if (this.weaponSprite && this.weaponSprite.visible) {
+            this.weaponSprite.setRotation(angle);
+            
+            // Flip weapon if on the left side to avoid being upside down
+            if (Math.abs(angle) > Math.PI / 2) {
+                this.weaponSprite.setFlipY(true);
+                // Adjust offset to keep it "in hand" correctly when flipped?
+                // Might need fine tuning.
+            } else {
+                this.weaponSprite.setFlipY(false);
+            }
+        }
 
         // Determine direction based on angle
         // East: -45 to 45
