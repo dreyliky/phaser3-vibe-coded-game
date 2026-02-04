@@ -78,7 +78,7 @@ export class Player extends Phaser.GameObjects.Container {
             
             // Adjust position: Center of body
             this.weaponSprite.x = 0;
-            this.weaponSprite.y = 5; // Slightly lower than center to look like held in hands
+            this.weaponSprite.y = 13; // Lowered by 8px from 5 to 13
         }
     }
 

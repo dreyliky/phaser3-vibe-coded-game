@@ -105,7 +105,9 @@ export class Game extends Phaser.Scene {
         });
 
         if (nearestItem) {
-            (nearestItem as WorldItem).setHighlight(true);
+            const item = nearestItem as WorldItem;
+            const canAdd = inventorySystem.canAddItem(item.getItem(), item.getQuantity());
+            item.setHighlight(true, canAdd ? 0x00ff00 : 0xff0000);
         }
     }
 

@@ -21,23 +21,23 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
     }
 
     public addItem(item: BaseItem, quantity: number = 1, extraData?: any): boolean {
-        // 1. Try to stack
-        if (item.getMaxStack() > 1) {
-            // Check quick slots first
+        // Weapon Logic: Try Quick Slots first
+        if (item instanceof BaseRangeWeapon) {
+            // Find empty quick slot
             for (let i = 0; i < this.quickSlots.length; i++) {
-                const slot = this.quickSlots[i];
-                if (slot && slot.item.getId() === item.getId() && slot.quantity < slot.item.getMaxStack()) {
-                    const space = slot.item.getMaxStack() - slot.quantity;
-                    const add = Math.min(space, quantity);
-                    slot.quantity += add;
-                    quantity -= add;
-                    this.emit('update', { type: 'quick', index: i, item: slot });
-                    if (quantity === 0) return true;
+                if (this.quickSlots[i] === null) {
+                    this.quickSlots[i] = this.createInventoryItem(item, quantity, extraData);
+                    this.emit('update', { type: 'quick', index: i, item: this.quickSlots[i] });
+                    return true;
                 }
             }
-            
-            // Check main inventory
-            for (let i = 0; i < this.slots.length; i++) {
+        }
+
+        // Standard Logic (Non-weapon or weapon that didn't fit in quick slots)
+        
+        // 1. Try to stack (Main Inventory only)
+        if (item.getMaxStack() > 1) {
+             for (let i = 0; i < this.slots.length; i++) {
                 const slot = this.slots[i];
                 if (slot && slot.item.getId() === item.getId() && slot.quantity < slot.item.getMaxStack()) {
                     const space = slot.item.getMaxStack() - slot.quantity;
@@ -50,16 +50,7 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
             }
         }
 
-        // 2. Find empty slot
-        // Try quick slots first
-        for (let i = 0; i < this.quickSlots.length; i++) {
-            if (this.quickSlots[i] === null) {
-                this.quickSlots[i] = this.createInventoryItem(item, quantity, extraData);
-                this.emit('update', { type: 'quick', index: i, item: this.quickSlots[i] });
-                return true;
-            }
-        }
-
+        // 2. Find empty slot (Main Inventory only)
         for (let i = 0; i < this.slots.length; i++) {
             if (this.slots[i] === null) {
                 this.slots[i] = this.createInventoryItem(item, quantity, extraData);
@@ -69,6 +60,46 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
         }
 
         return false; // Inventory full
+    }
+
+    public canAddItem(item: BaseItem, quantity: number = 1): boolean {
+        // Simulate addition
+        let remaining = quantity;
+
+        // Weapon check for quick slots
+        if (item instanceof BaseRangeWeapon) {
+             for (let i = 0; i < this.quickSlots.length; i++) {
+                if (this.quickSlots[i] === null) {
+                    return true;
+                }
+            }
+        }
+
+        // Stack check
+        if (item.getMaxStack() > 1) {
+            for (let i = 0; i < this.slots.length; i++) {
+                const slot = this.slots[i];
+                if (slot && slot.item.getId() === item.getId() && slot.quantity < slot.item.getMaxStack()) {
+                    const space = slot.item.getMaxStack() - slot.quantity;
+                    remaining -= space;
+                    if (remaining <= 0) return true;
+                }
+            }
+        }
+
+        // Empty slot check
+        if (remaining > 0) {
+            for (let i = 0; i < this.slots.length; i++) {
+                if (this.slots[i] === null) {
+                    // One empty slot can take up to maxStack
+                    const space = item.getMaxStack();
+                    remaining -= space;
+                    if (remaining <= 0) return true;
+                }
+            }
+        }
+        
+        return remaining <= 0;
     }
 
     private createInventoryItem(item: BaseItem, quantity: number, extraData?: any): InventoryItem {

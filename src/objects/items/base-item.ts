@@ -49,10 +49,9 @@ export class WorldItem extends Phaser.GameObjects.Container {
         this.quantity = quantity;
         this.extraData = extraData;
 
-        // Highlight (Green shadow/glow)
+        // Highlight (Gradient shadow/glow)
         this.highlight = scene.add.graphics();
-        this.highlight.fillStyle(0x00ff00, 0.5); // Green with 50% opacity
-        this.highlight.fillCircle(0, 0, 24); // Circle shadow
+        this.createGradientHighlight(0x00ff00);
         this.highlight.setVisible(false);
         this.add(this.highlight);
 
@@ -88,8 +87,26 @@ export class WorldItem extends Phaser.GameObjects.Container {
         }
     }
 
-    public setHighlight(active: boolean) {
-        this.highlight.setVisible(active);
+    public setHighlight(active: boolean, color: number = 0x00ff00) {
+        if (active) {
+            this.createGradientHighlight(color);
+            this.highlight.setVisible(true);
+        } else {
+            this.highlight.setVisible(false);
+        }
+    }
+
+    private createGradientHighlight(color: number) {
+        this.highlight.clear();
+        // Simulate radial gradient with concentric circles
+        const radius = 24;
+        const steps = 10;
+        for (let i = 0; i < steps; i++) {
+            const alpha = 0.5 * (1 - i / steps);
+            const r = radius * (1 - i / steps);
+            this.highlight.fillStyle(color, alpha);
+            this.highlight.fillCircle(0, 0, r);
+        }
     }
 
     public getItem(): BaseItem {
