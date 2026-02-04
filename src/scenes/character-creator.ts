@@ -11,6 +11,10 @@ export class CharacterCreator extends Phaser.Scene {
     private hairSprite!: Phaser.GameObjects.Sprite;
     private container!: Phaser.GameObjects.Container;
 
+    // UI
+    private genderSelector!: TextSelector;
+    private bodySelector!: TextSelector;
+
     constructor() {
         super('CharacterCreator');
         this.character = {
@@ -43,28 +47,32 @@ export class CharacterCreator extends Phaser.Scene {
         const startY = height * 0.65;
         const gapY = 40;
 
-        new TextSelector(this, width * 0.5, startY, 'Gender', Object.values(Gender), 
+        this.genderSelector = new TextSelector(this, width * 0.5, startY, 'Gender', Object.values(Gender), 
             this.character.gender, 
-            (val) => { this.character.gender = val as Gender; this.updateCharacter(); });
+            (val) => { 
+                this.character.gender = val as Gender; 
+                this.onGenderChange();
+                this.updateCharacter(); 
+            });
 
-        new TextSelector(this, width * 0.5, startY + gapY, 'Body', Object.values(BodyType), 
+        this.bodySelector = new TextSelector(this, width * 0.5, startY + gapY, 'Body', this.getAvailableBodyTypes(), 
             this.character.bodyType, 
-            (val) => { this.character.bodyType = val as BodyType; this.updateCharacter(); });
+            (val) => { 
+                this.character.bodyType = val as BodyType; 
+                this.onBodyTypeChange();
+                this.updateCharacter(); 
+            });
 
-        new TextSelector(this, width * 0.5, startY + gapY * 2, 'Face', Object.values(FaceType), 
-            this.character.faceType, 
-            (val) => { this.character.faceType = val as FaceType; this.updateCharacter(); });
-
-        new TextSelector(this, width * 0.5, startY + gapY * 3, 'Hair', Object.values(HairType), 
+        new TextSelector(this, width * 0.5, startY + gapY * 2, 'Hair', Object.values(HairType), 
             this.character.hairType, 
             (val) => { this.character.hairType = val as HairType; this.updateCharacter(); });
 
         // Colors
-        new ColorSelector(this, width * 0.3, startY + gapY * 4.5, 'Skin', SKIN_COLORS, 
+        new ColorSelector(this, width * 0.3, startY + gapY * 3.5, 'Skin', SKIN_COLORS, 
             this.character.skinColor,
             (val) => { this.character.skinColor = val; this.updateCharacter(); });
 
-        new ColorSelector(this, width * 0.7, startY + gapY * 4.5, 'Hair Color', HAIR_COLORS, 
+        new ColorSelector(this, width * 0.7, startY + gapY * 3.5, 'Hair Color', HAIR_COLORS, 
             this.character.hairColor,
             (val) => { this.character.hairColor = val; this.updateCharacter(); });
 
@@ -87,6 +95,60 @@ export class CharacterCreator extends Phaser.Scene {
             .on('pointerdown', () => this.scene.start('MainMenu'));
 
         this.updateCharacter();
+    }
+
+    private getAvailableBodyTypes(): string[] {
+        const allTypes = Object.values(BodyType);
+        if (this.character.gender === Gender.Male) {
+            return allTypes.filter(t => t !== BodyType.Female);
+        } else {
+            return allTypes.filter(t => t !== BodyType.Male);
+        }
+    }
+
+    private onGenderChange() {
+        const availableTypes = this.getAvailableBodyTypes();
+        
+        if (!availableTypes.includes(this.character.bodyType)) {
+            if (this.character.gender === Gender.Male) {
+                this.character.bodyType = BodyType.Male;
+            } else {
+                this.character.bodyType = BodyType.Female;
+            }
+            this.onBodyTypeChange();
+        }
+        
+        this.bodySelector.setOptions(availableTypes, this.character.bodyType);
+    }
+
+    private onBodyTypeChange() {
+        switch (this.character.bodyType) {
+            case BodyType.Fat:
+                this.character.faceType = FaceType.Average_Wide;
+                break;
+            case BodyType.Female:
+                this.character.faceType = FaceType.Average_Normal;
+                if (this.character.gender !== Gender.Female) {
+                    this.character.gender = Gender.Female;
+                    this.genderSelector.setOptions(Object.values(Gender), Gender.Female);
+                    this.onGenderChange();
+                }
+                break;
+            case BodyType.Hulk:
+                this.character.faceType = FaceType.Average_Normal;
+                break;
+            case BodyType.Male:
+                this.character.faceType = FaceType.Average_Normal;
+                if (this.character.gender !== Gender.Male) {
+                    this.character.gender = Gender.Male;
+                    this.genderSelector.setOptions(Object.values(Gender), Gender.Male);
+                    this.onGenderChange();
+                }
+                break;
+            case BodyType.Thin:
+                this.character.faceType = FaceType.Narrow_Normal;
+                break;
+        }
     }
 
     private updateCharacter() {

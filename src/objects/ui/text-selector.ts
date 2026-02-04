@@ -46,6 +46,16 @@ export class TextSelector extends Phaser.GameObjects.Container {
         this.add(rightArrow);
     }
 
+    public setOptions(options: string[], initialValue?: string) {
+        this.options = options;
+        if (initialValue && this.options.includes(initialValue)) {
+            this.currentIndex = this.options.indexOf(initialValue);
+        } else {
+            this.currentIndex = 0;
+        }
+        this.updateValue();
+    }
+
     private selectNext() {
         this.currentIndex = (this.currentIndex + 1) % this.options.length;
         this.updateValue();
