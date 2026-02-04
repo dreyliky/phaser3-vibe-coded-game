@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BodyType, CharacterDefinition } from '../types/character';
+import { BodyType, CharacterDefinition } from '../../types/character';
 
 export class CharacterVisual extends Phaser.GameObjects.Container {
     private bodySprite: Phaser.GameObjects.Sprite;

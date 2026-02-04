@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { BodyType, CharacterDefinition, FaceType, Gender, HairType, HAIR_COLORS, SKIN_COLORS } from '../types/character';
+import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
+import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { TextSelector, ColorSelector, CharacterVisual } from '../objects';
 
 export class CharacterCreator extends Phaser.Scene {
@@ -67,8 +68,8 @@ export class CharacterCreator extends Phaser.Scene {
             this.character.hairColor,
             (val) => { this.character.hairColor = val; this.updateCharacter(); });
 
-        // Generate Output Button
-        const btn = this.add.text(width * 0.5, height - 50, 'Generate Output', {
+        // Play Button
+        const btn = this.add.text(width * 0.5, height - 50, 'Play', {
             fontSize: '24px',
             color: '#00ff00',
             backgroundColor: '#333333',
@@ -76,7 +77,7 @@ export class CharacterCreator extends Phaser.Scene {
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.generateOutput())
+        .on('pointerdown', () => this.startGame())
         .on('pointerover', () => btn.setStyle({ fill: '#ffff00' }))
         .on('pointerout', () => btn.setStyle({ fill: '#00ff00' }));
 
@@ -144,10 +145,7 @@ export class CharacterCreator extends Phaser.Scene {
         this.characterVisual.updateDefinition(this.character);
     }
 
-    private generateOutput() {
-        console.log('--- Character Definition ---');
-        console.log(JSON.stringify(this.character, null, 2));
-        console.log('---------------------------');
-        alert('Character definition logged to console!');
+    private startGame() {
+        this.scene.start('GameScene', { character: this.character });
     }
 }

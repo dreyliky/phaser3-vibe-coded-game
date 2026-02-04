@@ -14,7 +14,7 @@ export class MainMenu extends Phaser.Scene {
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        const playButton = this.add.text(width * 0.5, height * 0.5, 'Play', {
+        const playButton = this.add.text(width * 0.5, height * 0.5, 'New Game', {
             fontSize: '32px',
             color: '#00ff00',
             fontFamily: 'Arial',
@@ -24,24 +24,9 @@ export class MainMenu extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
-            this.scene.start('GameScene');
+            this.scene.start('CharacterCreator');
         })
         .on('pointerover', () => playButton.setStyle({ fill: '#ffff00' }))
         .on('pointerout', () => playButton.setStyle({ fill: '#00ff00' }));
-
-        const settingsButton = this.add.text(width * 0.5, height * 0.65, 'Character Creator', {
-            fontSize: '32px',
-            color: '#ffffff',
-            fontFamily: 'Arial',
-            backgroundColor: '#333333',
-            padding: { x: 20, y: 10 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
-            this.scene.start('CharacterCreator');
-        })
-        .on('pointerover', () => settingsButton.setStyle({ fill: '#ffff00' }))
-        .on('pointerout', () => settingsButton.setStyle({ fill: '#ffffff' }));
     }
 }

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CharacterDefinition } from '../types/character';
+import { CharacterDefinition } from '../../types/character';
 import { CharacterVisual } from './character-visual';
 
 export class Player extends Phaser.GameObjects.Container {

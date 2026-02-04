@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BodyType, FaceType, Gender, HairType } from '../types/character';
+import { ASSETS } from '../config/constants';
 
 export class Boot extends Phaser.Scene {
     constructor() {
@@ -7,7 +8,7 @@ export class Boot extends Phaser.Scene {
     }
 
     preload() {
-        const basePath = 'assets/sprites/things/pawn/Humanlike';
+        const basePath = ASSETS.SPRITES.HUMANLIKE_BASE_PATH;
         const directions = ['south', 'north', 'east'];
 
         // Load Bodies
