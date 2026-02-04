@@ -58,7 +58,6 @@ export enum HairType {
   Rockstar = 'Rockstar',
   Rookie = 'Rookie',
   Savage = 'Savage',
-  Scat = 'Scat',
   Scorpiontail = 'Scorpiontail',
   Scrapper = 'Scrapper',
   Senorita = 'Senorita',

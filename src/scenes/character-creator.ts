@@ -1,15 +1,12 @@
 import Phaser from 'phaser';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType, HAIR_COLORS, SKIN_COLORS } from '../types/character';
-import { TextSelector, ColorSelector } from '../objects/ui';
+import { TextSelector, ColorSelector, CharacterVisual } from '../objects';
 
 export class CharacterCreator extends Phaser.Scene {
     private character: CharacterDefinition;
     
-    // Sprites
-    private bodySprite!: Phaser.GameObjects.Sprite;
-    private headSprite!: Phaser.GameObjects.Sprite;
-    private hairSprite!: Phaser.GameObjects.Sprite;
-    private container!: Phaser.GameObjects.Container;
+    // Visual
+    private characterVisual!: CharacterVisual;
 
     // UI
     private genderSelector!: TextSelector;
@@ -33,15 +30,9 @@ export class CharacterCreator extends Phaser.Scene {
         // Background
         this.add.rectangle(0, 0, width, height, 0x222222).setOrigin(0);
 
-        // Character Container (Center)
-        this.container = this.add.container(width * 0.5, height * 0.4);
-        
-        // Sprites (Order matters: Body -> Head -> Hair)
-        this.bodySprite = this.add.sprite(0, 0, 'body_Male_south');
-        this.headSprite = this.add.sprite(0, -42, 'head_Male_Average_Normal_south');
-        this.hairSprite = this.add.sprite(0, -52, 'hair_Mohawk_south');
-
-        this.container.add([this.bodySprite, this.headSprite, this.hairSprite]);
+        // Character Visual
+        this.characterVisual = new CharacterVisual(this, width * 0.5, height * 0.4, this.character);
+        this.add.existing(this.characterVisual);
 
         // Controls
         const startY = height * 0.65;
@@ -91,10 +82,8 @@ export class CharacterCreator extends Phaser.Scene {
 
         // Back Button
         this.add.text(50, 50, '< Back', { fontSize: '20px', color: '#ffffff' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.scene.start('MainMenu'));
-
-        this.updateCharacter();
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.scene.start('MainMenu'));
     }
 
     private getAvailableBodyTypes(): string[] {
@@ -152,38 +141,7 @@ export class CharacterCreator extends Phaser.Scene {
     }
 
     private updateCharacter() {
-        // Texture Updates
-        const bodyKey = `body_${this.character.bodyType}_south`;
-        const headKey = `head_${this.character.gender}_${this.character.faceType}_south`;
-        const hairKey = `hair_${this.character.hairType}_south`;
-
-        // Check if textures exist (fallback to prevent crash)
-        if (this.textures.exists(bodyKey)) this.bodySprite.setTexture(bodyKey);
-        if (this.textures.exists(headKey)) this.headSprite.setTexture(headKey);
-        
-        if (this.textures.exists(hairKey)) {
-            this.hairSprite.setVisible(true);
-            this.hairSprite.setTexture(hairKey);
-        } else {
-            this.hairSprite.setVisible(false);
-        }
-
-        // Tints
-        const skinTint = Phaser.Display.Color.HexStringToColor(this.character.skinColor).color;
-        const hairTint = Phaser.Display.Color.HexStringToColor(this.character.hairColor).color;
-
-        this.bodySprite.setTint(skinTint);
-        this.headSprite.setTint(skinTint);
-        this.hairSprite.setTint(hairTint);
-
-        // Adjust positions based on body type (simple adjustment)
-        if (this.character.bodyType === BodyType.Hulk) {
-            this.headSprite.y = -37;
-            this.hairSprite.y = -47;
-        } else {
-            this.headSprite.y = -32;
-            this.hairSprite.y = -42;
-        }
+        this.characterVisual.updateDefinition(this.character);
     }
 
     private generateOutput() {
