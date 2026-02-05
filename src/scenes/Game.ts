@@ -5,12 +5,15 @@ import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { AssaultRifle, Pistol, Shotgun, LightAmmo, StandardAmmo, HeavyAmmo, BuckshotAmmo } from '../objects/items';
 import { inventorySystem } from '../systems/inventory-system';
 import { ItemInteractionSystem } from '../systems/item-interaction-system';
+import { MapGenerator } from '../systems/map-generator';
+import { DEBUG_SETTINGS } from '../config/constants';
 
 export class Game extends Phaser.Scene {
     private player!: Player;
     private characterDefinition!: CharacterDefinition;
     private itemInteractionSystem!: ItemInteractionSystem;
     private background!: Phaser.GameObjects.TileSprite;
+    private mapGenerator!: MapGenerator;
 
     constructor() {
         super('GameScene');
@@ -47,9 +50,13 @@ export class Game extends Phaser.Scene {
         // Launch HUD
         this.scene.launch('HUD');
 
+        // Map Generation
+        this.mapGenerator = new MapGenerator(this);
+        this.mapGenerator.generateMap(mapWidth, mapHeight);
+
         // Create Player
         this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
-        this.player.setDepth(100); // Explicitly set depth to ensure it's above everything
+        // Depth is handled in Player.update() for Y-sorting
         
         // Camera setup
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
@@ -60,10 +67,25 @@ export class Game extends Phaser.Scene {
         // Initialize Item Interaction System
         this.itemInteractionSystem = new ItemInteractionSystem(this, this.player);
 
+        // Apply Debug Settings
+        if (DEBUG_SETTINGS.SHOW_COLLIDERS) {
+            this.physics.world.createDebugGraphic();
+            this.physics.world.drawDebug = true;
+        }
+
+        // Colliders
+        this.physics.add.collider(this.player, this.mapGenerator.getVegetation());
+
         // Spawn test items
         this.itemInteractionSystem.spawnItem(new AssaultRifle(), 300, 300);
         this.itemInteractionSystem.spawnItem(new Pistol(), 400, 300);
         this.itemInteractionSystem.spawnItem(new Shotgun(), 500, 300);
+        
+        // Extra weapons
+        this.itemInteractionSystem.spawnItem(new AssaultRifle(), 320, 350);
+        this.itemInteractionSystem.spawnItem(new Pistol(), 420, 350);
+        this.itemInteractionSystem.spawnItem(new Shotgun(), 520, 350);
+
         this.itemInteractionSystem.spawnItem(new StandardAmmo(), 350, 400, 60);
         this.itemInteractionSystem.spawnItem(new LightAmmo(), 450, 400, 100);
         this.itemInteractionSystem.spawnItem(new BuckshotAmmo(), 550, 400, 40);

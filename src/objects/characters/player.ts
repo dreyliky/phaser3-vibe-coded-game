@@ -20,8 +20,8 @@ export class Player extends Phaser.GameObjects.Container {
         // Physics
         scene.physics.add.existing(this);
         const body = this.body as Phaser.Physics.Arcade.Body;
-        body.setSize(40, 60); 
-        body.setOffset(-20, -30); 
+        body.setSize(40, 30); 
+        body.setOffset(-20, 6); // Moved down by 6px (was 0)
         body.setCollideWorldBounds(true);
 
         // Systems
@@ -37,6 +37,8 @@ export class Player extends Phaser.GameObjects.Container {
         this.movementSystem.update();
         this.combatSystem.update();
         this.handleVisualRotation();
+        // Sort by bottom of the player (feet)
+        this.setDepth(this.y + 30);
     }
 
     public equipWeapon(item: InventoryItem) {

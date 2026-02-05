@@ -88,8 +88,10 @@ export class WorldItem extends Phaser.GameObjects.Container {
 
         // Tooltip
         this.on('pointerover', (pointer: Phaser.Input.Pointer) => {
-            const name = this.item.getName();
-            // User requested to hide quantity in tooltip for WorldItem (items on floor)
+            let name = this.item.getName();
+            if (this.quantity > 1) {
+                name += ` (${this.quantity})`;
+            }
             this.scene.events.emit('tooltip-show', name, pointer.x, pointer.y);
         });
 

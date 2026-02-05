@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { InventoryWindow, QuickBar, PauseMenu, Tooltip } from '../objects/ui';
 import { inventorySystem } from '../systems/inventory-system';
 import { InventorySlot } from '../objects/ui/inventory-slot';
+import { DEBUG_SETTINGS } from '../config/constants';
 
 export class HUD extends Phaser.Scene {
     private inventoryWindow!: InventoryWindow;
@@ -11,6 +12,7 @@ export class HUD extends Phaser.Scene {
     private caliberText!: Phaser.GameObjects.Text;
     private tooltip!: Tooltip;
     private backdrop!: Phaser.GameObjects.Rectangle;
+    private fpsText!: Phaser.GameObjects.Text;
 
     constructor() {
         super('HUD');
@@ -31,6 +33,20 @@ export class HUD extends Phaser.Scene {
 
         // Set drag threshold to prevent drops on simple clicks
         this.input.dragDistanceThreshold = 10;
+
+        // FPS Counter
+        if (DEBUG_SETTINGS.SHOW_FPS) {
+            this.fpsText = this.add.text(width - 10, 10, 'FPS: 0', {
+                fontSize: '16px',
+                color: '#00ff00',
+                stroke: '#000000',
+                strokeThickness: 2,
+                fontFamily: 'monospace'
+            })
+            .setOrigin(1, 0)
+            .setScrollFactor(0)
+            .setDepth(200);
+        }
 
         // Quick Bar (Bottom Center)
         this.quickBar = new QuickBar(this, width * 0.5, height - 50);
@@ -235,7 +251,13 @@ export class HUD extends Phaser.Scene {
         });
     }
 
-    update() {
+    update(time: number, delta: number) {
+        if (DEBUG_SETTINGS.SHOW_FPS && this.fpsText) {
+            // Use delta to calculate instantaneous FPS if actualFps is 0
+            const fps = Math.round(1000 / delta);
+            this.fpsText.setText(`FPS: ${fps}`);
+        }
+
         const gameScene = this.scene.get('GameScene') as any;
         if (!gameScene || !gameScene.player) {
             this.ammoText.setText('');
@@ -379,6 +401,10 @@ export class HUD extends Phaser.Scene {
 
         if (this.caliberText) {
             this.caliberText.setPosition(20, height - 15);
+        }
+
+        if (this.fpsText) {
+            this.fpsText.setPosition(width - 10, 10);
         }
     }
 }

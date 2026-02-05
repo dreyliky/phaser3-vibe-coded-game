@@ -70,6 +70,20 @@ export class Boot extends Phaser.Scene {
         
         // Load Environment
         this.load.image('background_sand', 'assets/sprites/things/projectile/Sand.png');
+
+        // Load Plants - Bushes/Cacti
+        const plantPath = 'assets/sprites/things/plant';
+        this.load.image('plant_agave', `${plantPath}/Agave.png`);
+        this.load.image('plant_pincushion_cactus', `${plantPath}/PincushionCactus.png`);
+        this.load.image('plant_saguaro_cactus', `${plantPath}/SaguaroCactus.png`);
+        this.load.image('plant_saguaro_cactus_leafless', `${plantPath}/SaguaroCactus_Leafless.png`);
+
+        // Load Plants - Trees
+        this.load.image('plant_tree_bamboo', `${plantPath}/TreeBamboo.png`);
+        this.load.image('plant_tree_cecropia', `${plantPath}/TreeCecropia.png`);
+        this.load.image('plant_tree_palm', `${plantPath}/TreePalm.png`);
+        this.load.image('plant_tree_teak', `${plantPath}/TreeTeak.png`);
+        this.load.image('plant_tree_willow', `${plantPath}/TreeWillow.png`);
     }
 
     create() {
