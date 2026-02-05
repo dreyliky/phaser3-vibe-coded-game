@@ -61,6 +61,12 @@ export class Boot extends Phaser.Scene {
         this.load.image('weapon_assault_rifle', 'assets/sprites/things/item/equipment/WeaponRanged/AssaultRifle.png');
         this.load.image('weapon_pistol', 'assets/sprites/things/item/equipment/WeaponRanged/Autopistol.png');
         this.load.image('weapon_shotgun', 'assets/sprites/things/item/equipment/WeaponRanged/Shotgun.png');
+
+        // Load Projectiles
+        this.load.image('projectile_heavy', 'assets/sprites/things/projectile/Bullet_Big.png');
+        this.load.image('projectile_standard', 'assets/sprites/things/projectile/Bullet_Medium.png');
+        this.load.image('projectile_buckshot', 'assets/sprites/things/projectile/Bullet_Shotgun.png');
+        this.load.image('projectile_light', 'assets/sprites/things/projectile/Bullet_Small.png');
     }
 
     create() {

@@ -551,7 +551,27 @@ export class PlayerCombatSystem {
         const worldPoint = pointer.positionToCamera(this.scene.cameras.main) as Phaser.Math.Vector2;
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
 
-        const projectileCount = weapon instanceof Shotgun ? 6 : 1;
+        const projectileCount = 1;
+        const caliber = weapon.getCaliber();
+        
+        let texture = 'projectile_standard';
+        let colliderScale = 1/8;
+        
+        switch(caliber) {
+            case 'heavy':
+                texture = 'projectile_heavy';
+                break;
+            case 'standard':
+                texture = 'projectile_standard';
+                break;
+            case 'buckshot':
+                texture = 'projectile_buckshot';
+                colliderScale = 1/4;
+                break;
+            case 'light':
+                texture = 'projectile_light';
+                break;
+        }
         
         for (let i = 0; i < projectileCount; i++) {
             const spread = 0.1;
@@ -586,13 +606,37 @@ export class PlayerCombatSystem {
                 startY = this.player.y + this.weaponSprite.y + Math.sin(finalAngle) * muzzleOffset;
             }
 
-            const bullet = this.scene.add.rectangle(startX, startY, 4, 4, 0xffff00);
+            const bullet = this.scene.add.sprite(startX, startY, texture);
+            bullet.setTint(0xffff93);
             this.scene.physics.add.existing(bullet);
             const body = bullet.body as Phaser.Physics.Arcade.Body;
+            
+            // Set rotation (Assuming sprite points UP)
+            bullet.setRotation(finalAngle + Math.PI / 2);
             
             const speed = 1200;
             const velocity = this.scene.physics.velocityFromRotation(finalAngle, speed);
             body.setVelocity(velocity.x, velocity.y);
+
+            // Collider setup
+            const width = bullet.width;
+            const height = bullet.height;
+            const size = width * colliderScale;
+            
+            body.setSize(size, size);
+            
+            // Calculate offset to place collider at the tip
+            // The tip is at distance height/2 from center in direction of travel
+            // We want the collider center to be close to the tip
+            const tipDistance = (height / 2) - (size / 2);
+            
+            const offsetXFromCenter = Math.cos(finalAngle) * tipDistance;
+            const offsetYFromCenter = Math.sin(finalAngle) * tipDistance;
+            
+            const finalOffsetX = offsetXFromCenter + bullet.displayOriginX - (size / 2);
+            const finalOffsetY = offsetYFromCenter + bullet.displayOriginY - (size / 2);
+            
+            body.setOffset(finalOffsetX, finalOffsetY);
 
             this.scene.time.delayedCall(1000, () => bullet.destroy());
         }
