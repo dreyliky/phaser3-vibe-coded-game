@@ -33,7 +33,9 @@ export class HUD extends Phaser.Scene {
 
         // Input Handling
         if (this.input.keyboard) {
-            this.input.keyboard.on('keydown-I', () => {
+            this.input.keyboard.addCapture('TAB');
+            
+            this.input.keyboard.on('keydown-TAB', () => {
                 this.inventoryWindow.toggle();
             });
 
@@ -47,6 +49,10 @@ export class HUD extends Phaser.Scene {
 
             this.input.keyboard.on('keydown-TWO', () => {
                 this.quickBar.selectSlot(1);
+            });
+
+            this.input.keyboard.on('keydown-THREE', () => {
+                this.quickBar.selectSlot(2);
             });
         }
 
@@ -85,8 +91,8 @@ export class HUD extends Phaser.Scene {
                 if (item) {
                     // Notify Game scene to spawn item
                     const gameScene = this.scene.get('GameScene') as any;
-                    if (gameScene && gameScene.spawnPlayerDrop) {
-                        gameScene.spawnPlayerDrop(item.item, item.quantity, item.extraData);
+                    if (gameScene && gameScene.itemInteractionSystem) {
+                        gameScene.itemInteractionSystem.spawnPlayerDrop(item.item, item.quantity, item.extraData);
                     }
                 }
             }
@@ -102,9 +108,11 @@ export class HUD extends Phaser.Scene {
         // Clean up input on scene shutdown (if needed, though HUD usually persists)
         this.events.on('shutdown', () => {
             if (this.input.keyboard) {
-                this.input.keyboard.off('keydown-I');
+                this.input.keyboard.off('keydown-TAB');
+                this.input.keyboard.off('keydown-ESC');
                 this.input.keyboard.off('keydown-ONE');
                 this.input.keyboard.off('keydown-TWO');
+                this.input.keyboard.off('keydown-THREE');
             }
         });
     }
