@@ -19,6 +19,9 @@ export class HUD extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
+        // Handle Resize
+        this.scale.on('resize', this.handleResize, this);
+
         // Backdrop (Black, 20% opacity, behind windows)
         this.backdrop = this.add.rectangle(0, 0, width, height, 0x000000, 0.2)
             .setOrigin(0)
@@ -349,5 +352,33 @@ export class HUD extends Phaser.Scene {
     private updateBackdrop() {
         const isAnyWindowOpen = this.inventoryWindow.visible || this.pauseMenu.visible;
         this.backdrop.setVisible(isAnyWindowOpen);
+    }
+
+    handleResize(gameSize: Phaser.Structs.Size) {
+        const { width, height } = gameSize;
+
+        if (this.backdrop) {
+            this.backdrop.setSize(width, height);
+        }
+
+        if (this.quickBar) {
+            this.quickBar.setPosition(width * 0.5, height - 50);
+        }
+
+        if (this.inventoryWindow) {
+            this.inventoryWindow.setPosition(width * 0.5, height * 0.5);
+        }
+
+        if (this.pauseMenu) {
+            this.pauseMenu.setPosition(width * 0.5, height * 0.5);
+        }
+
+        if (this.ammoText) {
+            this.ammoText.setPosition(20, height - 40);
+        }
+
+        if (this.caliberText) {
+            this.caliberText.setPosition(20, height - 15);
+        }
     }
 }

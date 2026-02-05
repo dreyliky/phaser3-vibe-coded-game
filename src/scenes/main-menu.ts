@@ -1,20 +1,25 @@
 import Phaser from 'phaser';
 
 export class MainMenu extends Phaser.Scene {
+    private titleText!: Phaser.GameObjects.Text;
+    private playButton!: Phaser.GameObjects.Text;
+
     constructor() {
         super('MainMenu');
     }
 
     create() {
         const { width, height } = this.scale;
+        
+        this.scale.on('resize', this.handleResize, this);
 
-        this.add.text(width * 0.5, height * 0.3, 'Main Menu', {
+        this.titleText = this.add.text(width * 0.5, height * 0.3, 'Main Menu', {
             fontSize: '48px',
             color: '#ffffff',
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        const playButton = this.add.text(width * 0.5, height * 0.5, 'New Game', {
+        this.playButton = this.add.text(width * 0.5, height * 0.5, 'New Game', {
             fontSize: '32px',
             color: '#00ff00',
             fontFamily: 'Arial',
@@ -26,7 +31,17 @@ export class MainMenu extends Phaser.Scene {
         .on('pointerdown', () => {
             this.scene.start('CharacterCreator');
         })
-        .on('pointerover', () => playButton.setStyle({ fill: '#ffff00' }))
-        .on('pointerout', () => playButton.setStyle({ fill: '#00ff00' }));
+        .on('pointerover', () => this.playButton.setStyle({ fill: '#ffff00' }))
+        .on('pointerout', () => this.playButton.setStyle({ fill: '#00ff00' }));
+    }
+
+    handleResize(gameSize: Phaser.Structs.Size) {
+        const { width, height } = gameSize;
+        if (this.titleText) {
+            this.titleText.setPosition(width * 0.5, height * 0.3);
+        }
+        if (this.playButton) {
+            this.playButton.setPosition(width * 0.5, height * 0.5);
+        }
     }
 }

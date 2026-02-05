@@ -30,6 +30,14 @@ export class Game extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
         
+        // Handle Resize
+        this.scale.on('resize', this.handleResize, this);
+
+        // Set world bounds (Large map)
+        const mapWidth = 4000;
+        const mapHeight = 4000;
+        this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
+
         // Background
         this.background = this.add.tileSprite(0, 0, width, height, 'background_sand')
             .setOrigin(0)
@@ -42,6 +50,12 @@ export class Game extends Phaser.Scene {
         // Create Player
         this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
         this.player.setDepth(100); // Explicitly set depth to ensure it's above everything
+        
+        // Camera setup
+        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
+        this.cameras.main.startFollow(this.player, true); // No lerp for pixel perfect follow
+        this.cameras.main.setZoom(1);
+        this.cameras.main.setRoundPixels(true);
 
         // Initialize Item Interaction System
         this.itemInteractionSystem = new ItemInteractionSystem(this, this.player);
@@ -97,8 +111,15 @@ export class Game extends Phaser.Scene {
         this.itemInteractionSystem.update();
 
         if (this.background) {
-            this.background.tilePositionX = this.cameras.main.scrollX;
-            this.background.tilePositionY = this.cameras.main.scrollY;
+            this.background.tilePositionX = Math.round(this.cameras.main.scrollX);
+            this.background.tilePositionY = Math.round(this.cameras.main.scrollY);
+        }
+    }
+
+    handleResize(gameSize: Phaser.Structs.Size) {
+        const { width, height } = gameSize;
+        if (this.background) {
+            this.background.setSize(width, height);
         }
     }
 }
