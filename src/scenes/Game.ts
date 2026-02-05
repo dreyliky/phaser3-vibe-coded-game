@@ -10,6 +10,7 @@ export class Game extends Phaser.Scene {
     private player!: Player;
     private characterDefinition!: CharacterDefinition;
     private itemInteractionSystem!: ItemInteractionSystem;
+    private background!: Phaser.GameObjects.TileSprite;
 
     constructor() {
         super('GameScene');
@@ -29,6 +30,12 @@ export class Game extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
         
+        // Background
+        this.background = this.add.tileSprite(0, 0, width, height, 'background_sand')
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setDepth(-100);
+
         // Launch HUD
         this.scene.launch('HUD');
 
@@ -88,6 +95,11 @@ export class Game extends Phaser.Scene {
     update() {
         this.player.update();
         this.itemInteractionSystem.update();
+
+        if (this.background) {
+            this.background.tilePositionX = this.cameras.main.scrollX;
+            this.background.tilePositionY = this.cameras.main.scrollY;
+        }
     }
 }
 

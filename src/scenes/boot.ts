@@ -67,6 +67,9 @@ export class Boot extends Phaser.Scene {
         this.load.image('projectile_standard', 'assets/sprites/things/projectile/Bullet_Medium.png');
         this.load.image('projectile_buckshot', 'assets/sprites/things/projectile/Bullet_Shotgun.png');
         this.load.image('projectile_light', 'assets/sprites/things/projectile/Bullet_Small.png');
+        
+        // Load Environment
+        this.load.image('background_sand', 'assets/sprites/things/projectile/Sand.png');
     }
 
     create() {
