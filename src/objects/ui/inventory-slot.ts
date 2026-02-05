@@ -57,6 +57,28 @@ export class InventorySlot extends Phaser.GameObjects.Container {
                 this.itemIcon.setData('slotType', this.slotType);
                 this.itemIcon.setData('slotIndex', this.slotIndex);
                 this.itemIcon.setData('originSlot', this);
+
+                // Tooltip
+                this.itemIcon.on('pointerover', (pointer: Phaser.Input.Pointer) => {
+                    const name = item.item.getName();
+                    const qty = item.quantity > 1 ? ` (${item.quantity})` : '';
+                    this.scene.events.emit('tooltip-show', `${name}${qty}`, pointer.x, pointer.y);
+                });
+
+                this.itemIcon.on('pointerout', () => {
+                    this.scene.events.emit('tooltip-hide');
+                });
+
+                // Shift+Click to equip/unequip
+                this.itemIcon.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                    const event = pointer.event as MouseEvent;
+                    if (event.shiftKey) {
+                         const hud = this.scene as any;
+                         if (hud.handleShiftClick) {
+                             hud.handleShiftClick(this.slotType, this.slotIndex);
+                         }
+                    }
+                });
             }
 
             // Quantity
@@ -85,6 +107,10 @@ export class InventorySlot extends Phaser.GameObjects.Container {
         } else {
             this.setInteractive({ dropZone: true });
         }
+    }
+
+    public getIsDisabled(): boolean {
+        return this.isDisabled;
     }
 
     public setSelected(selected: boolean) {

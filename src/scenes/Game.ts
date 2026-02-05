@@ -43,9 +43,9 @@ export class Game extends Phaser.Scene {
         this.itemInteractionSystem.spawnItem(new AssaultRifle(), 300, 300);
         this.itemInteractionSystem.spawnItem(new Pistol(), 400, 300);
         this.itemInteractionSystem.spawnItem(new Shotgun(), 500, 300);
-        this.itemInteractionSystem.spawnItem(new StandardAmmo(), 350, 400);
-        this.itemInteractionSystem.spawnItem(new LightAmmo(), 450, 400);
-        this.itemInteractionSystem.spawnItem(new BuckshotAmmo(), 550, 400);
+        this.itemInteractionSystem.spawnItem(new StandardAmmo(), 350, 400, 60);
+        this.itemInteractionSystem.spawnItem(new LightAmmo(), 450, 400, 100);
+        this.itemInteractionSystem.spawnItem(new BuckshotAmmo(), 550, 400, 40);
 
         // Input for interaction
         if (this.input.keyboard) {

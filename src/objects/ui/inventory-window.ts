@@ -19,6 +19,7 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
 
         // Background
         this.background = scene.add.rectangle(0, 0, width, height, 0x222222, 0.9);
+        this.background.setInteractive({ dropZone: true }); // Make it a drop zone to catch drops on window
         this.add(this.background);
 
         // Header / Close Button
@@ -75,5 +76,12 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
 
     public toggle() {
         this.setVisible(!this.visible);
+    }
+
+    public isSlotDisabled(index: number): boolean {
+        if (index >= 0 && index < this.slots.length) {
+            return this.slots[index].getIsDisabled(); // Need to add getter to InventorySlot
+        }
+        return true;
     }
 }

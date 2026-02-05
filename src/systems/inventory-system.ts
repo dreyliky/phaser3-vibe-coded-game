@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BaseItem } from '../objects/items/base-item';
 import { BaseRangeWeapon } from '../objects/items/weapons/base-range-weapon';
+import { BaseMeleeWeapon } from '../objects/items/weapons/base-melee-weapon';
 import { Hands } from '../objects/items/weapons/hands';
 
 export interface InventoryItem {
@@ -26,7 +27,7 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
 
     public addItem(item: BaseItem, quantity: number = 1, extraData?: any): boolean {
         // Weapon Logic: Try Quick Slots first
-        if (item instanceof BaseRangeWeapon) {
+        if (item instanceof BaseRangeWeapon || (item instanceof BaseMeleeWeapon && !(item instanceof Hands))) {
             // Find empty quick slot (SKIP SLOT 0 - HANDS)
             for (let i = 1; i < this.quickSlots.length; i++) {
                 if (this.quickSlots[i] === null) {
@@ -162,6 +163,14 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
 
         // If source is empty, nothing to move
         if (!fromItem) return false;
+
+        // Restriction: Quick Slots can only hold Weapons (Melee/Ranged)
+        if (toType === 'quick') {
+            const isWeapon = fromItem.item instanceof BaseRangeWeapon || fromItem.item instanceof BaseMeleeWeapon;
+            if (!isWeapon) {
+                return false;
+            }
+        }
 
         // If destination has item, swap
         // Check if stackable?

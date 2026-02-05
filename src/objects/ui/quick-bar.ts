@@ -18,6 +18,12 @@ export class QuickBar extends Phaser.GameObjects.Container {
         const width = 3 * (this.SLOT_SIZE + this.GAP) + this.GAP; // 3 slots
         const height = this.SLOT_SIZE + this.GAP * 2;
 
+        // Background (Drop Zone to catch drops on bar)
+        // Transparent but interactive
+        const background = scene.add.rectangle(0, 0, width, height, 0x000000, 0);
+        background.setInteractive({ dropZone: true });
+        this.add(background);
+
         const startX = -width / 2 + this.GAP + this.SLOT_SIZE / 2;
         
         for (let i = 0; i < 3; i++) {

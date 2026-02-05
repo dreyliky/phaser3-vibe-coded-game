@@ -5,7 +5,7 @@ export class PauseMenu extends Phaser.GameObjects.Container {
     private closeButton: Phaser.GameObjects.Text;
     private menuItems: Phaser.GameObjects.Container;
     
-    constructor(scene: Phaser.Scene, x: number, y: number, onExit: () => void) {
+    constructor(scene: Phaser.Scene, x: number, y: number, onExit: () => void, onResume?: () => void) {
         super(scene, x, y);
 
         const width = 300;
@@ -25,7 +25,10 @@ export class PauseMenu extends Phaser.GameObjects.Container {
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.setVisible(false));
+        .on('pointerdown', () => {
+            this.setVisible(false);
+            if (onResume) onResume();
+        });
         this.add(this.closeButton);
 
         // Title

@@ -86,7 +86,20 @@ export class WorldItem extends Phaser.GameObjects.Container {
         
         this.setInteractive(new Phaser.Geom.Rectangle(-16, -16, 32, 32), Phaser.Geom.Rectangle.Contains);
 
+        // Tooltip
+        this.on('pointerover', (pointer: Phaser.Input.Pointer) => {
+            const name = this.item.getName();
+            // User requested to hide quantity in tooltip for WorldItem (items on floor)
+            this.scene.events.emit('tooltip-show', name, pointer.x, pointer.y);
+        });
+
+        this.on('pointerout', () => {
+            this.scene.events.emit('tooltip-hide');
+        });
+
         // Optional: Display quantity if > 1
+        // REMOVED per user request: "Прибери текст з надписом про кількість айтемів в стаку, коли айтем лежить на підлозі"
+        /*
         if (this.quantity > 1) {
             const qtyText = scene.add.text(10, 10, this.quantity.toString(), {
                 fontSize: '10px',
@@ -96,6 +109,7 @@ export class WorldItem extends Phaser.GameObjects.Container {
             }).setOrigin(1, 1);
             this.add(qtyText);
         }
+        */
     }
 
     public setHighlight(active: boolean, color: number = 0x00ff00) {
@@ -133,7 +147,7 @@ export class WorldItem extends Phaser.GameObjects.Container {
         // Simpler approximation with rings
         for (let i = 0; i < steps; i++) {
             const ratio = i / steps;
-            const alpha = 1 - ratio; // 1 at center (i=0), 0 at edge
+            const alpha = (1 - ratio) * 0.5; // 1 at center (i=0), 0 at edge. Reduced opacity by x2 (0.5 factor)
             const r = radius * ratio;
             const nextR = radius * ((i + 1) / steps);
             const thickness = nextR - r;
