@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { CharacterDefinition } from '../../types/character';
 import { CharacterVisual } from './character-visual';
-import { InventoryItem } from '../../systems/inventory-system';
+import { InventoryItem, inventorySystem } from '../../systems/inventory-system';
 import { BaseRangeWeapon, BaseMeleeWeapon, Hands } from '../items';
 import { Shotgun, AssaultRifle, Pistol } from '../items';
 import { Damageable } from '../../interfaces/damageable';
@@ -24,6 +24,11 @@ export class Player extends Phaser.GameObjects.Container {
     private lastFiredTime: number = 0;
     private isFiring: boolean = false;
     private recoilOffset: { x: number, y: number } = { x: 0, y: 0 };
+
+    // Reload
+    private isReloading: boolean = false;
+    private reloadTimer: Phaser.Time.TimerEvent | null = null;
+    private reloadIndicator: Phaser.GameObjects.Graphics | null = null;
 
     // Hands (Melee)
     private handsContainer: Phaser.GameObjects.Container;
@@ -89,8 +94,21 @@ export class Player extends Phaser.GameObjects.Container {
         }
 
         // Mouse Input for Shooting
-        scene.input.on('pointerdown', () => { this.isFiring = true; });
-        scene.input.on('pointerup', () => { this.isFiring = false; });
+        scene.input.on('pointerdown', () => {
+            this.isFiring = true;
+            this.handleShooting();
+        });
+
+        scene.input.on('pointerup', () => {
+            this.isFiring = false;
+        });
+
+        // Input for reload
+        if (scene.input.keyboard) {
+            scene.input.keyboard.on('keydown-R', () => {
+                this.startReload();
+            });
+        }
 
         // Add to scene
         scene.add.existing(this);
@@ -103,12 +121,19 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     public equipWeapon(item: InventoryItem) {
+        // Stop any ongoing reload
+        this.cancelReload();
+
         this.equippedItem = item;
-        
-        if (item.item instanceof Hands) {
-            // Equip Hands
-            if (this.weaponSprite) this.weaponSprite.setVisible(false);
-            if (this.holdingHand) this.holdingHand.setVisible(false);
+
+        if (item.item instanceof BaseMeleeWeapon) {
+            // Equip Melee Weapon (Hands)
+            if (this.weaponSprite) {
+                this.weaponSprite.setVisible(false);
+            }
+            if (this.holdingHand) {
+                this.holdingHand.setVisible(false);
+            }
             this.handsContainer.setVisible(true);
         } else if (this.weaponSprite) {
             // Equip Range Weapon
@@ -142,6 +167,9 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     public unequipWeapon() {
+        // Stop any ongoing reload
+        this.cancelReload();
+
         this.equippedItem = null;
         if (this.weaponSprite) {
             this.weaponSprite.setVisible(false);
@@ -150,6 +178,211 @@ export class Player extends Phaser.GameObjects.Container {
             this.holdingHand.setVisible(false);
         }
         this.handsContainer.setVisible(false);
+    }
+
+    private startReload() {
+        if (!this.equippedItem || !(this.equippedItem.item instanceof BaseRangeWeapon)) {
+            return;
+        }
+
+        if (this.isReloading) return;
+
+        const weapon = this.equippedItem.item as BaseRangeWeapon;
+        const extraData = this.equippedItem.extraData || {};
+        const currentAmmo = extraData.ammo || 0;
+        const magSize = weapon.getMagazineSize();
+
+        if (currentAmmo >= magSize) return; // Full
+
+        // Shotgun Logic
+        if (weapon instanceof Shotgun) {
+            this.startShotgunReload(weapon);
+        } else {
+            this.startMagazineReload(weapon);
+        }
+    }
+
+    private cancelReload() {
+        if (this.isReloading) {
+            this.isReloading = false;
+            if (this.reloadTimer) {
+                this.reloadTimer.remove();
+                this.reloadTimer = null;
+            }
+            if (this.reloadIndicator) {
+                this.reloadIndicator.destroy();
+                this.reloadIndicator = null;
+            }
+        }
+    }
+
+    private startMagazineReload(weapon: BaseRangeWeapon) {
+        // Check if we have ANY ammo of this type
+        const caliber = weapon.getCaliber();
+        const ammoItem = this.findAmmoInInventory(caliber);
+        
+        if (!ammoItem) {
+            return;
+        }
+
+        this.isReloading = true;
+        const duration = weapon.getReloadSpeed();
+
+        // Create indicator
+        this.createReloadIndicator(duration);
+
+        this.reloadTimer = this.scene.time.delayedCall(duration, () => {
+            this.finishMagazineReload(weapon);
+        });
+    }
+
+    private finishMagazineReload(weapon: BaseRangeWeapon) {
+        const extraData = this.equippedItem!.extraData || { ammo: 0 };
+        const currentAmmo = extraData.ammo || 0;
+        const magSize = weapon.getMagazineSize();
+        let needed = magSize - currentAmmo;
+
+        const caliber = weapon.getCaliber();
+        let consumed = 0;
+        
+        while (needed > 0) {
+            const ammoStack = this.findAmmoInInventory(caliber);
+            if (!ammoStack) break;
+
+            const take = Math.min(needed, ammoStack.quantity);
+            
+            // inventorySystem.removeItem(ammoStack.type, ammoStack.index, take); // OLD Incorrect
+            
+            // Correct way:
+            const item = inventorySystem.getItemAt(ammoStack.type, ammoStack.index);
+            if (item) {
+                item.quantity -= take;
+                if (item.quantity <= 0) {
+                    inventorySystem.removeItem(ammoStack.type, ammoStack.index);
+                } else {
+                    inventorySystem.setItemAt(ammoStack.type, ammoStack.index, item);
+                }
+            }
+            
+            consumed += take;
+            needed -= take;
+        }
+
+        // Update weapon ammo
+        extraData.ammo = currentAmmo + consumed;
+        this.equippedItem!.extraData = extraData;
+        
+        this.cancelReload();
+    }
+
+    private startShotgunReload(weapon: Shotgun) {
+        const caliber = weapon.getCaliber();
+        const ammoItem = this.findAmmoInInventory(caliber);
+        if (!ammoItem) return;
+
+        const extraData = this.equippedItem!.extraData || { ammo: 0 };
+        if (extraData.ammo >= weapon.getMagazineSize()) return;
+
+        this.isReloading = true;
+        
+        // 600ms per shell or based on reloadSpeed?
+        // Let's use 600ms per shell as discussed.
+        const shellDuration = 600; 
+
+        this.createReloadIndicator(shellDuration);
+
+        this.reloadTimer = this.scene.time.delayedCall(shellDuration, () => {
+            this.insertShotgunShell(weapon);
+        });
+    }
+
+    private insertShotgunShell(weapon: Shotgun) {
+        if (!this.isReloading) return; // Cancelled
+
+        const caliber = weapon.getCaliber();
+        const ammoStack = this.findAmmoInInventory(caliber);
+        
+        if (ammoStack) {
+            // Take 1
+            // inventorySystem.removeItem(ammoStack.type, ammoStack.index, 1);
+            
+            const item = inventorySystem.getItemAt(ammoStack.type, ammoStack.index);
+            if (item) {
+                item.quantity -= 1;
+                if (item.quantity <= 0) {
+                    inventorySystem.removeItem(ammoStack.type, ammoStack.index);
+                } else {
+                    inventorySystem.setItemAt(ammoStack.type, ammoStack.index, item);
+                }
+            }
+            
+            // Add 1
+            const extraData = this.equippedItem!.extraData || { ammo: 0 };
+            extraData.ammo = (extraData.ammo || 0) + 1;
+            this.equippedItem!.extraData = extraData;
+            
+            // Check if full
+            if (extraData.ammo >= weapon.getMagazineSize()) {
+                this.cancelReload();
+            } else {
+                // Continue reloading
+                if (this.reloadIndicator) {
+                    this.reloadIndicator.destroy();
+                    this.reloadIndicator = null;
+                }
+                
+                const shellDuration = 600;
+                this.createReloadIndicator(shellDuration);
+                this.reloadTimer = this.scene.time.delayedCall(shellDuration, () => {
+                    this.insertShotgunShell(weapon);
+                });
+            }
+        } else {
+            this.cancelReload();
+        }
+    }
+
+    private findAmmoInInventory(caliber: string): { type: 'main' | 'quick', index: number, quantity: number } | null {
+        for (let i = 0; i < 16; i++) {
+            const item = inventorySystem.getItemAt('main', i);
+            if (item && item.item.getId() === `ammo_${caliber}`) {
+                 return { type: 'main', index: i, quantity: item.quantity };
+            }
+        }
+        return null;
+    }
+
+    private createReloadIndicator(duration: number) {
+        if (this.reloadIndicator) this.reloadIndicator.destroy();
+
+        this.reloadIndicator = this.scene.add.graphics();
+        this.add(this.reloadIndicator);
+        
+        this.reloadIndicator.x = 40;
+        this.reloadIndicator.y = 11;
+        this.reloadIndicator.setDepth(200);
+
+        const radius = 8;
+        const startAngle = -90;
+        
+        this.scene.tweens.addCounter({
+            from: 0,
+            to: 360,
+            duration: duration,
+            onUpdate: (tween) => {
+                if (!this.reloadIndicator) return;
+                const angle = tween.getValue() as number;
+                this.reloadIndicator.clear();
+                
+                this.reloadIndicator.lineStyle(2, 0x555555);
+                this.reloadIndicator.strokeCircle(0, 0, radius);
+                
+                this.reloadIndicator.lineStyle(2, 0x00ff00);
+                this.reloadIndicator.beginPath();
+                this.reloadIndicator.arc(0, 0, radius, Phaser.Math.DegToRad(startAngle), Phaser.Math.DegToRad(startAngle + angle), false);
+                this.reloadIndicator.strokePath();
+            }
+        });
     }
 
     private checkMeleeHit(damage: number) {
@@ -478,6 +711,21 @@ export class Player extends Phaser.GameObjects.Container {
         if (this.handsContainer && this.handsContainer.visible) {
             this.handsContainer.setRotation(angle);
             // No flipY needed for simple circle hands, as they are symmetric
+        }
+
+        // Reload Indicator Rotation
+        if (this.reloadIndicator) {
+            const weaponLen = 60; // We set displayWidth to 60
+            const muzzleDist = weaponLen * 0.5 + 15; // 15px offset from center
+            
+            const weaponX = this.weaponSprite ? this.weaponSprite.x : 0;
+            const weaponY = this.weaponSprite ? this.weaponSprite.y : 11;
+            
+            const indX = weaponX + Math.cos(angle) * muzzleDist;
+            const indY = weaponY + Math.sin(angle) * muzzleDist;
+            
+            this.reloadIndicator.x = indX;
+            this.reloadIndicator.y = indY;
         }
 
         // Determine direction based on angle

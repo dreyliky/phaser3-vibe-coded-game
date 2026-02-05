@@ -31,11 +31,13 @@ export class Game extends Phaser.Scene {
         // Launch HUD
         this.scene.launch('HUD');
 
-        // Create Player
-        this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
-
-        // World Items Group
+        // World Items Group (Created BEFORE Player)
         this.worldItems = this.physics.add.group();
+
+        // Create Player (Created AFTER Items so it renders ON TOP)
+        this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
+        this.player.setDepth(100); // Explicitly set depth to ensure it's above everything
+
 
         // Spawn test items
         this.spawnItem(new AssaultRifle(), 300, 300);
