@@ -26,6 +26,9 @@ export class HUD extends Phaser.Scene {
             .setVisible(false)
             .setInteractive(); // Block clicks below
 
+        // Set drag threshold to prevent drops on simple clicks
+        this.input.dragDistanceThreshold = 10;
+
         // Quick Bar (Bottom Center)
         this.quickBar = new QuickBar(this, width * 0.5, height - 50);
         this.quickBar.setDepth(95);

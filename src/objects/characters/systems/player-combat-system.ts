@@ -25,6 +25,7 @@ export class PlayerCombatSystem {
     private isReloading: boolean = false;
     private reloadTimer: Phaser.Time.TimerEvent | null = null;
     private reloadIndicator: Phaser.GameObjects.Graphics | null = null;
+    private fireDelayIndicator: Phaser.GameObjects.Graphics | null = null;
 
     // Melee State
     private isMeleeAttacking: boolean = false;
@@ -110,13 +111,14 @@ export class PlayerCombatSystem {
         if (this.weaponSprite && this.weaponSprite.visible) {
             if (this.currentDirection === 'north') {
                 // North: All Back
-                this.player.sendToBack(this.weaponSprite);
+                // Send Weapon first (bottom), then Hand (on top of Weapon)
                 this.player.sendToBack(this.holdingHand);
+                this.player.sendToBack(this.weaponSprite);
             } else {
                 // South/East/West: Weapon in Front
-                // (Assuming in side view, weapon is held in front arm)
-                this.player.bringToTop(this.holdingHand);
+                // Bring Weapon first, then Hand (on top of Weapon)
                 this.player.bringToTop(this.weaponSprite);
+                this.player.bringToTop(this.holdingHand);
             }
             
             if (this.reloadIndicator) {
@@ -210,9 +212,17 @@ export class PlayerCombatSystem {
             const forwardX = Math.cos(angle) * forwardOffset;
             const forwardY = Math.sin(angle) * forwardOffset;
 
+            // Directional Y Offset
+            let directionalY = 11; // Default for South
+            if (this.currentDirection === 'north') {
+                directionalY = 0;
+            } else if (this.currentDirection === 'east' || this.currentDirection === 'west') {
+                directionalY = 11 - 4; // 7
+            }
+
             // Apply recoil and forward offset
             this.weaponSprite.x = 0 + forwardX + this.recoilOffset.x;
-            this.weaponSprite.y = 11 + forwardY + this.recoilOffset.y;
+            this.weaponSprite.y = directionalY + forwardY + this.recoilOffset.y;
             
             // Rotate holding hand logic
             // Simple rotation for now as per previous implementation logic (revisiting complex orbit logic if needed)
@@ -284,10 +294,30 @@ export class PlayerCombatSystem {
             this.reloadIndicator.x = indX;
             this.reloadIndicator.y = indY;
         }
+
+        // Fire Delay Indicator Rotation
+        if (this.fireDelayIndicator) {
+            const weaponLen = 60; 
+            const muzzleDist = weaponLen * 0.5 + 15; 
+            
+            const weaponX = this.weaponSprite ? this.weaponSprite.x : 0;
+            const weaponY = this.weaponSprite ? this.weaponSprite.y : 11;
+            
+            const indX = weaponX + Math.cos(angle) * muzzleDist;
+            const indY = weaponY + Math.sin(angle) * muzzleDist;
+            
+            this.fireDelayIndicator.x = indX;
+            this.fireDelayIndicator.y = indY;
+        }
     }
 
     private handleShooting() {
         if (!this.isFiring || !this.equippedItem) return;
+
+        // Cancel reload if trying to shoot
+        if (this.isReloading) {
+            this.cancelReload();
+        }
 
         const weapon = this.equippedItem.item;
         
@@ -333,7 +363,46 @@ export class PlayerCombatSystem {
             }
 
             this.fireBullet(weapon);
+
+            // Show fire delay indicator for weapons with delay (e.g. Shotgun)
+            if (weapon instanceof Shotgun) {
+                this.showFireDelayIndicator(weapon.getFireRate());
+            }
         }
+    }
+
+    private showFireDelayIndicator(duration: number) {
+        if (this.fireDelayIndicator) this.fireDelayIndicator.destroy();
+        
+        this.fireDelayIndicator = this.scene.add.graphics();
+        this.player.add(this.fireDelayIndicator);
+        this.fireDelayIndicator.setDepth(200);
+        
+        const radius = 10;
+        
+        // Draw white semi-circle
+        this.fireDelayIndicator.clear();
+        this.fireDelayIndicator.lineStyle(2, 0xffffff);
+        this.fireDelayIndicator.beginPath();
+        // Semi-circle (top half relative to rotation? or right half?)
+        // Let's use right half (-90 to 90) as it faces forward if 0 is right.
+        // Phaser angles: 0 is right. -90 is up. 90 is down.
+        // If we want "semi-circle", maybe -90 to 90 is good.
+        this.fireDelayIndicator.arc(0, 0, radius, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(90), false);
+        this.fireDelayIndicator.strokePath();
+        
+        // Tween: Fade out
+        this.scene.tweens.add({
+            targets: this.fireDelayIndicator,
+            alpha: 0,
+            duration: duration,
+            onComplete: () => {
+                if (this.fireDelayIndicator) {
+                    this.fireDelayIndicator.destroy();
+                    this.fireDelayIndicator = null;
+                }
+            }
+        });
     }
 
     private fireBullet(weapon: BaseRangeWeapon) {
