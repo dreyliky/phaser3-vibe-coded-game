@@ -47,6 +47,10 @@ export class Player extends Phaser.GameObjects.Container {
         this.combatSystem.unequipWeapon();
     }
 
+    public getAmmoInfo() {
+        return this.combatSystem.getAmmoInfo();
+    }
+
     private handleVisualRotation() {
         // Calculate angle to mouse pointer
         const pointer = this.scene.input.activePointer;

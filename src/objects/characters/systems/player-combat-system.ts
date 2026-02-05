@@ -123,6 +123,29 @@ export class PlayerCombatSystem {
         return this.equippedItem;
     }
 
+    public getAmmoInfo(): { current: number, total: number, isWeapon: boolean, caliber: string } | null {
+        if (!this.equippedItem || !(this.equippedItem.item instanceof BaseRangeWeapon)) {
+            return null;
+        }
+
+        const weapon = this.equippedItem.item as BaseRangeWeapon;
+        const extraData = this.equippedItem.extraData || {};
+        const current = extraData.currentAmmo || 0;
+        
+        const caliber = weapon.getCaliber();
+        let total = 0;
+
+        // Count total ammo in inventory
+        for (let i = 0; i < 16; i++) {
+            const item = inventorySystem.getItemAt('main', i);
+            if (item && item.item.getId() === `ammo_${caliber}`) {
+                 total += item.quantity;
+            }
+        }
+
+        return { current, total, isWeapon: true, caliber };
+    }
+
     private handleRotation() {
         // Calculate angle to mouse pointer
         const pointer = this.scene.input.activePointer;
@@ -134,9 +157,14 @@ export class PlayerCombatSystem {
         if (this.weaponSprite && this.weaponSprite.visible) {
             this.weaponSprite.setRotation(angle);
             
-            // Apply recoil
-            this.weaponSprite.x = 0 + this.recoilOffset.x;
-            this.weaponSprite.y = 11 + this.recoilOffset.y;
+            // Move weapon forward by 6px in direction of view
+            const forwardOffset = 6;
+            const forwardX = Math.cos(angle) * forwardOffset;
+            const forwardY = Math.sin(angle) * forwardOffset;
+
+            // Apply recoil and forward offset
+            this.weaponSprite.x = 0 + forwardX + this.recoilOffset.x;
+            this.weaponSprite.y = 11 + forwardY + this.recoilOffset.y;
             
             // Rotate holding hand logic
             // Simple rotation for now as per previous implementation logic (revisiting complex orbit logic if needed)
@@ -327,7 +355,7 @@ export class PlayerCombatSystem {
 
         const weapon = this.equippedItem.item as BaseRangeWeapon;
         const extraData = this.equippedItem.extraData || {};
-        const currentAmmo = extraData.ammo || 0;
+        const currentAmmo = extraData.currentAmmo || 0;
         const magSize = weapon.getMagazineSize();
 
         if (currentAmmo >= magSize) return;
@@ -372,8 +400,8 @@ export class PlayerCombatSystem {
     }
 
     private finishMagazineReload(weapon: BaseRangeWeapon) {
-        const extraData = this.equippedItem!.extraData || { ammo: 0 };
-        const currentAmmo = extraData.ammo || 0;
+        const extraData = this.equippedItem!.extraData || { currentAmmo: 0 };
+        const currentAmmo = extraData.currentAmmo || 0;
         const magSize = weapon.getMagazineSize();
         let needed = magSize - currentAmmo;
 
@@ -400,7 +428,7 @@ export class PlayerCombatSystem {
             needed -= take;
         }
 
-        extraData.ammo = currentAmmo + consumed;
+        extraData.currentAmmo = currentAmmo + consumed;
         this.equippedItem!.extraData = extraData;
         
         this.cancelReload();
@@ -411,8 +439,8 @@ export class PlayerCombatSystem {
         const ammoItem = this.findAmmoInInventory(caliber);
         if (!ammoItem) return;
 
-        const extraData = this.equippedItem!.extraData || { ammo: 0 };
-        if (extraData.ammo >= weapon.getMagazineSize()) return;
+        const extraData = this.equippedItem!.extraData || { currentAmmo: 0 };
+        if (extraData.currentAmmo >= weapon.getMagazineSize()) return;
 
         this.isReloading = true;
         
@@ -442,11 +470,11 @@ export class PlayerCombatSystem {
                 }
             }
             
-            const extraData = this.equippedItem!.extraData || { ammo: 0 };
-            extraData.ammo = (extraData.ammo || 0) + 1;
+            const extraData = this.equippedItem!.extraData || { currentAmmo: 0 };
+            extraData.currentAmmo = (extraData.currentAmmo || 0) + 1;
             this.equippedItem!.extraData = extraData;
             
-            if (extraData.ammo >= weapon.getMagazineSize()) {
+            if (extraData.currentAmmo >= weapon.getMagazineSize()) {
                 this.cancelReload();
             } else {
                 if (this.reloadIndicator) {

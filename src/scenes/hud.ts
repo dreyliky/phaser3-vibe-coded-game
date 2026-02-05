@@ -7,6 +7,8 @@ export class HUD extends Phaser.Scene {
     private inventoryWindow!: InventoryWindow;
     private quickBar!: QuickBar;
     private pauseMenu!: PauseMenu;
+    private ammoText!: Phaser.GameObjects.Text;
+    private caliberText!: Phaser.GameObjects.Text;
 
     constructor() {
         super('HUD');
@@ -30,6 +32,26 @@ export class HUD extends Phaser.Scene {
             this.scene.start('MainMenu');
         });
         this.add.existing(this.pauseMenu);
+
+        // Ammo Display (Bottom Left)
+        this.ammoText = this.add.text(20, height - 40, '', {
+            fontSize: '24px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontFamily: 'Arial'
+        });
+        this.ammoText.setScrollFactor(0);
+
+        // Caliber Display (Below Ammo)
+        this.caliberText = this.add.text(20, height - 15, '', {
+            fontSize: '8px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 1,
+            fontFamily: 'Arial'
+        });
+        this.caliberText.setScrollFactor(0);
 
         // Input Handling
         if (this.input.keyboard) {
@@ -115,5 +137,26 @@ export class HUD extends Phaser.Scene {
                 this.input.keyboard.off('keydown-THREE');
             }
         });
+    }
+
+    update() {
+        const gameScene = this.scene.get('GameScene') as any;
+        if (!gameScene || !gameScene.player) {
+            this.ammoText.setText('');
+            return;
+        }
+
+        const ammoInfo = gameScene.player.getAmmoInfo();
+        if (ammoInfo && ammoInfo.isWeapon) {
+            const text = ammoInfo.total > 0 ? `${ammoInfo.current}/${ammoInfo.total}` : `${ammoInfo.current}`;
+            this.ammoText.setText(text);
+            this.ammoText.setVisible(true);
+
+            this.caliberText.setText(ammoInfo.caliber);
+            this.caliberText.setVisible(true);
+        } else {
+            this.ammoText.setVisible(false);
+            this.caliberText.setVisible(false);
+        }
     }
 }
