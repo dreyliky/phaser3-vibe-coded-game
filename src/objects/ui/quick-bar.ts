@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { InventorySlot } from './inventory-slot';
-import { inventorySystem } from '../../systems/inventory-system';
+import { inventorySystem, InventoryItem } from '../../systems/inventory-system';
 
 export class QuickBar extends Phaser.GameObjects.Container {
     private slots: InventorySlot[] = [];
@@ -92,7 +92,7 @@ export class QuickBar extends Phaser.GameObjects.Container {
         }
 
         // Listen for inventory updates
-        inventorySystem.on('update', (data: { type: string, index: number, item: any }) => {
+        inventorySystem.on('update', (data: { type: string, index: number, item: InventoryItem | null }) => {
             if (data.type === 'quick') {
                 this.slots[data.index].setItem(data.item);
                 

@@ -23,11 +23,21 @@ export class PlayerMovementSystem {
                 down: Phaser.Input.Keyboard.KeyCodes.S,
                 left: Phaser.Input.Keyboard.KeyCodes.A,
                 right: Phaser.Input.Keyboard.KeyCodes.D
-            }) as any;
+            }) as {
+                up: Phaser.Input.Keyboard.Key;
+                down: Phaser.Input.Keyboard.Key;
+                left: Phaser.Input.Keyboard.Key;
+                right: Phaser.Input.Keyboard.Key;
+            };
         } else {
             // Fallback or error handling if keyboard is not available
-            this.cursors = {} as any;
-            this.wasd = {} as any;
+            this.cursors = {} as Phaser.Types.Input.Keyboard.CursorKeys;
+            this.wasd = {} as {
+                up: Phaser.Input.Keyboard.Key;
+                down: Phaser.Input.Keyboard.Key;
+                left: Phaser.Input.Keyboard.Key;
+                right: Phaser.Input.Keyboard.Key;
+            };
         }
     }
 

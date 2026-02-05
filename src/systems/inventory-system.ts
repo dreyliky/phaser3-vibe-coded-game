@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BaseItem } from '../objects/items/base-item';
+import { ItemExtraData } from '../types/item-extra-data';
 import { BaseRangeWeapon } from '../objects/items/weapons/base-range-weapon';
 import { BaseMeleeWeapon } from '../objects/items/weapons/base-melee-weapon';
 import { Hands } from '../objects/items/weapons/hands';
@@ -7,7 +8,7 @@ import { Hands } from '../objects/items/weapons/hands';
 export interface InventoryItem {
     item: BaseItem;
     quantity: number;
-    extraData?: any; // For weapon state like currentAmmo
+    extraData?: ItemExtraData; // For weapon state like currentAmmo
 }
 
 export class InventorySystem extends Phaser.Events.EventEmitter {
@@ -25,7 +26,7 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
         this.quickSlots[0] = this.createInventoryItem(new Hands(), 1);
     }
 
-    public addItem(item: BaseItem, quantity: number = 1, extraData?: any): boolean {
+    public addItem(item: BaseItem, quantity: number = 1, extraData?: ItemExtraData): boolean {
         // Weapon Logic: Try Quick Slots first
         if (item instanceof BaseRangeWeapon || (item instanceof BaseMeleeWeapon && !(item instanceof Hands))) {
             // Find empty quick slot (SKIP SLOT 0 - HANDS)
@@ -107,7 +108,7 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
         return remaining <= 0;
     }
 
-    private createInventoryItem(item: BaseItem, quantity: number, extraData?: any): InventoryItem {
+    private createInventoryItem(item: BaseItem, quantity: number, extraData?: ItemExtraData): InventoryItem {
         const invItem: InventoryItem = { item, quantity };
         
         if (extraData) {

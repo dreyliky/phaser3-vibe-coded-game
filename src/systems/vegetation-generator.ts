@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
-import { Bush } from '../objects/plants/Bush';
-import { Tree } from '../objects/plants/Tree';
+import { Bush, Tree } from '../objects/plants';
 
 export class VegetationGenerator {
     private scene: Phaser.Scene;

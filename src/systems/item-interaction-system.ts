@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { Player } from '../objects';
-import { WorldItem } from '../objects/items';
+import { BaseItem, WorldItem } from '../objects/items';
 import { inventorySystem } from './inventory-system';
+import { ItemExtraData } from '../types/item-extra-data';
 
 export class ItemInteractionSystem {
     private scene: Phaser.Scene;
@@ -18,12 +19,12 @@ export class ItemInteractionSystem {
         this.updateItemHighlight();
     }
 
-    public spawnItem(item: any, x: number, y: number, quantity: number = 1, extraData?: any) {
+    public spawnItem(item: BaseItem, x: number, y: number, quantity: number = 1, extraData?: ItemExtraData) {
         const worldItem = new WorldItem(this.scene, x, y, item, quantity, extraData);
         this.worldItems.add(worldItem);
     }
 
-    public spawnPlayerDrop(item: any, quantity: number, extraData?: any) {
+    public spawnPlayerDrop(item: BaseItem, quantity: number, extraData?: ItemExtraData) {
         // Get drop direction (mouse pointer)
         const pointer = this.scene.input.activePointer;
         const worldPoint = pointer.positionToCamera(this.scene.cameras.main) as Phaser.Math.Vector2;

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ItemExtraData } from '../../types/item-extra-data';
 
 export interface ItemDefinition {
     id: string;
@@ -39,11 +40,11 @@ export abstract class BaseItem {
 export class WorldItem extends Phaser.GameObjects.Container {
     private item: BaseItem;
     private quantity: number;
-    private extraData: any;
+    private extraData: ItemExtraData | undefined;
     private sprite: Phaser.GameObjects.Sprite;
     private highlight: Phaser.GameObjects.Graphics;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, item: BaseItem, quantity: number = 1, extraData?: any) {
+    constructor(scene: Phaser.Scene, x: number, y: number, item: BaseItem, quantity: number = 1, extraData?: ItemExtraData) {
         super(scene, x, y);
         this.item = item;
         this.quantity = quantity;
@@ -167,7 +168,7 @@ export class WorldItem extends Phaser.GameObjects.Container {
         return this.quantity;
     }
 
-    public getExtraData(): any {
+    public getExtraData(): ItemExtraData | undefined {
         return this.extraData;
     }
 

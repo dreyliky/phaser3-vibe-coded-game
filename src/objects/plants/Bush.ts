@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BasePlant } from './BasePlant';
+import { BasePlant } from './base-plant';
 
 export class Bush extends BasePlant {
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {

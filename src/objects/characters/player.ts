@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { CharacterDefinition } from '../../types/character';
 import { CharacterVisual } from './character-visual';
-import { InventoryItem } from '../../systems/inventory-system';
+import { InventoryItem } from '../../systems';
 import { PlayerCombatSystem } from './systems/player-combat-system';
 import { PlayerMovementSystem } from './systems/player-movement-system';
 

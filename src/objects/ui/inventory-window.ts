@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { InventorySlot } from './inventory-slot';
-import { inventorySystem } from '../../systems/inventory-system';
+import { inventorySystem, InventoryItem } from '../../systems/inventory-system';
 
 export class InventoryWindow extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Rectangle;
@@ -67,7 +67,7 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
         this.setVisible(false);
 
         // Listen for inventory updates
-        inventorySystem.on('update', (data: { type: string, index: number, item: any }) => {
+        inventorySystem.on('update', (data: { type: string, index: number, item: InventoryItem | null }) => {
             if (data.type === 'main') {
                 this.slots[data.index].setItem(data.item);
             }

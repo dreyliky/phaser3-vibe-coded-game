@@ -3,15 +3,14 @@ import { Player } from '../objects';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { AssaultRifle, Pistol, Shotgun, LightAmmo, StandardAmmo, HeavyAmmo, BuckshotAmmo } from '../objects/items';
-import { inventorySystem } from '../systems/inventory-system';
-import { ItemInteractionSystem } from '../systems/item-interaction-system';
-import { MapGenerator } from '../systems/map-generator';
+import { inventorySystem, InventoryItem, ItemInteractionSystem, MapGenerator } from '../systems';
 import { DEBUG_SETTINGS } from '../config/constants';
+import { HUD } from './hud';
 
 export class Game extends Phaser.Scene {
-    private player!: Player;
+    public player!: Player;
     private characterDefinition!: CharacterDefinition;
-    private itemInteractionSystem!: ItemInteractionSystem;
+    public itemInteractionSystem!: ItemInteractionSystem;
     private background!: Phaser.GameObjects.TileSprite;
     private mapGenerator!: MapGenerator;
 
@@ -96,7 +95,7 @@ export class Game extends Phaser.Scene {
 
             // Drop Weapon (G)
             this.input.keyboard.on('keydown-G', () => {
-                const hudScene = this.scene.get('HUD') as any;
+                const hudScene = this.scene.get('HUD') as HUD;
                 if (hudScene && hudScene.quickBar) {
                     const selectedIndex = hudScene.quickBar.getSelectedIndex();
                     if (selectedIndex !== -1) {
@@ -110,9 +109,9 @@ export class Game extends Phaser.Scene {
         }
 
         // Listen for HUD events (weapon equip/unequip)
-        const hudScene = this.scene.get('HUD') as any;
+        const hudScene = this.scene.get('HUD') as HUD;
         if (hudScene) {
-            hudScene.events.on('weapon-equipped', (item: any) => {
+            hudScene.events.on('weapon-equipped', (item: InventoryItem) => {
                 this.player.equipWeapon(item);
             });
             hudScene.events.on('weapon-unequipped', () => {

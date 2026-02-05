@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import { InventoryWindow, QuickBar, PauseMenu, Tooltip } from '../objects/ui';
-import { inventorySystem } from '../systems/inventory-system';
-import { InventorySlot } from '../objects/ui/inventory-slot';
+import { InventoryWindow, QuickBar, PauseMenu, Tooltip, InventorySlot } from '../objects/ui';
+import { inventorySystem } from '../systems';
 import { DEBUG_SETTINGS } from '../config/constants';
+import { Game as GameScene } from './game';
 
 export class HUD extends Phaser.Scene {
-    private inventoryWindow!: InventoryWindow;
-    private quickBar!: QuickBar;
+    public inventoryWindow!: InventoryWindow;
+    public quickBar!: QuickBar;
     private pauseMenu!: PauseMenu;
     private ammoText!: Phaser.GameObjects.Text;
     private caliberText!: Phaser.GameObjects.Text;
@@ -83,7 +83,7 @@ export class HUD extends Phaser.Scene {
         });
 
         // Listen for tooltip events from GameScene elements (WorldItems)
-        const gameScene = this.scene.get('GameScene');
+        const gameScene = this.scene.get('GameScene') as GameScene;
         if (gameScene) {
             gameScene.events.on('tooltip-show', (content: string, x: number, y: number) => {
                 this.tooltip.show(content, x, y);
@@ -93,6 +93,11 @@ export class HUD extends Phaser.Scene {
                 this.tooltip.hide();
             });
         }
+
+        // Listen for slot shift-click events
+        this.events.on('slot-shift-click', (type: 'main' | 'quick', index: number) => {
+            this.handleShiftClick(type, index);
+        });
 
         // Ammo Display (Bottom Left)
         this.ammoText = this.add.text(20, height - 40, '', {
@@ -160,7 +165,7 @@ export class HUD extends Phaser.Scene {
             gameObject.y = pointer.y;
         });
 
-        this.input.on('drop', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropZone: any) => {
+        this.input.on('drop', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropZone: Phaser.GameObjects.Zone & { slotType?: string, slotIndex?: number }) => {
             // Check if dropped on InventoryWindow background (which is a drop zone now)
             // If so, just return (cancel drop), so it snaps back in dragend
             if (!dropZone.slotType) {
@@ -168,10 +173,12 @@ export class HUD extends Phaser.Scene {
                 return;
             }
 
-            const fromType = gameObject.getData('slotType');
-            const fromIndex = gameObject.getData('slotIndex');
-            const toType = dropZone.slotType;
+            const fromType = gameObject.getData('slotType') as 'main' | 'quick';
+            const fromIndex = gameObject.getData('slotIndex') as number;
+            const toType = dropZone.slotType as 'main' | 'quick';
             const toIndex = dropZone.slotIndex;
+            
+            if (!toType || toIndex === undefined) return;
 
             // Check if target slot is disabled (if in main inventory)
             if (toType === 'main') {
@@ -199,13 +206,13 @@ export class HUD extends Phaser.Scene {
             if (gameObject.active) {
                 if (!dropped) {
                     // Drop to world
-                    const fromType = gameObject.getData('slotType');
-                    const fromIndex = gameObject.getData('slotIndex');
+                    const fromType = gameObject.getData('slotType') as 'main' | 'quick';
+                    const fromIndex = gameObject.getData('slotIndex') as number;
                     
                     const item = inventorySystem.dropItem(fromType, fromIndex);
                     if (item) {
                         // Notify Game scene to spawn item
-                        const gameScene = this.scene.get('GameScene') as any;
+                        const gameScene = this.scene.get('GameScene') as GameScene;
                         if (gameScene && gameScene.itemInteractionSystem) {
                             gameScene.itemInteractionSystem.spawnPlayerDrop(item.item, item.quantity, item.extraData);
                         }
@@ -242,6 +249,7 @@ export class HUD extends Phaser.Scene {
             // Clean up tooltip listeners
             this.events.off('tooltip-show');
             this.events.off('tooltip-hide');
+            this.events.off('slot-shift-click');
             
             const gameScene = this.scene.get('GameScene');
             if (gameScene) {
@@ -258,7 +266,7 @@ export class HUD extends Phaser.Scene {
             this.fpsText.setText(`FPS: ${fps}`);
         }
 
-        const gameScene = this.scene.get('GameScene') as any;
+        const gameScene = this.scene.get('GameScene') as GameScene;
         if (!gameScene || !gameScene.player) {
             this.ammoText.setText('');
             this.caliberText.setText('');

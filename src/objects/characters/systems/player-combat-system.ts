@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { InventoryItem, inventorySystem } from '../../../systems/inventory-system';
+import { InventoryItem, inventorySystem } from '../../../systems';
 import { BaseRangeWeapon, BaseMeleeWeapon, Hands, Shotgun, AssaultRifle } from '../../items';
+import { Damageable } from '../../../types/damageable';
 
 export class PlayerCombatSystem {
     private scene: Phaser.Scene;
@@ -448,13 +449,15 @@ export class PlayerCombatSystem {
             const now = this.scene.time.now;
             if (now - this.lastFiredTime < weapon.getFireRate()) return;
 
-            if (this.equippedItem.extraData.currentAmmo <= 0) {
+            if (!this.equippedItem.extraData || (this.equippedItem.extraData.currentAmmo ?? 0) <= 0) {
                 this.isFiring = false;
                 return;
             }
 
             this.lastFiredTime = now;
-            this.equippedItem.extraData.currentAmmo--;
+            if (this.equippedItem.extraData) {
+                this.equippedItem.extraData.currentAmmo = (this.equippedItem.extraData.currentAmmo || 0) - 1;
+            }
 
             const isAuto = weapon instanceof AssaultRifle;
             if (!isAuto) {
@@ -659,8 +662,11 @@ export class PlayerCombatSystem {
             const gameObject = body.gameObject;
             if (!gameObject) continue;
             
-            if ('takeDamage' in gameObject && typeof (gameObject as any).takeDamage === 'function') {
-                (gameObject as any).takeDamage(damage);
+            if ('takeDamage' in gameObject) {
+                const damageable = gameObject as unknown as Damageable;
+                if (typeof damageable.takeDamage === 'function') {
+                    damageable.takeDamage(damage);
+                }
             }
         }
     }
@@ -759,7 +765,7 @@ export class PlayerCombatSystem {
         if (!ammoItem) return;
 
         const extraData = this.equippedItem!.extraData || { currentAmmo: 0 };
-        if (extraData.currentAmmo >= weapon.getMagazineSize()) return;
+        if ((extraData.currentAmmo || 0) >= weapon.getMagazineSize()) return;
 
         this.isReloading = true;
         
@@ -793,7 +799,7 @@ export class PlayerCombatSystem {
             extraData.currentAmmo = (extraData.currentAmmo || 0) + 1;
             this.equippedItem!.extraData = extraData;
             
-            if (extraData.currentAmmo >= weapon.getMagazineSize()) {
+            if ((extraData.currentAmmo || 0) >= weapon.getMagazineSize()) {
                 this.cancelReload();
             } else {
                 if (this.reloadIndicator) {

@@ -73,10 +73,7 @@ export class InventorySlot extends Phaser.GameObjects.Container {
                 this.itemIcon.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
                     const event = pointer.event as MouseEvent;
                     if (event.shiftKey) {
-                         const hud = this.scene as any;
-                         if (hud.handleShiftClick) {
-                             hud.handleShiftClick(this.slotType, this.slotIndex);
-                         }
+                        this.scene.events.emit('slot-shift-click', this.slotType, this.slotIndex);
                     }
                 });
             }
