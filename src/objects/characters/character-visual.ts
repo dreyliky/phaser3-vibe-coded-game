@@ -38,6 +38,10 @@ export class CharacterVisual extends Phaser.GameObjects.Container {
     private updateVisuals() {
         const dirSuffix = this.direction === 'west' ? 'east' : this.direction;
         const isFlipX = this.direction === 'west';
+        
+        // Opacity check for North
+        const alpha = this.direction === 'north' ? 0.8 : 1;
+        this.setAlpha(alpha);
 
         // Texture Keys
         const bodyKey = `body_${this.definition.bodyType}_${dirSuffix}`;

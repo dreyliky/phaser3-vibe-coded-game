@@ -78,5 +78,6 @@ export class Player extends Phaser.GameObjects.Container {
         }
 
         this.visual.setDirection(direction);
+        this.combatSystem.setDirection(direction);
     }
 }

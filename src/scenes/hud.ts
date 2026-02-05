@@ -326,6 +326,7 @@ export class HUD extends Phaser.Scene {
     }
 
     private toggleInventory() {
+        if (this.pauseMenu.visible) return;
         this.inventoryWindow.toggle();
         this.updateBackdrop();
     }

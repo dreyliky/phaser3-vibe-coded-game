@@ -11,9 +11,9 @@ export class PlayerCombatSystem {
     private holdingHand: Phaser.GameObjects.Sprite;
     
     // Melee Sprites
-    private handsContainer: Phaser.GameObjects.Container;
     private leftHand: Phaser.GameObjects.Sprite;
     private rightHand: Phaser.GameObjects.Sprite;
+    private handOffsets = { left: 0, right: 0 };
 
     // State
     private equippedItem: InventoryItem | null = null;
@@ -29,6 +29,7 @@ export class PlayerCombatSystem {
     // Melee State
     private isMeleeAttacking: boolean = false;
     private nextHandToAttack: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
+    private currentDirection: 'north' | 'south' | 'east' | 'west' = 'south';
 
     constructor(scene: Phaser.Scene, player: Phaser.GameObjects.Container, skinColorInt: number) {
         this.scene = scene;
@@ -46,17 +47,15 @@ export class PlayerCombatSystem {
         this.player.add(this.holdingHand);
 
         // Hands Visuals (Melee)
-        this.handsContainer = scene.add.container(0, 0);
-        this.handsContainer.setVisible(false);
-        this.player.add(this.handsContainer);
-
         this.leftHand = scene.add.sprite(10, -12, 'weapon_hands');
         this.leftHand.setTint(skinColorInt);
+        this.leftHand.setVisible(false);
         
         this.rightHand = scene.add.sprite(10, 12, 'weapon_hands');
         this.rightHand.setTint(skinColorInt);
+        this.rightHand.setVisible(false);
 
-        this.handsContainer.add([this.leftHand, this.rightHand]);
+        this.player.add([this.leftHand, this.rightHand]);
 
         // Input Listeners
         scene.input.on('pointerdown', () => {
@@ -80,6 +79,52 @@ export class PlayerCombatSystem {
         this.handleShooting();
     }
 
+    public setDirection(direction: 'north' | 'south' | 'east' | 'west') {
+        this.currentDirection = direction;
+        this.updateZIndex();
+    }
+
+    private updateZIndex() {
+        // 1. Melee Hands
+        if (this.leftHand.visible && this.rightHand.visible) {
+            if (this.currentDirection === 'north') {
+                // North: All Back
+                this.player.sendToBack(this.leftHand);
+                this.player.sendToBack(this.rightHand);
+            } else if (this.currentDirection === 'south') {
+                // South: All Front
+                this.player.bringToTop(this.leftHand);
+                this.player.bringToTop(this.rightHand);
+            } else if (this.currentDirection === 'east') {
+                // East: Left Back, Right Front
+                this.player.sendToBack(this.leftHand);
+                this.player.bringToTop(this.rightHand);
+            } else { // west
+                // West: Right Back, Left Front
+                this.player.sendToBack(this.rightHand);
+                this.player.bringToTop(this.leftHand);
+            }
+        }
+        
+        // 2. Ranged Weapon (Weapon Sprite + Holding Hand)
+        if (this.weaponSprite && this.weaponSprite.visible) {
+            if (this.currentDirection === 'north') {
+                // North: All Back
+                this.player.sendToBack(this.weaponSprite);
+                this.player.sendToBack(this.holdingHand);
+            } else {
+                // South/East/West: Weapon in Front
+                // (Assuming in side view, weapon is held in front arm)
+                this.player.bringToTop(this.holdingHand);
+                this.player.bringToTop(this.weaponSprite);
+            }
+            
+            if (this.reloadIndicator) {
+                 this.player.bringToTop(this.reloadIndicator);
+            }
+        }
+    }
+
     public equipWeapon(item: InventoryItem) {
         this.cancelReload();
         this.equippedItem = item;
@@ -88,10 +133,12 @@ export class PlayerCombatSystem {
             // Equip Melee Weapon (Hands)
             this.weaponSprite.setVisible(false);
             this.holdingHand.setVisible(false);
-            this.handsContainer.setVisible(true);
+            this.leftHand.setVisible(true);
+            this.rightHand.setVisible(true);
         } else if (this.weaponSprite) {
             // Equip Range Weapon
-            this.handsContainer.setVisible(false);
+            this.leftHand.setVisible(false);
+            this.rightHand.setVisible(false);
             
             this.weaponSprite.setTexture(item.item.getTexture());
             this.weaponSprite.setVisible(true);
@@ -116,7 +163,8 @@ export class PlayerCombatSystem {
         this.equippedItem = null;
         this.weaponSprite.setVisible(false);
         this.holdingHand.setVisible(false);
-        this.handsContainer.setVisible(false);
+        this.leftHand.setVisible(false);
+        this.rightHand.setVisible(false);
     }
 
     public getEquippedItem(): InventoryItem | null {
@@ -201,8 +249,25 @@ export class PlayerCombatSystem {
         }
         
         // Hands Rotation
-        if (this.handsContainer && this.handsContainer.visible) {
-            this.handsContainer.setRotation(angle);
+        if (this.leftHand.visible && this.rightHand.visible) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+
+            // Left Hand (10, -12)
+            const leftDist = 16 + this.handOffsets.left;
+            this.leftHand.setPosition(
+                leftDist * cos - (-12) * sin,
+                leftDist * sin + (-12) * cos
+            );
+            this.leftHand.setRotation(angle);
+
+            // Right Hand (10, 12)
+            const rightDist = 16 + this.handOffsets.right;
+            this.rightHand.setPosition(
+                rightDist * cos - 12 * sin,
+                rightDist * sin + 12 * cos
+            );
+            this.rightHand.setRotation(angle);
         }
 
         // Reload Indicator Rotation
@@ -231,18 +296,18 @@ export class PlayerCombatSystem {
             if (this.isMeleeAttacking) return;
 
             this.isMeleeAttacking = true;
-            const hand = this.nextHandToAttack === 'left' ? this.leftHand : this.rightHand;
-            const originalX = hand.x;
-
+            const isLeft = this.nextHandToAttack === 'left';
+            
             this.scene.tweens.add({
-                targets: hand,
-                x: originalX + 20, // Punch forward
+                targets: this.handOffsets,
+                [isLeft ? 'left' : 'right']: 20, // Punch forward offset
                 duration: 100,
                 yoyo: true,
                 onComplete: () => {
                     this.isMeleeAttacking = false;
-                    this.nextHandToAttack = this.nextHandToAttack === 'left' ? 'right' : 'left';
-                    hand.x = originalX;
+                    this.nextHandToAttack = isLeft ? 'right' : 'left';
+                    // Reset logic is handled by yoyo, but just in case of float errors
+                    this.handOffsets[isLeft ? 'left' : 'right'] = 0;
                 }
             });
             

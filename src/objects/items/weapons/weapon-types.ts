@@ -21,7 +21,7 @@ export class Pistol extends BaseRangeWeapon {
     constructor() {
         super({
             id: 'weapon_pistol',
-            name: 'Autopistol',
+            name: 'Pistol',
             description: 'Semi-automatic pistol.',
             texture: 'weapon_pistol',
             maxStack: 1,
