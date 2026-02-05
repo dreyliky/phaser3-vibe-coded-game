@@ -10,6 +10,12 @@ export class PlayerCombatSystem {
     private weaponSprite: Phaser.GameObjects.Sprite;
     private holdingHand: Phaser.GameObjects.Sprite;
     
+    // Outlines
+    private weaponOutline: Phaser.GameObjects.Sprite;
+    private holdingHandOutline: Phaser.GameObjects.Sprite;
+    private leftHandOutline: Phaser.GameObjects.Sprite;
+    private rightHandOutline: Phaser.GameObjects.Sprite;
+    
     // Melee Sprites
     private leftHand: Phaser.GameObjects.Sprite;
     private rightHand: Phaser.GameObjects.Sprite;
@@ -25,7 +31,9 @@ export class PlayerCombatSystem {
     private isReloading: boolean = false;
     private reloadTimer: Phaser.Time.TimerEvent | null = null;
     private reloadIndicator: Phaser.GameObjects.Graphics | null = null;
-    private fireDelayIndicator: Phaser.GameObjects.Graphics | null = null;
+    
+    // Muzzle Flash
+    private muzzleFlash: Phaser.GameObjects.Graphics | null = null;
 
     // Melee State
     private isMeleeAttacking: boolean = false;
@@ -41,22 +49,53 @@ export class PlayerCombatSystem {
         this.weaponSprite.setVisible(false);
         this.player.add(this.weaponSprite);
         
+        // Weapon Outline
+        this.weaponOutline = scene.add.sprite(0, 0, '');
+        this.weaponOutline.setVisible(false);
+        this.weaponOutline.setAlpha(0.4);
+        this.weaponOutline.setTint(0xffffff);
+        this.player.add(this.weaponOutline);
+        
         // Holding Hand (for range weapons)
         this.holdingHand = scene.add.sprite(0, 0, 'weapon_hands');
         this.holdingHand.setTint(skinColorInt);
         this.holdingHand.setVisible(false);
+        this.holdingHand.setScale(0.8);
         this.player.add(this.holdingHand);
+
+        // Holding Hand Outline
+        this.holdingHandOutline = scene.add.sprite(0, 0, 'weapon_hands');
+        this.holdingHandOutline.setVisible(false);
+        this.holdingHandOutline.setAlpha(0.4);
+        this.holdingHandOutline.setTint(skinColorInt);
+        this.holdingHandOutline.setScale(0.8);
+        this.player.add(this.holdingHandOutline);
 
         // Hands Visuals (Melee)
         this.leftHand = scene.add.sprite(10, -12, 'weapon_hands');
         this.leftHand.setTint(skinColorInt);
         this.leftHand.setVisible(false);
+        this.leftHand.setScale(0.8);
         
         this.rightHand = scene.add.sprite(10, 12, 'weapon_hands');
         this.rightHand.setTint(skinColorInt);
         this.rightHand.setVisible(false);
+        this.rightHand.setScale(0.8);
 
-        this.player.add([this.leftHand, this.rightHand]);
+        // Melee Outlines
+        this.leftHandOutline = scene.add.sprite(10, -12, 'weapon_hands');
+        this.leftHandOutline.setTint(skinColorInt);
+        this.leftHandOutline.setVisible(false);
+        this.leftHandOutline.setAlpha(0.4);
+        this.leftHandOutline.setScale(0.8);
+
+        this.rightHandOutline = scene.add.sprite(10, 12, 'weapon_hands');
+        this.rightHandOutline.setTint(skinColorInt);
+        this.rightHandOutline.setVisible(false);
+        this.rightHandOutline.setAlpha(0.4);
+        this.rightHandOutline.setScale(0.8);
+
+        this.player.add([this.leftHand, this.rightHand, this.leftHandOutline, this.rightHandOutline]);
 
         // Input Listeners
         scene.input.on('pointerdown', () => {
@@ -92,18 +131,36 @@ export class PlayerCombatSystem {
                 // North: All Back
                 this.player.sendToBack(this.leftHand);
                 this.player.sendToBack(this.rightHand);
+                
+                // Show Outlines on Top
+                this.leftHandOutline.setVisible(true);
+                this.rightHandOutline.setVisible(true);
+                this.player.bringToTop(this.leftHandOutline);
+                this.player.bringToTop(this.rightHandOutline);
             } else if (this.currentDirection === 'south') {
                 // South: All Front
                 this.player.bringToTop(this.leftHand);
                 this.player.bringToTop(this.rightHand);
+                
+                // Hide Outlines
+                this.leftHandOutline.setVisible(false);
+                this.rightHandOutline.setVisible(false);
             } else if (this.currentDirection === 'east') {
                 // East: Left Back, Right Front
                 this.player.sendToBack(this.leftHand);
                 this.player.bringToTop(this.rightHand);
+                
+                // Hide Outlines
+                this.leftHandOutline.setVisible(false);
+                this.rightHandOutline.setVisible(false);
             } else { // west
                 // West: Right Back, Left Front
                 this.player.sendToBack(this.rightHand);
                 this.player.bringToTop(this.leftHand);
+                
+                // Hide Outlines
+                this.leftHandOutline.setVisible(false);
+                this.rightHandOutline.setVisible(false);
             }
         }
         
@@ -114,11 +171,21 @@ export class PlayerCombatSystem {
                 // Send Weapon first (bottom), then Hand (on top of Weapon)
                 this.player.sendToBack(this.holdingHand);
                 this.player.sendToBack(this.weaponSprite);
+
+                // Show Outlines on Top
+                this.weaponOutline.setVisible(true);
+                this.holdingHandOutline.setVisible(true);
+                this.player.bringToTop(this.weaponOutline);
+                this.player.bringToTop(this.holdingHandOutline);
             } else {
                 // South/East/West: Weapon in Front
                 // Bring Weapon first, then Hand (on top of Weapon)
                 this.player.bringToTop(this.weaponSprite);
                 this.player.bringToTop(this.holdingHand);
+                
+                // Hide Outlines
+                this.weaponOutline.setVisible(false);
+                this.holdingHandOutline.setVisible(false);
             }
             
             if (this.reloadIndicator) {
@@ -135,19 +202,34 @@ export class PlayerCombatSystem {
             // Equip Melee Weapon (Hands)
             this.weaponSprite.setVisible(false);
             this.holdingHand.setVisible(false);
+            
+            this.weaponOutline.setVisible(false);
+            this.holdingHandOutline.setVisible(false);
+            
             this.leftHand.setVisible(true);
             this.rightHand.setVisible(true);
+
+            // Hide melee outlines initially (managed by updateZIndex)
+            this.leftHandOutline.setVisible(false);
+            this.rightHandOutline.setVisible(false);
         } else if (this.weaponSprite) {
             // Equip Range Weapon
             this.leftHand.setVisible(false);
             this.rightHand.setVisible(false);
+            this.leftHandOutline.setVisible(false);
+            this.rightHandOutline.setVisible(false);
             
             this.weaponSprite.setTexture(item.item.getTexture());
             this.weaponSprite.setVisible(true);
             
+            this.weaponOutline.setTexture(item.item.getTexture());
+            
             // Set width to 60 and maintain aspect ratio
             this.weaponSprite.displayWidth = 60;
             this.weaponSprite.scaleY = this.weaponSprite.scaleX;
+
+            this.weaponOutline.displayWidth = 60;
+            this.weaponOutline.scaleY = this.weaponOutline.scaleX;
             
             // Adjust position: Center of body
             this.weaponSprite.x = 0;
@@ -165,8 +247,12 @@ export class PlayerCombatSystem {
         this.equippedItem = null;
         this.weaponSprite.setVisible(false);
         this.holdingHand.setVisible(false);
+        this.weaponOutline.setVisible(false);
+        this.holdingHandOutline.setVisible(false);
         this.leftHand.setVisible(false);
         this.rightHand.setVisible(false);
+        this.leftHandOutline.setVisible(false);
+        this.rightHandOutline.setVisible(false);
     }
 
     public getEquippedItem(): InventoryItem | null {
@@ -256,6 +342,19 @@ export class PlayerCombatSystem {
             }
             
             this.holdingHand.setRotation(angle);
+
+            // Sync Outlines
+            if (this.weaponOutline.visible) {
+                this.weaponOutline.setPosition(this.weaponSprite.x, this.weaponSprite.y);
+                this.weaponOutline.setRotation(this.weaponSprite.rotation);
+                this.weaponOutline.setFlipY(this.weaponSprite.flipY);
+            }
+            
+            if (this.holdingHandOutline.visible) {
+                this.holdingHandOutline.setPosition(this.holdingHand.x, this.holdingHand.y);
+                this.holdingHandOutline.setRotation(this.holdingHand.rotation);
+                this.holdingHandOutline.setFlipY(this.holdingHand.flipY);
+            }
         }
         
         // Hands Rotation
@@ -278,6 +377,18 @@ export class PlayerCombatSystem {
                 rightDist * sin + 12 * cos
             );
             this.rightHand.setRotation(angle);
+
+            // Sync Outlines
+            if (this.leftHandOutline.visible) {
+                this.leftHandOutline.setPosition(this.leftHand.x, this.leftHand.y);
+                this.leftHandOutline.setRotation(this.leftHand.rotation);
+                this.leftHandOutline.setFlipY(this.leftHand.flipY);
+            }
+            if (this.rightHandOutline.visible) {
+                this.rightHandOutline.setPosition(this.rightHand.x, this.rightHand.y);
+                this.rightHandOutline.setRotation(this.rightHand.rotation);
+                this.rightHandOutline.setFlipY(this.rightHand.flipY);
+            }
         }
 
         // Reload Indicator Rotation
@@ -296,19 +407,7 @@ export class PlayerCombatSystem {
         }
 
         // Fire Delay Indicator Rotation
-        if (this.fireDelayIndicator) {
-            const weaponLen = 60; 
-            const muzzleDist = weaponLen * 0.5 + 15; 
-            
-            const weaponX = this.weaponSprite ? this.weaponSprite.x : 0;
-            const weaponY = this.weaponSprite ? this.weaponSprite.y : 11;
-            
-            const indX = weaponX + Math.cos(angle) * muzzleDist;
-            const indY = weaponY + Math.sin(angle) * muzzleDist;
-            
-            this.fireDelayIndicator.x = indX;
-            this.fireDelayIndicator.y = indY;
-        }
+        this.updateMuzzleFlashPosition();
     }
 
     private handleShooting() {
@@ -362,47 +461,89 @@ export class PlayerCombatSystem {
                 this.isFiring = false;
             }
 
+            this.showMuzzleFlash(weapon);
             this.fireBullet(weapon);
-
-            // Show fire delay indicator for weapons with delay (e.g. Shotgun)
-            if (weapon instanceof Shotgun) {
-                this.showFireDelayIndicator(weapon.getFireRate());
-            }
         }
     }
 
-    private showFireDelayIndicator(duration: number) {
-        if (this.fireDelayIndicator) this.fireDelayIndicator.destroy();
+    private showMuzzleFlash(weapon: BaseRangeWeapon) {
+        if (this.muzzleFlash) this.muzzleFlash.destroy();
         
-        this.fireDelayIndicator = this.scene.add.graphics();
-        this.player.add(this.fireDelayIndicator);
-        this.fireDelayIndicator.setDepth(200);
+        this.muzzleFlash = this.scene.add.graphics();
+        this.player.add(this.muzzleFlash);
+        // Ensure flash is above weapon
+        this.player.bringToTop(this.muzzleFlash);
         
-        const radius = 10;
+        // Configuration based on weapon type
+        let radius = 10;
+        let color = 0xffffaa; // Light yellow
+        let alpha = 0.8;
+        let duration = 50;
+
+        if (weapon instanceof Shotgun) {
+            radius = 25;
+            color = 0xffaa00; // More orange/intense
+            alpha = 0.9;
+            duration = 80;
+        } else if (weapon instanceof AssaultRifle) {
+            radius = 15;
+            color = 0xffffcc;
+            alpha = 0.8;
+            duration = 40;
+        } else {
+            // Pistol/Default
+            radius = 8;
+            color = 0xffffff;
+            alpha = 0.7;
+            duration = 30;
+        }
         
-        // Draw white semi-circle
-        this.fireDelayIndicator.clear();
-        this.fireDelayIndicator.lineStyle(2, 0xffffff);
-        this.fireDelayIndicator.beginPath();
-        // Semi-circle (top half relative to rotation? or right half?)
-        // Let's use right half (-90 to 90) as it faces forward if 0 is right.
-        // Phaser angles: 0 is right. -90 is up. 90 is down.
-        // If we want "semi-circle", maybe -90 to 90 is good.
-        this.fireDelayIndicator.arc(0, 0, radius, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(90), false);
-        this.fireDelayIndicator.strokePath();
+        this.muzzleFlash.clear();
+        // Core white center
+        this.muzzleFlash.fillStyle(0xffffff, 1);
+        this.muzzleFlash.fillCircle(0, 0, radius * 0.4);
         
+        // Outer glow
+        this.muzzleFlash.fillStyle(color, alpha);
+        this.muzzleFlash.fillCircle(0, 0, radius);
+        
+        // Position update will happen in update() loop, but set initial position here
+        this.updateMuzzleFlashPosition();
+
         // Tween: Fade out
         this.scene.tweens.add({
-            targets: this.fireDelayIndicator,
+            targets: this.muzzleFlash,
             alpha: 0,
+            scale: 0.5,
             duration: duration,
             onComplete: () => {
-                if (this.fireDelayIndicator) {
-                    this.fireDelayIndicator.destroy();
-                    this.fireDelayIndicator = null;
+                if (this.muzzleFlash) {
+                    this.muzzleFlash.destroy();
+                    this.muzzleFlash = null;
                 }
             }
         });
+    }
+
+    private updateMuzzleFlashPosition() {
+        if (!this.muzzleFlash || !this.weaponSprite) return;
+        
+        const weaponLen = 60; 
+        const muzzleDist = weaponLen * 0.5 + 5; // Tip of the barrel
+        
+        const weaponRotation = this.weaponSprite.rotation;
+        
+        // Calculate position relative to player center
+        // Weapon pivot is at player center (0,0) with offset
+        // Weapon sprite position:
+        const weaponX = this.weaponSprite.x;
+        const weaponY = this.weaponSprite.y;
+        
+        const flashX = weaponX + Math.cos(weaponRotation) * muzzleDist;
+        const flashY = weaponY + Math.sin(weaponRotation) * muzzleDist;
+        
+        this.muzzleFlash.x = flashX;
+        this.muzzleFlash.y = flashY;
     }
 
     private fireBullet(weapon: BaseRangeWeapon) {
@@ -449,7 +590,7 @@ export class PlayerCombatSystem {
             this.scene.physics.add.existing(bullet);
             const body = bullet.body as Phaser.Physics.Arcade.Body;
             
-            const speed = 600;
+            const speed = 1200;
             const velocity = this.scene.physics.velocityFromRotation(finalAngle, speed);
             body.setVelocity(velocity.x, velocity.y);
 
