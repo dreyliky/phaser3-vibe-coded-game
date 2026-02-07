@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
+import { Button } from './button';
 
 export class PauseMenu extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Rectangle;
-    private closeButton: Phaser.GameObjects.Text;
+    private closeButton: Button;
     private menuItems: Phaser.GameObjects.Container;
     
     constructor(scene: Phaser.Scene, x: number, y: number, onExit: () => void, onResume?: () => void) {
@@ -17,17 +18,13 @@ export class PauseMenu extends Phaser.GameObjects.Container {
         this.add(this.background);
 
         // Header / Close Button
-        this.closeButton = scene.add.text(width / 2 - 20, -height / 2 + 15, 'X', {
-            fontSize: '20px',
-            color: '#ffffff',
-            backgroundColor: '#cc0000',
-            padding: { x: 5, y: 2 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
+        this.closeButton = new Button(scene, width / 2 - 20, -height / 2 + 15, 'X', () => {
             this.setVisible(false);
             if (onResume) onResume();
+        }, {
+            fontSize: '20px',
+            backgroundColor: 0xcc0000,
+            padding: { x: 5, y: 2 }
         });
         this.add(this.closeButton);
 
@@ -45,29 +42,16 @@ export class PauseMenu extends Phaser.GameObjects.Container {
         this.add(this.menuItems);
 
         // Item 1: Exit to Menu
-        const exitBtn = this.createButton(scene, 0, 0, 'Exit to Menu', onExit);
+        const exitBtn = new Button(scene, 0, 0, 'Exit to Menu', onExit, {
+            width: 200,
+            height: 50,
+            backgroundColor: 0x444444,
+            backgroundColorOver: 0x666666
+        });
         this.menuItems.add(exitBtn);
 
         this.setVisible(false);
         this.setDepth(1000); // Ensure it's on top
-    }
-
-    private createButton(scene: Phaser.Scene, x: number, y: number, text: string, onClick: () => void): Phaser.GameObjects.Container {
-        const btnContainer = scene.add.container(x, y);
-        
-        const bg = scene.add.rectangle(0, 0, 200, 50, 0x444444);
-        const label = scene.add.text(0, 0, text, {
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-
-        bg.setInteractive({ useHandCursor: true })
-          .on('pointerdown', onClick)
-          .on('pointerover', () => bg.setFillStyle(0x666666))
-          .on('pointerout', () => bg.setFillStyle(0x444444));
-
-        btnContainer.add([bg, label]);
-        return btnContainer;
     }
 
     public toggle() {

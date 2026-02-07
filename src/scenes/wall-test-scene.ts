@@ -3,6 +3,7 @@ import { StructureGenerator } from '../systems/structure-generator';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseBrickWall } from '../objects/walls/wall-types';
 import { GAME_CONFIG } from '../config/constants';
+import { Button } from '../objects/ui/button';
 
 export class WallTestScene extends Phaser.Scene {
     private structureGenerator!: StructureGenerator;
@@ -42,20 +43,14 @@ export class WallTestScene extends Phaser.Scene {
         }).setScrollFactor(0).setDepth(100);
 
         // Back to Menu Button
-        const backButton = this.add.text(10, this.scale.height - 40, 'Back to Menu', {
-            fontSize: '20px',
-            color: '#ffffff',
-            backgroundColor: '#000000',
-            padding: { x: 10, y: 5 }
-        })
-        .setScrollFactor(0)
-        .setDepth(100)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
+        const backButton = new Button(this, 100, this.scale.height - 40, 'Back to Menu', () => {
             this.scene.start('MainMenu');
-        })
-        .on('pointerover', () => backButton.setStyle({ fill: '#ffff00' }))
-        .on('pointerout', () => backButton.setStyle({ fill: '#ffffff' }));
+        }, {
+            fontSize: '20px',
+            backgroundColor: 0x000000,
+            padding: { x: 10, y: 5 }
+        });
+        backButton.setScrollFactor(0).setDepth(100);
 
         // Camera Controls
         if (this.input.keyboard) {

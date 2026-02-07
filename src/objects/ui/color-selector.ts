@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Button } from './button';
 
 export class ColorSelector extends Phaser.GameObjects.Container {
     private currentIndicator: Phaser.GameObjects.Arc;
@@ -33,17 +34,21 @@ export class ColorSelector extends Phaser.GameObjects.Container {
         this.add(this.currentIndicator);
 
         // Left Arrow
-        const leftArrow = scene.add.text(-50, 0, '<', { fontSize: '24px', color: '#ffffff' })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.selectPrevious());
+        const leftArrow = new Button(scene, -50, 0, '<', () => this.selectPrevious(), {
+            fontSize: '24px',
+            backgroundColor: 0x000000,
+            backgroundAlpha: 0, // Transparent
+            padding: { x: 10, y: 5 }
+        });
         this.add(leftArrow);
 
         // Right Arrow
-        const rightArrow = scene.add.text(50, 0, '>', { fontSize: '24px', color: '#ffffff' })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.selectNext());
+        const rightArrow = new Button(scene, 50, 0, '>', () => this.selectNext(), {
+            fontSize: '24px',
+            backgroundColor: 0x000000,
+            backgroundAlpha: 0, // Transparent
+            padding: { x: 10, y: 5 }
+        });
         this.add(rightArrow);
     }
 

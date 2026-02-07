@@ -70,7 +70,7 @@ export class InventorySlot extends Phaser.GameObjects.Container {
                 });
 
                 // Shift+Click to equip/unequip
-                this.itemIcon.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                this.itemIcon.on('pointerup', (pointer: Phaser.Input.Pointer) => {
                     const event = pointer.event as MouseEvent;
                     if (event.shiftKey) {
                         this.scene.events.emit('slot-shift-click', this.slotType, this.slotIndex);

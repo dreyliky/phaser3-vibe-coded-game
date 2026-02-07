@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { InventorySlot } from './inventory-slot';
 import { inventorySystem, InventoryItem } from '../../systems/inventory-system';
+import { Button } from './button';
 
 export class InventoryWindow extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Rectangle;
     private slots: InventorySlot[] = [];
-    private closeButton: Phaser.GameObjects.Text;
+    private closeButton: Button;
     private readonly SLOT_SIZE = 50;
     private readonly GAP = 10;
     private readonly COLS = 4;
@@ -23,15 +24,13 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
         this.add(this.background);
 
         // Header / Close Button
-        this.closeButton = scene.add.text(width / 2 - 20, -height / 2 + 15, 'X', {
+        this.closeButton = new Button(scene, width / 2 - 20, -height / 2 + 15, 'X', () => {
+            this.setVisible(false);
+        }, {
             fontSize: '20px',
-            color: '#ffffff',
-            backgroundColor: '#cc0000',
+            backgroundColor: 0xcc0000,
             padding: { x: 5, y: 2 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.setVisible(false));
+        });
         this.add(this.closeButton);
 
         // Slots

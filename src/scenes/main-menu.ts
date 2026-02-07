@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
+import { Button } from '../objects/ui/button';
 
 export class MainMenu extends Phaser.Scene {
     private titleText!: Phaser.GameObjects.Text;
-    private playButton!: Phaser.GameObjects.Text;
-    private wallTestButton!: Phaser.GameObjects.Text;
+    private playButton!: Button;
+    private wallTestButton!: Button;
 
     constructor() {
         super('MainMenu');
@@ -20,35 +21,21 @@ export class MainMenu extends Phaser.Scene {
             fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        this.playButton = this.add.text(width * 0.5, height * 0.5, 'New Game', {
-            fontSize: '32px',
-            color: '#00ff00',
-            fontFamily: 'Arial',
-            backgroundColor: '#333333',
-            padding: { x: 20, y: 10 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
+        this.playButton = new Button(this, width * 0.5, height * 0.5, 'New Game', () => {
             this.scene.start('CharacterCreator');
-        })
-        .on('pointerover', () => this.playButton.setStyle({ fill: '#ffff00' }))
-        .on('pointerout', () => this.playButton.setStyle({ fill: '#00ff00' }));
+        }, {
+            fontSize: '32px',
+            textColor: '#00ff00',
+            backgroundColor: 0x333333,
+            textColorOver: '#ffff00'
+        });
 
-        this.wallTestButton = this.add.text(width * 0.5, height * 0.6, 'Walls Test Scene', {
-            fontSize: '24px',
-            color: '#ffffff',
-            fontFamily: 'Arial',
-            backgroundColor: '#333333',
-            padding: { x: 20, y: 10 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
+        this.wallTestButton = new Button(this, width * 0.5, height * 0.6, 'Walls Test Scene', () => {
             this.scene.start('WallTestScene');
-        })
-        .on('pointerover', () => this.wallTestButton.setStyle({ fill: '#ffff00' }))
-        .on('pointerout', () => this.wallTestButton.setStyle({ fill: '#ffffff' }));
+        }, {
+            fontSize: '24px',
+            backgroundColor: 0x333333
+        });
     }
 
     handleResize(gameSize: Phaser.Structs.Size) {

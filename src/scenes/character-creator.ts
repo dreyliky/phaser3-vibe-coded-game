@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { TextSelector, ColorSelector, CharacterVisual } from '../objects';
+import { Button } from '../objects/ui/button';
 
 export class CharacterCreator extends Phaser.Scene {
     private character: CharacterDefinition;
@@ -69,22 +70,21 @@ export class CharacterCreator extends Phaser.Scene {
             (val) => { this.character.hairColor = val; this.updateCharacter(); });
 
         // Play Button
-        const btn = this.add.text(width * 0.5, height - 50, 'Play', {
+        new Button(this, width * 0.5, height - 50, 'Play', () => this.startGame(), {
             fontSize: '24px',
-            color: '#00ff00',
-            backgroundColor: '#333333',
+            textColor: '#00ff00',
+            backgroundColor: 0x333333,
+            textColorOver: '#ffff00',
             padding: { x: 20, y: 10 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.startGame())
-        .on('pointerover', () => btn.setStyle({ fill: '#ffff00' }))
-        .on('pointerout', () => btn.setStyle({ fill: '#00ff00' }));
+        });
 
         // Back Button
-        this.add.text(50, 50, '< Back', { fontSize: '20px', color: '#ffffff' })
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.scene.start('MainMenu'));
+        new Button(this, 90, 60, '< Back', () => this.scene.start('MainMenu'), {
+            fontSize: '20px',
+            backgroundColor: 0x000000,
+            padding: { x: 10, y: 5 },
+            backgroundAlpha: 0 // Optional: make it transparent if desired, but 0x000000 is fine
+        });
     }
 
     private getAvailableBodyTypes(): string[] {
