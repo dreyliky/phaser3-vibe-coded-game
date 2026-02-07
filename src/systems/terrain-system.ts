@@ -1,9 +1,17 @@
 import Phaser from 'phaser';
 
 export enum TerrainType {
+    NONE = 'NONE',
     SAND = 'SAND',
     SOIL = 'SOIL',
-    ROCK = 'ROCK'
+    SOIL_RICH = 'SOIL_RICH',
+    MUD = 'MUD',
+    ROCK = 'ROCK',
+    SMOOTH_STONE = 'SMOOTH_STONE',
+    ANCIENT_CONCRETE = 'ANCIENT_CONCRETE',
+    BROKEN_ASPHALT = 'BROKEN_ASPHALT',
+    TILE_STONE = 'TILE_STONE',
+    WOOD_FLOOR = 'WOOD_FLOOR'
 }
 
 interface TerrainConfig {
@@ -12,21 +20,56 @@ interface TerrainConfig {
     z: number; // Phaser depth
 }
 
-const TERRAIN_DATA: Record<TerrainType, TerrainConfig> = {
+const TERRAIN_DATA: Record<string, TerrainConfig> = { // Changed key type to string to allow skipping NONE
     [TerrainType.SAND]: { 
         asset: 'background_sand', 
-        layer: 0,
+        layer: 1, // Changed to 1
         z: -100
     },
     [TerrainType.SOIL]: { 
         asset: 'floor_soil', 
-        layer: 1,
+        layer: 2,
         z: -95
+    },
+    [TerrainType.SOIL_RICH]: {
+        asset: 'floor_soil_rich',
+        layer: 2,
+        z: -94
+    },
+    [TerrainType.MUD]: {
+        asset: 'floor_mud',
+        layer: 2,
+        z: -93
     },
     [TerrainType.ROCK]: { 
         asset: 'floor_cave', 
-        layer: 2,
+        layer: 3,
         z: -90
+    },
+    [TerrainType.SMOOTH_STONE]: {
+        asset: 'floor_smooth_stone',
+        layer: 3,
+        z: -89
+    },
+    [TerrainType.ANCIENT_CONCRETE]: {
+        asset: 'floor_ancient_concrete',
+        layer: 4,
+        z: -85
+    },
+    [TerrainType.BROKEN_ASPHALT]: {
+        asset: 'floor_broken_asphalt',
+        layer: 4,
+        z: -84
+    },
+    [TerrainType.TILE_STONE]: {
+        asset: 'floor_tile_stone',
+        layer: 4,
+        z: -83
+    },
+    [TerrainType.WOOD_FLOOR]: {
+        asset: 'floor_wood',
+        layer: 4,
+        z: -82
     }
 };
 
@@ -36,7 +79,9 @@ export class TerrainSystem {
     private width: number;
     private height: number;
     private tileSize: number;
+    private tileContainer: Phaser.GameObjects.Container;
     private activeTiles: Phaser.GameObjects.Image[] = [];
+    private isDirty: boolean = false;
 
     constructor(options: {
         scene: Phaser.Scene;
@@ -48,20 +93,35 @@ export class TerrainSystem {
         this.width = options.width;
         this.height = options.height;
         this.tileSize = options.tileSize;
+        this.tileContainer = this.scene.add.container(0, 0);
         this.grid = [];
 
-        // Initialize grid with default terrain (Sand)
+        // Initialize grid with NONE (Void/Black)
         for (let x = 0; x < this.width; x++) {
             this.grid[x] = [];
             for (let y = 0; y < this.height; y++) {
-                this.grid[x][y] = TerrainType.SAND;
+                this.grid[x][y] = TerrainType.NONE;
             }
         }
     }
 
+    public getContainer(): Phaser.GameObjects.Container {
+        return this.tileContainer;
+    }
+
     public setTerrain(x: number, y: number, type: TerrainType) {
         if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-            this.grid[x][y] = type;
+            if (this.grid[x][y] !== type) {
+                this.grid[x][y] = type;
+                this.isDirty = true;
+            }
+        }
+    }
+
+    public update() {
+        if (this.isDirty) {
+            this.render();
+            this.isDirty = false;
         }
     }
 
@@ -77,70 +137,33 @@ export class TerrainSystem {
         this.activeTiles.forEach(tile => tile.destroy());
         this.activeTiles = [];
 
-        // 1. Render Base Layer (Layer 0) - Fill everywhere
-        // Optimization: If we have a seamless base layer like sand, we can just tile it or render individual tiles.
-        // For consistency with blending, let's render individual tiles for now, or assume Layer 0 is the "background".
-        // In our case, Sand is Layer 0.
-        
-        // We will iterate through all defined Terrain Types sorted by layer
-        const terrainTypes = Object.values(TerrainType);
+        // Iterate through defined terrain types (excluding NONE)
+        const terrainTypes = Object.keys(TERRAIN_DATA) as TerrainType[];
         const sortedTypes = terrainTypes.sort((a, b) => TERRAIN_DATA[a].layer - TERRAIN_DATA[b].layer);
 
         for (const type of sortedTypes) {
             const config = TERRAIN_DATA[type];
             
-            if (config.layer === 0) {
-                // Base layer: Render everywhere without blending (or simplified)
-                // To save performance, we only render where needed? 
-                // No, base layer usually covers everything.
-                // Let's render Sand everywhere for now as the "Canvas".
-                for (let x = 0; x < this.width; x++) {
-                    for (let y = 0; y < this.height; y++) {
+            // Render all layers as overlays
+            for (let x = 0; x < this.width; x++) {
+                for (let y = 0; y < this.height; y++) {
+                    const tl = this.getVertexAlpha(x, y, type);
+                    const tr = this.getVertexAlpha(x + 1, y, type);
+                    const bl = this.getVertexAlpha(x, y + 1, type);
+                    const br = this.getVertexAlpha(x + 1, y + 1, type);
+
+                    if (tl > 0 || tr > 0 || bl > 0 || br > 0) {
                         const posX = x * this.tileSize;
                         const posY = y * this.tileSize;
-                        
+
                         const tile = this.scene.add.image(posX, posY, config.asset)
                             .setDisplaySize(this.tileSize, this.tileSize)
                             .setDepth(config.z)
-                            .setOrigin(0, 0);
+                            .setOrigin(0, 0)
+                            .setAlpha(tl, tr, bl, br);
                         
+                        this.tileContainer.add(tile);
                         this.activeTiles.push(tile);
-                    }
-                }
-            } else {
-                // Overlay layers: Render only where present, with Vertex Alpha Blending
-                for (let x = 0; x < this.width; x++) {
-                    for (let y = 0; y < this.height; y++) {
-                        // We render this overlay tile if:
-                        // 1. The cell itself is this type OR
-                        // 2. Any neighbor is this type (so we can blend the edge)
-                        // Actually, if the cell itself is NOT this type, we shouldn't render it fully...
-                        // But wait, if I have Rock at (1,1) and Sand at (1,2).
-                        // At (1,2) [Sand], the top-left corner touches Rock.
-                        // So (1,2) needs to render Rock with alpha=0.25 at top-left?
-                        // YES! This is crucial for smooth blending. The "Rock" layer spills over into neighbors.
-                        
-                        // So for Overlay Layer T:
-                        // We calculate vertex alpha for all 4 corners.
-                        // If ANY corner has alpha > 0, we render the tile.
-                        
-                        const tl = this.getVertexAlpha(x, y, type);
-                        const tr = this.getVertexAlpha(x + 1, y, type);
-                        const bl = this.getVertexAlpha(x, y + 1, type);
-                        const br = this.getVertexAlpha(x + 1, y + 1, type);
-
-                        if (tl > 0 || tr > 0 || bl > 0 || br > 0) {
-                            const posX = x * this.tileSize;
-                            const posY = y * this.tileSize;
-
-                            const tile = this.scene.add.image(posX, posY, config.asset)
-                                .setDisplaySize(this.tileSize, this.tileSize)
-                                .setDepth(config.z)
-                                .setOrigin(0, 0)
-                                .setAlpha(tl, tr, bl, br);
-                            
-                            this.activeTiles.push(tile);
-                        }
                     }
                 }
             }
@@ -149,10 +172,6 @@ export class TerrainSystem {
 
     private getVertexAlpha(vx: number, vy: number, type: TerrainType): number {
         // Vertex (vx, vy) is the Top-Left corner of grid cell (vx, vy).
-        // It is shared by 4 cells:
-        // (vx-1, vy-1), (vx, vy-1)
-        // (vx-1, vy),   (vx, vy)
-        
         let matchCount = 0;
         const neighbors = [
             { x: vx - 1, y: vy - 1 },
@@ -166,18 +185,15 @@ export class TerrainSystem {
         for (const p of neighbors) {
             const neighborType = this.getTerrain(p.x, p.y);
             
-            // Check if this neighbor cell matches the target terrain type
-            // OR if the neighbor is a "higher" layer (which implies it covers this layer)
-            // This prevents gaps (e.g. seeing Sand between Soil and Rock)
-            if (neighborType) {
+            if (neighborType && neighborType !== TerrainType.NONE) {
                 const neighborLayer = TERRAIN_DATA[neighborType].layer;
+                // If neighbor is same type, or a higher layer (covering this one)
                 if (neighborType === type || neighborLayer > targetLayer) {
                     matchCount++;
                 }
             }
         }
 
-        // Return average (0.0 to 1.0)
         return matchCount / 4;
     }
 }

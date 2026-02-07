@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+// import Phaser from 'phaser';
 import { BasePlant, BasePlantOptions } from './base-plant';
 
 export class Tree extends BasePlant {

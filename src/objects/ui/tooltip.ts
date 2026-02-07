@@ -1,43 +1,72 @@
 import Phaser from 'phaser';
 
+export interface TooltipConfig {
+    fontSize?: string;
+    fontFamily?: string;
+    textColor?: string;
+    backgroundColor?: number;
+    backgroundAlpha?: number;
+    borderColor?: number;
+    borderThickness?: number;
+    padding?: number;
+}
+
 export class Tooltip extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Graphics;
     private text: Phaser.GameObjects.Text;
-    private padding: number = 8;
+    private config: Required<TooltipConfig>;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, config?: TooltipConfig) {
         super(scene, 0, 0);
+
+        this.config = {
+            fontSize: config?.fontSize || '14px',
+            fontFamily: config?.fontFamily || 'Arial',
+            textColor: config?.textColor || '#ffffff',
+            backgroundColor: config?.backgroundColor ?? 0x000000,
+            backgroundAlpha: config?.backgroundAlpha ?? 0.8,
+            borderColor: config?.borderColor ?? 0xaaaaaa,
+            borderThickness: config?.borderThickness ?? 1,
+            padding: config?.padding ?? 8
+        };
 
         this.background = scene.add.graphics();
         this.add(this.background);
 
         this.text = scene.add.text(0, 0, '', {
-            fontSize: '14px',
-            color: '#ffffff',
+            fontSize: this.config.fontSize,
+            color: this.config.textColor,
             stroke: '#000000',
             strokeThickness: 2,
-            fontFamily: 'Arial'
+            fontFamily: this.config.fontFamily
         });
         this.add(this.text);
 
         this.setVisible(false);
-        this.setDepth(1000); // Ensure it's on top
+        this.setDepth(Number.MAX_SAFE_INTEGER); // Ensure it's on top
         scene.add.existing(this);
     }
 
     public show(content: string, x: number, y: number) {
+        // Ensure it's on top of its parent container if it has one
+        if (this.parentContainer) {
+            this.parentContainer.bringToTop(this);
+        } else {
+            this.scene.children.bringToTop(this);
+        }
+
         this.text.setText(content);
         
-        const width = this.text.width + this.padding * 2;
-        const height = this.text.height + this.padding * 2;
+        const width = this.text.width + this.config.padding * 2;
+        const height = this.text.height + this.config.padding * 2;
 
         this.background.clear();
-        this.background.fillStyle(0x000000, 0.8);
-        this.background.lineStyle(1, 0xaaaaaa, 1);
+        this.background.fillStyle(this.config.backgroundColor, this.config.backgroundAlpha);
+        this.background.lineStyle(this.config.borderThickness, this.config.borderColor, 1);
         this.background.fillRoundedRect(0, 0, width, height, 4);
         this.background.strokeRoundedRect(0, 0, width, height, 4);
 
-        this.text.setPosition(this.padding, this.padding);
+        this.text.setPosition(this.config.padding, this.config.padding);
 
         // Adjust position to keep within bounds
         const { width: cameraWidth, height: cameraHeight } = this.scene.scale;

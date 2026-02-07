@@ -80,11 +80,18 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
         this.setVisible(false);
 
         // Listen for inventory updates
-        inventorySystem.on('update', (data: { type: string, index: number, item: InventoryItem | null }) => {
-            if (data.type === 'main') {
-                this.slots[data.index].setItem(data.item);
-            }
-        });
+        inventorySystem.on('update', this.handleInventoryUpdate);
+    }
+
+    private handleInventoryUpdate = (data: { type: string, index: number, item: InventoryItem | null }) => {
+        if (data.type === 'main') {
+            this.slots[data.index].setItem(data.item);
+        }
+    };
+
+    public destroy(fromScene?: boolean): void {
+        inventorySystem.off('update', this.handleInventoryUpdate);
+        super.destroy(fromScene);
     }
 
     public toggle() {

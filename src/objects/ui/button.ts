@@ -11,6 +11,7 @@ export interface ButtonOptions {
     fontSize?: string;
     fontFamily?: string;
     padding?: { x?: number, y?: number };
+    tooltip?: string;
 }
 
 export interface ButtonConstructorOptions {
@@ -20,6 +21,7 @@ export interface ButtonConstructorOptions {
     text: string;
     onClick: () => void;
     style?: ButtonOptions;
+    icon?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 }
 
 export class Button extends Phaser.GameObjects.Container {
@@ -28,18 +30,29 @@ export class Button extends Phaser.GameObjects.Container {
     private onClick: () => void;
     private options: ButtonOptions;
 
+    private get defaultStyle() {
+        return {
+            bgColor: this.options.backgroundColor !== undefined ? this.options.backgroundColor : 0x333333,
+            bgAlpha: this.options.backgroundAlpha !== undefined ? this.options.backgroundAlpha : 1,
+            textColor: this.options.textColor || '#ffffff',
+            bgColorOver: this.options.backgroundColorOver !== undefined ? this.options.backgroundColorOver : 0x444444,
+            textColorOver: this.options.textColorOver || '#ffff00'
+        };
+    }
+
     constructor(options: ButtonConstructorOptions) {
         super(options.scene, options.x, options.y);
         this.onClick = options.onClick;
         this.options = options.style || {};
         const scene = options.scene;
 
+        // Ensure button stays fixed on screen if it's UI
+        this.setScrollFactor(0);
+
         // Defaults
         const fontSize = this.options.fontSize || '24px';
         const fontFamily = this.options.fontFamily || 'Arial';
-        const textColor = this.options.textColor || '#ffffff';
-        const bgColor = this.options.backgroundColor !== undefined ? this.options.backgroundColor : 0x333333;
-        const bgAlpha = this.options.backgroundAlpha !== undefined ? this.options.backgroundAlpha : 1;
+        const { bgColor, bgAlpha, textColor } = this.defaultStyle;
         
         // Measure text to determine default width/height if not provided
         const tempText = scene.make.text({ text: options.text, style: { fontSize, fontFamily } });
@@ -56,6 +69,11 @@ export class Button extends Phaser.GameObjects.Container {
         // Background
         this.background = scene.add.rectangle(0, 0, width, height, bgColor, bgAlpha);
         this.add(this.background);
+
+        // Icon (if provided)
+        if (options.icon) {
+            this.add(options.icon);
+        }
 
         // Text
         this.textObj = scene.add.text(0, 0, options.text, {
@@ -77,22 +95,30 @@ export class Button extends Phaser.GameObjects.Container {
         scene.add.existing(this);
     }
 
-    private onPointerOver() {
-        const bgColorOver = this.options.backgroundColorOver !== undefined ? this.options.backgroundColorOver : 0x444444;
-        const textColorOver = this.options.textColorOver || '#ffff00';
-        const bgAlpha = this.options.backgroundAlpha !== undefined ? this.options.backgroundAlpha : 1;
+    private onPointerOver(pointer: Phaser.Input.Pointer) {
+        const { bgColorOver, bgAlpha, textColorOver } = this.defaultStyle;
         
         this.background.setFillStyle(bgColorOver, bgAlpha);
         this.textObj.setColor(textColorOver);
+
+        if (this.options.tooltip) {
+            this.scene.events.emit('tooltip-show', this.options.tooltip, pointer.worldX, pointer.worldY);
+        }
     }
 
     private onPointerOut() {
-        const bgColor = this.options.backgroundColor !== undefined ? this.options.backgroundColor : 0x333333;
-        const textColor = this.options.textColor || '#ffffff';
-        const bgAlpha = this.options.backgroundAlpha !== undefined ? this.options.backgroundAlpha : 1;
+        const { bgColor, bgAlpha, textColor } = this.defaultStyle;
 
         this.background.setFillStyle(bgColor, bgAlpha);
         this.textObj.setColor(textColor);
+
+        if (this.options.tooltip) {
+            this.scene.events.emit('tooltip-hide');
+        }
+    }
+
+    public destroy(fromScene?: boolean) {
+        super.destroy(fromScene);
     }
 
     private onPointerUp() {
@@ -101,5 +127,10 @@ export class Button extends Phaser.GameObjects.Container {
     
     public setText(text: string) {
         this.textObj.setText(text);
+    }
+
+    public setBackgroundColor(color: number) {
+        this.options.backgroundColor = color;
+        this.background.setFillStyle(color, this.options.backgroundAlpha ?? 1);
     }
 }

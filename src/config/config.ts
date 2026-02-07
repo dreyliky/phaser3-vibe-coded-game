@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
-import { Boot, CharacterCreator, Game, HUD, MainMenu, WallTestScene } from '../scenes';
+import { Boot, CharacterCreator, Game, HUD, MainMenu, WallTestScene, MapEditor, MapSelectionScene } from '../scenes';
 
 export const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: 'app',
     backgroundColor: '#000000',
-    scene: [Boot, MainMenu, CharacterCreator, Game, HUD, WallTestScene],
+    scene: [Boot, MainMenu, CharacterCreator, Game, HUD, WallTestScene, MapEditor, MapSelectionScene],
     scale: {
         mode: Phaser.Scale.RESIZE,
         width: window.innerWidth,

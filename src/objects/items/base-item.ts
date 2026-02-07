@@ -142,7 +142,7 @@ export class WorldItem extends Phaser.GameObjects.Container {
         const steps = 10;
         for (let i = 0; i < steps; i++) {
             const alpha = 1 - (i / steps); // 1.0 to 0.0
-            const r = radius * (1 - i / steps);
+            // const r = radius * (1 - i / steps);
             this.highlight.fillStyle(color, alpha * 0.2); // Base alpha factor to avoid too intense center
             // Actually, to simulate gradient correctly with circles, we draw from outside in or inside out?
             // If we draw multiple circles on top, alphas add up.

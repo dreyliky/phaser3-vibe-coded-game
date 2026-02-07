@@ -36,63 +36,33 @@ export class MapGenerator {
         });
 
         // Generate Soil Patches (Cellular Automata)
-        // We generate a separate grid for soil distribution
-        const soilGrid: number[][] = [];
-        for (let x = 0; x < gridWidth; x++) {
-            soilGrid[x] = [];
-            for (let y = 0; y < gridHeight; y++) {
-                // 40% chance to start as soil
-                soilGrid[x][y] = Math.random() < 0.4 ? 1 : 0;
-            }
-        }
+        const soilGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.4, 3);
+        
+        // Generate Rock Patches (Cellular Automata) - Less frequent than soil
+        const rockGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.25, 3);
 
-        // Smooth Soil Grid (3 iterations)
-        for (let i = 0; i < 3; i++) {
-            const newGrid: number[][] = [];
-            for (let x = 0; x < gridWidth; x++) {
-                newGrid[x] = [];
-                for (let y = 0; y < gridHeight; y++) {
-                    let neighbors = 0;
-                    for (let nx = x - 1; nx <= x + 1; nx++) {
-                        for (let ny = y - 1; ny <= y + 1; ny++) {
-                            if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
-                                if (nx !== x || ny !== y) {
-                                    neighbors += soilGrid[nx][ny];
-                                }
-                            }
-                        }
-                    }
-                    // Standard CA rules for smooth blobs
-                    if (neighbors > 4) newGrid[x][y] = 1;
-                    else if (neighbors < 4) newGrid[x][y] = 0;
-                    else newGrid[x][y] = soilGrid[x][y];
-                }
-            }
-            // Copy back
-            for (let x = 0; x < gridWidth; x++) {
-                for (let y = 0; y < gridHeight; y++) {
-                    soilGrid[x][y] = newGrid[x][y];
-                }
-            }
-        }
-
-        // Populate Terrain Grid based on Cave Generator and Soil Grid
+        // Populate Terrain Grid based on Cave Generator and Soil/Rock Grids
         for (let x = 0; x < gridWidth; x++) {
             for (let y = 0; y < gridHeight; y++) {
-                // Default is SAND (handled by TerrainSystem init)
+                // Default is SAND
+                let type = TerrainType.SAND;
 
                 // If soil patch exists, set SOIL
                 if (soilGrid[x][y] === 1) {
-                    this.terrainSystem.setTerrain(x, y, TerrainType.SOIL);
+                    type = TerrainType.SOIL;
                 }
 
-                // If inside cave, overwrite with ROCK (Higher priority/layer)
-                // Actually, setTerrain overwrites the grid value.
-                // Since Rock is conceptually "above" or "replaces" soil/sand in this specific map logic (cave overrides outside),
-                // we check cave last or just overwrite.
-                if (this.caveGenerator.isInsideCave(x, y)) {
-                    this.terrainSystem.setTerrain(x, y, TerrainType.ROCK);
+                // If rock patch exists, set ROCK (overrides Soil)
+                if (rockGrid[x][y] === 1) {
+                    type = TerrainType.ROCK;
                 }
+
+                // If inside cave, overwrite with ROCK (Highest priority for cave coherence)
+                if (this.caveGenerator.isInsideCave(x, y)) {
+                    type = TerrainType.ROCK;
+                }
+
+                this.terrainSystem.setTerrain(x, y, type);
 
                 const posX = x * tileSize;
                 const posY = y * tileSize;
@@ -165,6 +135,48 @@ export class MapGenerator {
             count: 800,
             collisionCheck: checkCollision
         });
+    }
+
+    private generateAutomataGrid(width: number, height: number, initialChance: number, iterations: number): number[][] {
+        const grid: number[][] = [];
+        // Init
+        for (let x = 0; x < width; x++) {
+            grid[x] = [];
+            for (let y = 0; y < height; y++) {
+                grid[x][y] = Math.random() < initialChance ? 1 : 0;
+            }
+        }
+
+        // Iterations
+        for (let i = 0; i < iterations; i++) {
+            const newGrid: number[][] = [];
+            for (let x = 0; x < width; x++) {
+                newGrid[x] = [];
+                for (let y = 0; y < height; y++) {
+                    let neighbors = 0;
+                    for (let nx = x - 1; nx <= x + 1; nx++) {
+                        for (let ny = y - 1; ny <= y + 1; ny++) {
+                            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                if (nx !== x || ny !== y) {
+                                    neighbors += grid[nx][ny];
+                                }
+                            }
+                        }
+                    }
+                    // Standard CA rules for smooth blobs
+                    if (neighbors > 4) newGrid[x][y] = 1;
+                    else if (neighbors < 4) newGrid[x][y] = 0;
+                    else newGrid[x][y] = grid[x][y];
+                }
+            }
+            // Copy back
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    grid[x][y] = newGrid[x][y];
+                }
+            }
+        }
+        return grid;
     }
 
     

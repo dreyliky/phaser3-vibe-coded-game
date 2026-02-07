@@ -120,13 +120,13 @@ export class WallTestScene extends Phaser.Scene {
         });
         
         // Mouse wheel zoom
-        this.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: unknown, deltaX: number, deltaY: number, deltaZ: number) => {
+        this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gameObjects: unknown, _deltaX: number, deltaY: number, _deltaZ: number) => {
             const zoom = this.cameras.main.zoom - deltaY * 0.001;
             this.cameras.main.setZoom(Phaser.Math.Clamp(zoom, 0.1, 4));
         });
     }
 
-    update(time: number, delta: number) {
+    update(_time: number, delta: number) {
         if (this.controls) {
             this.controls.update(delta);
         }

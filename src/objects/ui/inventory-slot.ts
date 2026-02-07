@@ -42,6 +42,8 @@ export class InventorySlot extends Phaser.GameObjects.Container {
     }
 
     public setItem(item: InventoryItem | null) {
+        if (!this.scene || !this.scene.add) return;
+
         if (this.itemIcon) {
             this.itemIcon.destroy();
             this.itemIcon = null;

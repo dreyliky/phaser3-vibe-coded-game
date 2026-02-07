@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { InventoryItem, inventorySystem } from '../../../systems';
-import { BaseRangeWeapon, BaseMeleeWeapon, Hands, Shotgun, AssaultRifle } from '../../items';
+import { BaseRangeWeapon, BaseMeleeWeapon, Shotgun, AssaultRifle } from '../../items';
 import { Damageable } from '../../../types/damageable';
 
 export class PlayerCombatSystem {

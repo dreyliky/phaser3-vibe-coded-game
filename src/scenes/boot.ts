@@ -72,6 +72,13 @@ export class Boot extends Phaser.Scene {
         this.load.image('background_sand', 'assets/sprites/terrain/surfaces/Sand.png');
         this.load.image('floor_cave', 'assets/sprites/terrain/surfaces/RoughHewnRock.png');
         this.load.image('floor_soil', 'assets/sprites/terrain/surfaces/Soil.png');
+        this.load.image('floor_ancient_concrete', 'assets/sprites/terrain/surfaces/AncientConcrete.png');
+        this.load.image('floor_broken_asphalt', 'assets/sprites/terrain/surfaces/BrokenAsphalt.png');
+        this.load.image('floor_mud', 'assets/sprites/terrain/surfaces/Mud.png');
+        this.load.image('floor_smooth_stone', 'assets/sprites/terrain/surfaces/SmoothStone.png');
+        this.load.image('floor_soil_rich', 'assets/sprites/terrain/surfaces/SoilRich.png');
+        this.load.image('floor_tile_stone', 'assets/sprites/terrain/surfaces/TileStone.png');
+        this.load.image('floor_wood', 'assets/sprites/terrain/surfaces/WoodFloor.png');
 
         // Load Plants - Bushes/Cacti
         const plantPath = 'assets/sprites/things/plant';

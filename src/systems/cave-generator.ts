@@ -186,7 +186,6 @@ export class CaveGenerator {
             let ty = centerY + dy * (Math.max(this.width, this.height));
 
             // Walk towards center until we hit a wall (the shell)
-            let foundShell = false;
             let steps = 0;
             const maxSteps = Math.max(this.width, this.height) * 2;
 
@@ -198,7 +197,6 @@ export class CaveGenerator {
                     if (this.grid[gridX][gridY] === 1) {
                         // Found the shell! Dig from here inwards
                         this.digTunnel({ startX: gridX, startY: gridY, dx: -dx, dy: -dy });
-                        foundShell = true;
                         break;
                     }
                 }

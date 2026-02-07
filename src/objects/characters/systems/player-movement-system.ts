@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 export class PlayerMovementSystem {
-    private scene: Phaser.Scene;
+    // private scene: Phaser.Scene;
     private body: Phaser.Physics.Arcade.Body;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd: {
@@ -13,7 +13,7 @@ export class PlayerMovementSystem {
     private speed: number = 200;
 
     constructor(scene: Phaser.Scene, body: Phaser.Physics.Arcade.Body) {
-        this.scene = scene;
+        // this.scene = scene;
         this.body = body;
 
         if (scene.input.keyboard) {

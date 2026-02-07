@@ -15,6 +15,10 @@ export class BaseLinkedWall extends BaseWall {
         return this.wallRegistry.get(`${gridX},${gridY}`);
     }
 
+    public static clearRegistry() {
+        this.wallRegistry.clear();
+    }
+
     private gridX: number;
     private gridY: number;
     private solidColor: number = WALL_SOLID_COLOR;
@@ -31,8 +35,9 @@ export class BaseLinkedWall extends BaseWall {
         super(options);
         
         // Snap to grid for logic
-        this.gridX = Math.round(options.x / GAME_CONFIG.TILE_SIZE);
-        this.gridY = Math.round(options.y / GAME_CONFIG.TILE_SIZE);
+        // Use Math.floor to ensure consistent grid coordinates for tiles starting at index 0
+        this.gridX = Math.floor(options.x / GAME_CONFIG.TILE_SIZE);
+        this.gridY = Math.floor(options.y / GAME_CONFIG.TILE_SIZE);
         
         // Apply Material Stats
         if (options.material) {
@@ -129,12 +134,6 @@ export class BaseLinkedWall extends BaseWall {
         } else if (this.debugText) {
             this.debugText.setVisible(false);
         }
-    }
-
-    private isNeighborSolid(dx: number, dy: number): boolean {
-        const neighbor = this.getNeighbor(dx, dy);
-        if (!neighbor) return false;
-        return neighbor.checkSurrounded();
     }
 
     // Public to allow neighbors to access it

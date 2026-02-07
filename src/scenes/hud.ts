@@ -151,7 +151,7 @@ export class HUD extends Phaser.Scene {
         }
 
         // Drag and Drop
-        this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite) => {
+        this.input.on('dragstart', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite) => {
             // Reparent to scene to ensure it's on top of everything (UI, Windows)
             const worldTransform = gameObject.getWorldTransformMatrix();
             const globalPos = worldTransform.transformPoint(0, 0);
@@ -164,14 +164,14 @@ export class HUD extends Phaser.Scene {
             gameObject.setAlpha(0.8);
         });
 
-        this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dragX: number, dragY: number) => {
+        this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, _dragX: number, _dragY: number) => {
             // Use pointer position directly since gameObject is now child of Scene (Screen Space)
             // This fixes the issue where sprite jumps to top-left or weird coordinates
             gameObject.x = pointer.x;
             gameObject.y = pointer.y;
         });
 
-        this.input.on('drop', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropZone: Phaser.GameObjects.Zone & { slotType?: string, slotIndex?: number }) => {
+        this.input.on('drop', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropZone: Phaser.GameObjects.Zone & { slotType?: string, slotIndex?: number }) => {
             // Check if dropped on InventoryWindow background (which is a drop zone now)
             // If so, just return (cancel drop), so it snaps back in dragend
             if (!dropZone.slotType) {
@@ -204,7 +204,7 @@ export class HUD extends Phaser.Scene {
             // Visual reset will be handled by inventory update or dragend cleanup
         });
 
-        this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropped: boolean) => {
+        this.input.on('dragend', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.Sprite, dropped: boolean) => {
             // Check if dropped successfully? 
             // The 'dropped' param is true if pointerup happened on a drop zone.
             // But we might have rejected the drop in 'drop' handler (e.g. disabled slot).
@@ -270,7 +270,7 @@ export class HUD extends Phaser.Scene {
         });
     }
 
-    update(time: number, delta: number) {
+    update(_time: number, delta: number) {
         if (DEBUG_SETTINGS.SHOW_FPS && this.fpsText) {
             // Use delta to calculate instantaneous FPS if actualFps is 0
             const fps = Math.round(1000 / delta);

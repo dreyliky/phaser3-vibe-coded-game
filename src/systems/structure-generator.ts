@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../objects/walls/wall-types';
 import { GAME_CONFIG } from '../config/constants';
-import { WALL_MATERIALS, WallMaterial } from '../config/wall-data';
+import { WALL_MATERIALS } from '../config/wall-data';
 
 export class StructureGenerator {
     private scene: Phaser.Scene;
