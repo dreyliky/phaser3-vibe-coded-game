@@ -94,7 +94,7 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
-        // Go to Main Menu
-        this.scene.start('MainMenu');
+        // Go to Wall Test Scene
+        this.scene.start('WallTestScene');
     }
 }

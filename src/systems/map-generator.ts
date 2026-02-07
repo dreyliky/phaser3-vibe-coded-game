@@ -21,13 +21,16 @@ export class MapGenerator {
     }
 
     public generateWalls(playerX: number, playerY: number) {
-        // 10 cells to the right of player (10 * 80 = 800px)
-        const startX = playerX + (10 * 80);
+        // 2 cells to the right of player (2 * 80 = 160px)
+        const startX = playerX + (2 * 80);
         const startY = playerY;
         
         // 6x6 square of walls
         // Using 'bricks' as a default test type
         this.structureGenerator.generateWallRect(startX, startY, 6, 6, 'bricks');
+
+        // Add palette for debugging
+        this.structureGenerator.generatePalette(startX, startY + (7 * 80), 'bricks');
 
         // Now generate vegetation, avoiding walls
         // We use a simple bounding box check or physics check

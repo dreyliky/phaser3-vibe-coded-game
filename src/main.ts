@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
 import { config } from './config/config';
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+(window as any).game = game;

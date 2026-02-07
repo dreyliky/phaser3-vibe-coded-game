@@ -1,63 +1,138 @@
 import Phaser from 'phaser';
 import { BaseWall } from './base-wall';
-
-// Mask -> Frame Index mapping derived from analysis
-// Mask bitwise: N=1, E=2, S=4, W=8
-const MAPPING = [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3];
+import { DEBUG_SETTINGS, GAME_CONFIG } from '../../config/constants';
+import { WALL_ATLAS_MAPPING, WALL_SOLID_COLOR } from './wall-constants';
 
 export class BaseLinkedWall extends BaseWall {
     private static wallRegistry: Map<string, BaseLinkedWall> = new Map();
-    private static TILE_SIZE = 80;
+
+    public static getWallAt(gridX: number, gridY: number): BaseLinkedWall | undefined {
+        return this.wallRegistry.get(`${gridX},${gridY}`);
+    }
 
     private gridX: number;
     private gridY: number;
-    private solidColor: number = 0x444444; // Default solid color
+    private solidColor: number = WALL_SOLID_COLOR;
     private solidGraphics?: Phaser.GameObjects.Graphics;
+    private debugText?: Phaser.GameObjects.Text;
+    public autoUpdate: boolean = true;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
         super(scene, x, y, texture, frame);
         
         // Snap to grid for logic
-        this.gridX = Math.round(x / BaseLinkedWall.TILE_SIZE);
-        this.gridY = Math.round(y / BaseLinkedWall.TILE_SIZE);
+        this.gridX = Math.round(x / GAME_CONFIG.TILE_SIZE);
+        this.gridY = Math.round(y / GAME_CONFIG.TILE_SIZE);
         
         // Register
         BaseLinkedWall.wallRegistry.set(this.getKey(this.gridX, this.gridY), this);
 
         // Initial update (defer to next tick to ensure neighbors are created)
-        scene.time.delayedCall(1, () => this.updateConnection());
+        scene.time.delayedCall(1, () => {
+            this.updateConnection();
+            this.updateSurroundings();
+        });
     }
+
 
     private getKey(gx: number, gy: number): string {
         return `${gx},${gy}`;
     }
 
+    public setDepth(value: number): this {
+        super.setDepth(value);
+        if (this.solidGraphics) {
+            this.solidGraphics.setDepth(value);
+        }
+        if (this.debugText) {
+            this.debugText.setDepth(value + 1);
+        }
+        return this;
+    }
+
     public updateConnection() {
-        if (!this.scene) return;
+        if (!this.scene || !this.autoUpdate) return;
 
-        let mask = 0;
+        // 1. Calculate raw connectivity (who is present)
+        const nN = this.getNeighbor(0, -1);
+        const nE = this.getNeighbor(1, 0);
+        const nS = this.getNeighbor(0, 1);
+        const nW = this.getNeighbor(-1, 0);
+
+        let rawMask = 0;
+        if (nN) rawMask |= 1;
+        if (nE) rawMask |= 2;
+        if (nS) rawMask |= 4;
+        if (nW) rawMask |= 8;
+
+        // 2. Check if I am solid (Surrounded on all sides)
+        const isSolid = (rawMask === 15);
+        this.setSolidMode(isSolid);
+
+        if (isSolid) {
+            this.updateDebugInfo(15, 'S');
+            return;
+        }
+
+        // 3. I am not solid (Perimeter). Calculate visual mask.
+        // We want a clean "Box" look. 
+        // We ignore neighbors that are themselves SOLID (surrounded).
+        // This ensures perimeter walls don't visually connect to the solid interior.
         
-        // Check neighbors: N, E, S, W
-        if (this.hasNeighbor(0, -1)) mask |= 1; // N
-        if (this.hasNeighbor(1, 0))  mask |= 2; // E
-        if (this.hasNeighbor(0, 1))  mask |= 4; // S
-        if (this.hasNeighbor(-1, 0)) mask |= 8; // W
+        let visualMask = 0;
+        if (nN && !nN.checkSurrounded()) visualMask |= 1;
+        if (nE && !nE.checkSurrounded()) visualMask |= 2;
+        if (nS && !nS.checkSurrounded()) visualMask |= 4;
+        if (nW && !nW.checkSurrounded()) visualMask |= 8;
 
-        // Special case: Surrounded on all sides (Mask 15 -> N+E+S+W)
-        if (mask === 15) {
-            this.setSolidMode(true);
-        } else {
-            this.setSolidMode(false);
-            const frameIndex = MAPPING[mask];
-            this.setFrame(frameIndex);
+        const frameIndex = WALL_ATLAS_MAPPING[visualMask];
+        this.setFrame(frameIndex);
+        
+        this.updateDebugInfo(visualMask, frameIndex);
+    }
+
+    private updateDebugInfo(mask: number, frame: string | number) {
+        if (DEBUG_SETTINGS.SHOW_WALL_DEBUG) {
+            if (!this.debugText) {
+                this.debugText = this.scene.add.text(this.x, this.y, '', { 
+                    fontSize: '10px', 
+                    color: '#ffffff',
+                    backgroundColor: '#000000'
+                }).setOrigin(0.5).setDepth(1000);
+            }
+            this.debugText.setText(`M:${mask}\nF:${frame}`);
+            this.debugText.setVisible(true);
+        } else if (this.debugText) {
+            this.debugText.setVisible(false);
         }
     }
 
-    private hasNeighbor(dx: number, dy: number): boolean {
+    private isNeighborSolid(dx: number, dy: number): boolean {
+        const neighbor = this.getNeighbor(dx, dy);
+        if (!neighbor) return false;
+        return neighbor.checkSurrounded();
+    }
+
+    // Public to allow neighbors to access it
+    public getNeighbor(dx: number, dy: number): BaseLinkedWall | undefined {
         const key = this.getKey(this.gridX + dx, this.gridY + dy);
         const neighbor = BaseLinkedWall.wallRegistry.get(key);
         // Only connect to walls of the SAME type/texture
-        return neighbor !== undefined && neighbor.texture.key === this.texture.key;
+        if (neighbor && neighbor.texture.key === this.texture.key) {
+            return neighbor;
+        }
+        return undefined;
+    }
+
+    private checkSurrounded(): boolean {
+        return this.hasNeighbor(0, -1) && 
+               this.hasNeighbor(1, 0) && 
+               this.hasNeighbor(0, 1) && 
+               this.hasNeighbor(-1, 0);
+    }
+
+    private hasNeighbor(dx: number, dy: number): boolean {
+        return this.getNeighbor(dx, dy) !== undefined;
     }
 
     private setSolidMode(isSolid: boolean) {
@@ -67,10 +142,10 @@ export class BaseLinkedWall extends BaseWall {
                 this.solidGraphics = this.scene.add.graphics();
                 this.solidGraphics.fillStyle(this.solidColor, 1);
                 this.solidGraphics.fillRect(
-                    this.x - BaseLinkedWall.TILE_SIZE / 2, 
-                    this.y - BaseLinkedWall.TILE_SIZE / 2, 
-                    BaseLinkedWall.TILE_SIZE, 
-                    BaseLinkedWall.TILE_SIZE
+                    this.x - GAME_CONFIG.TILE_SIZE / 2, 
+                    this.y - GAME_CONFIG.TILE_SIZE / 2, 
+                    GAME_CONFIG.TILE_SIZE, 
+                    GAME_CONFIG.TILE_SIZE
                 );
                 // Match depth
                 this.solidGraphics.setDepth(this.depth);
@@ -84,10 +159,50 @@ export class BaseLinkedWall extends BaseWall {
         }
     }
 
+    public updateSurroundings() {
+        // We need to update a larger area to ensure consistency.
+        // When a wall is added/removed:
+        // 1. Its immediate neighbors might change their Solid state (become surrounded/un-surrounded).
+        // 2. If an immediate neighbor changes Solid state, *its* neighbors might need to update their visual mask (because they ignore solid neighbors).
+        // So we update all walls within Manhattan Distance 2.
+
+        const wallsToUpdate = new Set<BaseLinkedWall>();
+
+        // Offsets for Manhattan Distance <= 2
+        // Distance 1: (0,1), (0,-1), (1,0), (-1,0)
+        // Distance 2: (0,2), (0,-2), (2,0), (-2,0), (1,1), (1,-1), (-1,1), (-1,-1)
+        const offsets = [
+            // Distance 1
+            {x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0},
+            // Distance 2 (Cardinals)
+            {x: 0, y: -2}, {x: 2, y: 0}, {x: 0, y: 2}, {x: -2, y: 0},
+            // Distance 2 (Diagonals)
+            {x: 1, y: -1}, {x: 1, y: 1}, {x: -1, y: 1}, {x: -1, y: -1}
+        ];
+
+        offsets.forEach(offset => {
+            const w = this.getNeighbor(offset.x, offset.y);
+            if (w) wallsToUpdate.add(w);
+        });
+
+        // Also update self just in case
+        wallsToUpdate.add(this);
+
+        wallsToUpdate.forEach(w => w.updateConnection());
+    }
+
     public destroy(fromScene?: boolean) {
         BaseLinkedWall.wallRegistry.delete(this.getKey(this.gridX, this.gridY));
+        
+        if (!fromScene) {
+            this.updateSurroundings();
+        }
+
         if (this.solidGraphics) {
             this.solidGraphics.destroy();
+        }
+        if (this.debugText) {
+            this.debugText.destroy();
         }
         super.destroy(fromScene);
     }
