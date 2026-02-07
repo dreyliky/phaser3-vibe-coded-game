@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BaseWall } from './base-wall';
 import { DEBUG_SETTINGS, GAME_CONFIG } from '../../config/constants';
 import { WALL_ATLAS_MAPPING, WALL_SOLID_COLOR } from './wall-constants';
+import { WallMaterial } from '../../config/wall-data';
 
 export class BaseLinkedWall extends BaseWall {
     private static wallRegistry: Map<string, BaseLinkedWall> = new Map();
@@ -16,14 +17,26 @@ export class BaseLinkedWall extends BaseWall {
     private solidGraphics?: Phaser.GameObjects.Graphics;
     private debugText?: Phaser.GameObjects.Text;
     public autoUpdate: boolean = true;
+    
+    // Stats
+    protected maxHealth: number = 100;
+    protected currentHealth: number = 100;
+    protected wallTint?: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, material?: WallMaterial, frame?: string | number) {
         super(scene, x, y, texture, frame);
         
         // Snap to grid for logic
         this.gridX = Math.round(x / GAME_CONFIG.TILE_SIZE);
         this.gridY = Math.round(y / GAME_CONFIG.TILE_SIZE);
         
+        // Apply Material Stats
+        if (material) {
+            this.maxHealth = material.maxHealth;
+            this.currentHealth = this.maxHealth;
+            this.wallTint = material.tint;
+        }
+
         // Register
         BaseLinkedWall.wallRegistry.set(this.getKey(this.gridX, this.gridY), this);
 
@@ -31,6 +44,13 @@ export class BaseLinkedWall extends BaseWall {
         scene.time.delayedCall(1, () => {
             this.updateConnection();
             this.updateSurroundings();
+            
+            // Apply Tint if set
+            if (this.wallTint !== undefined) {
+                this.setTint(this.wallTint);
+                // Also update solid color to match tint if it's not the default
+                this.solidColor = this.wallTint;
+            }
         });
     }
 

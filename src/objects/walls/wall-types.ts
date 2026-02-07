@@ -1,26 +1,29 @@
 import Phaser from 'phaser';
 import { BaseLinkedWall } from './base-linked-wall';
+import { WallMaterial } from '../../config/wall-data';
 
-export class RockWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'wall_rock');
+// --- Base Styles (Texture-based) ---
+
+export class BaseRockWall extends BaseLinkedWall {
+    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
+        super(scene, x, y, 'wall_rock', material);
     }
 }
 
-export class BrickWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'wall_bricks');
+export class BaseBrickWall extends BaseLinkedWall {
+    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
+        super(scene, x, y, 'wall_bricks', material);
     }
 }
 
-export class PlankWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'wall_planks');
+export class BasePlankWall extends BaseLinkedWall {
+    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
+        super(scene, x, y, 'wall_planks', material);
     }
 }
 
-export class SmoothWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'wall_smooth');
+export class BaseSmoothWall extends BaseLinkedWall {
+    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
+        super(scene, x, y, 'wall_smooth', material);
     }
 }

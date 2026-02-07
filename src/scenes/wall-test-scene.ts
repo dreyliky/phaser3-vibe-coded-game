@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { StructureGenerator } from '../systems/structure-generator';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
-import { BrickWall } from '../objects/walls/wall-types';
+import { BaseBrickWall } from '../objects/walls/wall-types';
 import { GAME_CONFIG } from '../config/constants';
 
 export class WallTestScene extends Phaser.Scene {
@@ -75,7 +75,7 @@ export class WallTestScene extends Phaser.Scene {
             if (existingWall) {
                 existingWall.destroy();
             } else {
-                new BrickWall(this, gridX * TILE_SIZE, gridY * TILE_SIZE);
+                new BaseBrickWall(this, gridX * TILE_SIZE, gridY * TILE_SIZE);
             }
         });
 
