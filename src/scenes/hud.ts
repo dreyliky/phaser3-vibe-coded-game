@@ -59,13 +59,19 @@ export class HUD extends Phaser.Scene {
         this.add.existing(this.inventoryWindow);
 
         // Pause Menu (Center)
-        this.pauseMenu = new PauseMenu(this, width * 0.5, height * 0.5, () => {
-            this.scene.stop('GameScene');
-            this.scene.stop('HUD');
-            this.scene.start('MainMenu');
-        }, () => {
-            // On Resume
-            this.updateBackdrop();
+        this.pauseMenu = new PauseMenu({
+            scene: this,
+            x: width * 0.5,
+            y: height * 0.5,
+            onExit: () => {
+                this.scene.stop('GameScene');
+                this.scene.stop('HUD');
+                this.scene.start('MainMenu');
+            },
+            onResume: () => {
+                // On Resume
+                this.updateBackdrop();
+            }
         });
         this.pauseMenu.setDepth(101);
         this.add.existing(this.pauseMenu);
@@ -188,7 +194,12 @@ export class HUD extends Phaser.Scene {
                 }
             }
 
-            inventorySystem.moveItem(fromType, fromIndex, toType, toIndex);
+            inventorySystem.moveItem({
+                fromType,
+                fromIndex,
+                toType,
+                toIndex
+            });
             
             // Visual reset will be handled by inventory update or dragend cleanup
         });
@@ -302,7 +313,12 @@ export class HUD extends Phaser.Scene {
             for (let i = 1; i < 3; i++) { 
                  const quickItem = inventorySystem.getItemAt('quick', i);
                  if (!quickItem) {
-                     moved = inventorySystem.moveItem('main', index, 'quick', i);
+                     moved = inventorySystem.moveItem({
+                         fromType: 'main',
+                         fromIndex: index,
+                         toType: 'quick',
+                         toIndex: i
+                     });
                      if (moved) {
                          this.time.delayedCall(0, () => this.events.emit('tooltip-hide'));
                          return;
@@ -314,7 +330,12 @@ export class HUD extends Phaser.Scene {
             if (!moved) {
                 const selectedIndex = this.quickBar.getSelectedIndex();
                 if (selectedIndex !== 0) {
-                    const movedToSelected = inventorySystem.moveItem('main', index, 'quick', selectedIndex);
+                    const movedToSelected = inventorySystem.moveItem({
+                        fromType: 'main',
+                        fromIndex: index,
+                        toType: 'quick',
+                        toIndex: selectedIndex
+                    });
                     if (movedToSelected) {
                         this.time.delayedCall(0, () => this.events.emit('tooltip-hide'));
                     }
@@ -335,7 +356,12 @@ export class HUD extends Phaser.Scene {
 
                     const slot = inventorySystem.getItemAt('main', i);
                     if (slot && slot.item.getId() === item.item.getId() && slot.quantity < slot.item.getMaxStack()) {
-                        const moved = inventorySystem.moveItem('quick', index, 'main', i);
+                        const moved = inventorySystem.moveItem({
+                            fromType: 'quick',
+                            fromIndex: index,
+                            toType: 'main',
+                            toIndex: i
+                        });
                         if (moved) {
                             this.time.delayedCall(0, () => this.events.emit('tooltip-hide'));
                             return;
@@ -351,7 +377,12 @@ export class HUD extends Phaser.Scene {
 
                 const slot = inventorySystem.getItemAt('main', i);
                 if (!slot) {
-                    const moved = inventorySystem.moveItem('quick', index, 'main', i);
+                    const moved = inventorySystem.moveItem({
+                        fromType: 'quick',
+                        fromIndex: index,
+                        toType: 'main',
+                        toIndex: i
+                    });
                     if (moved) {
                         this.time.delayedCall(0, () => this.events.emit('tooltip-hide'));
                     }

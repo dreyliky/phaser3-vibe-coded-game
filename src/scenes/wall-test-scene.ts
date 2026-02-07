@@ -30,10 +30,20 @@ export class WallTestScene extends Phaser.Scene {
         const startY = Math.round(centerY / TILE_SIZE) * TILE_SIZE - (3 * TILE_SIZE);
 
         // Generate 6x6 wall rect
-        this.structureGenerator.generateWallRect(startX, startY, 6, 6, 'bricks');
+        this.structureGenerator.generateWallRect({
+            startX,
+            startY,
+            width: 6,
+            height: 6,
+            type: 'bricks'
+        });
 
         // Generate Palette below
-        this.structureGenerator.generatePalette(startX, startY + (7 * TILE_SIZE), 'bricks');
+        this.structureGenerator.generatePalette({
+            startX,
+            startY: startY + (7 * TILE_SIZE),
+            type: 'bricks'
+        });
 
         // Add some instructions
         this.add.text(10, 10, 'Wall Test Scene\nLeft Click to Toggle Wall\nArrows/Drag to Move Camera\n(+/-) to Zoom', {
@@ -43,12 +53,19 @@ export class WallTestScene extends Phaser.Scene {
         }).setScrollFactor(0).setDepth(100);
 
         // Back to Menu Button
-        const backButton = new Button(this, 100, this.scale.height - 40, 'Back to Menu', () => {
-            this.scene.start('MainMenu');
-        }, {
-            fontSize: '20px',
-            backgroundColor: 0x000000,
-            padding: { x: 10, y: 5 }
+        const backButton = new Button({
+            scene: this,
+            x: 100,
+            y: this.scale.height - 40,
+            text: 'Back to Menu',
+            onClick: () => {
+                this.scene.start('MainMenu');
+            },
+            style: {
+                fontSize: '20px',
+                backgroundColor: 0x000000,
+                padding: { x: 10, y: 5 }
+            }
         });
         backButton.setScrollFactor(0).setDepth(100);
 
@@ -86,7 +103,11 @@ export class WallTestScene extends Phaser.Scene {
             if (existingWall) {
                 existingWall.destroy();
             } else {
-                new BaseBrickWall(this, gridX * TILE_SIZE, gridY * TILE_SIZE);
+                new BaseBrickWall({
+                    scene: this,
+                    x: gridX * TILE_SIZE,
+                    y: gridY * TILE_SIZE
+                });
             }
         });
 

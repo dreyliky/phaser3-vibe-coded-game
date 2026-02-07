@@ -37,6 +37,15 @@ export abstract class BaseItem {
     }
 }
 
+export interface WorldItemOptions {
+    scene: Phaser.Scene;
+    x: number;
+    y: number;
+    item: BaseItem;
+    quantity?: number;
+    extraData?: ItemExtraData;
+}
+
 export class WorldItem extends Phaser.GameObjects.Container {
     private item: BaseItem;
     private quantity: number;
@@ -44,11 +53,13 @@ export class WorldItem extends Phaser.GameObjects.Container {
     private sprite: Phaser.GameObjects.Sprite;
     private highlight: Phaser.GameObjects.Graphics;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, item: BaseItem, quantity: number = 1, extraData?: ItemExtraData) {
-        super(scene, x, y);
-        this.item = item;
-        this.quantity = quantity;
-        this.extraData = extraData;
+    constructor(options: WorldItemOptions) {
+        super(options.scene, options.x, options.y);
+        this.item = options.item;
+        this.quantity = options.quantity ?? 1;
+        this.extraData = options.extraData;
+        
+        const scene = options.scene;
 
         // Highlight (Gradient shadow/glow)
         this.highlight = scene.add.graphics();
@@ -57,7 +68,7 @@ export class WorldItem extends Phaser.GameObjects.Container {
         this.add(this.highlight);
 
         // Sprite
-        this.sprite = scene.add.sprite(0, 0, item.getTexture());
+        this.sprite = scene.add.sprite(0, 0, this.item.getTexture());
         
         // Determine scale
         // Reduce size for weapons by 30% from 0.5 -> 0.35
@@ -66,7 +77,7 @@ export class WorldItem extends Phaser.GameObjects.Container {
         // Assuming maxStack 1 = equipment/weapon for now as per current definitions.
         // Or better: check if it's NOT ammo. Ammo has maxStack > 1.
         let scale = 0.5;
-        if (item.getMaxStack() === 1) {
+        if (this.item.getMaxStack() === 1) {
              scale = 0.35;
         }
         this.sprite.setScale(scale); 

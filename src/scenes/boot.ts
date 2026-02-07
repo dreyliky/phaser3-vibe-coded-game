@@ -10,13 +10,13 @@ export class Boot extends Phaser.Scene {
 
     preload() {
         // Generate Ammo Textures
-        TextureGenerator.createSquareTexture(this, 'ammo_light', 0x00ff00, 16);
-        TextureGenerator.createSquareTexture(this, 'ammo_standard', 0xffff00, 16);
-        TextureGenerator.createSquareTexture(this, 'ammo_heavy', 0xff0000, 16);
-        TextureGenerator.createSquareTexture(this, 'ammo_buckshot', 0xffaa00, 16);
+        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_light', color: 0x00ff00, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_standard', color: 0xffff00, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_heavy', color: 0xff0000, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_buckshot', color: 0xffaa00, size: 16 });
 
         // Generate Weapon Textures
-        TextureGenerator.createCircleTexture(this, 'weapon_hands', 0xffffff, 8); // White circle for hands
+        TextureGenerator.createCircleTexture({ scene: this, key: 'weapon_hands', color: 0xffffff, radius: 8 }); // White circle for hands
 
 
         const basePath = ASSETS.SPRITES.HUMANLIKE_BASE_PATH;

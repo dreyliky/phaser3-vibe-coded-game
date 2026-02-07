@@ -38,17 +38,22 @@ export class TerrainSystem {
     private tileSize: number;
     private activeTiles: Phaser.GameObjects.Image[] = [];
 
-    constructor(scene: Phaser.Scene, width: number, height: number, tileSize: number) {
-        this.scene = scene;
-        this.width = width;
-        this.height = height;
-        this.tileSize = tileSize;
+    constructor(options: {
+        scene: Phaser.Scene;
+        width: number;
+        height: number;
+        tileSize: number;
+    }) {
+        this.scene = options.scene;
+        this.width = options.width;
+        this.height = options.height;
+        this.tileSize = options.tileSize;
         this.grid = [];
 
         // Initialize grid with default terrain (Sand)
-        for (let x = 0; x < width; x++) {
+        for (let x = 0; x < this.width; x++) {
             this.grid[x] = [];
-            for (let y = 0; y < height; y++) {
+            for (let y = 0; y < this.height; y++) {
                 this.grid[x][y] = TerrainType.SAND;
             }
         }

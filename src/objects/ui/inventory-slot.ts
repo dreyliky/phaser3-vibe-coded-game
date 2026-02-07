@@ -13,14 +13,23 @@ export class InventorySlot extends Phaser.GameObjects.Container {
     public slotIndex: number;
     public slotType: 'main' | 'quick';
 
-    constructor(scene: Phaser.Scene, x: number, y: number, size: number = 50, type: 'main' | 'quick', index: number) {
-        super(scene, x, y);
-        this.size = size;
-        this.slotType = type;
-        this.slotIndex = index;
+    constructor(options: {
+        scene: Phaser.Scene;
+        x: number;
+        y: number;
+        size?: number;
+        type: 'main' | 'quick';
+        index: number;
+    }) {
+        super(options.scene, options.x, options.y);
+        this.size = options.size ?? 50;
+        this.slotType = options.type;
+        this.slotIndex = options.index;
+        
+        const scene = options.scene;
 
         // Background
-        this.background = scene.add.rectangle(0, 0, size, size, 0x666666);
+        this.background = scene.add.rectangle(0, 0, this.size, this.size, 0x666666);
         this.add(this.background);
 
         // Border
@@ -28,7 +37,7 @@ export class InventorySlot extends Phaser.GameObjects.Container {
         this.drawBorder();
         this.add(this.border);
 
-        this.setSize(size, size);
+        this.setSize(this.size, this.size);
         this.setInteractive({ dropZone: true });
     }
 

@@ -13,7 +13,15 @@ export class StructureGenerator {
         this.walls = this.scene.add.group();
     }
 
-    public generateWallRect(startX: number, startY: number, width: number, height: number, type: 'rock' | 'bricks' | 'planks' | 'smooth', materialName: string = 'Default') {
+    public generateWallRect(options: {
+        startX: number;
+        startY: number;
+        width: number;
+        height: number;
+        type: 'rock' | 'bricks' | 'planks' | 'smooth';
+        materialName?: string;
+    }) {
+        const { startX, startY, width, height, type, materialName = 'Default' } = options;
         const tileSize = GAME_CONFIG.TILE_SIZE;
         const material = WALL_MATERIALS[materialName] || WALL_MATERIALS.Default;
         
@@ -29,10 +37,10 @@ export class StructureGenerator {
                 let wall: BaseLinkedWall;
                 
                 switch (type) {
-                    case 'rock': wall = new BaseRockWall(this.scene, posX, posY, material); break;
-                    case 'bricks': wall = new BaseBrickWall(this.scene, posX, posY, material); break;
-                    case 'planks': wall = new BasePlankWall(this.scene, posX, posY, material); break;
-                    case 'smooth': wall = new BaseSmoothWall(this.scene, posX, posY, material); break;
+                    case 'rock': wall = new BaseRockWall({ scene: this.scene, x: posX, y: posY, material }); break;
+                    case 'bricks': wall = new BaseBrickWall({ scene: this.scene, x: posX, y: posY, material }); break;
+                    case 'planks': wall = new BasePlankWall({ scene: this.scene, x: posX, y: posY, material }); break;
+                    case 'smooth': wall = new BaseSmoothWall({ scene: this.scene, x: posX, y: posY, material }); break;
                 }
                 
                 this.walls.add(wall);
@@ -40,7 +48,13 @@ export class StructureGenerator {
         }
     }
 
-    public generatePalette(startX: number, startY: number, type: 'rock' | 'bricks' | 'planks' | 'smooth', materialName: string = 'Default') {
+    public generatePalette(options: {
+        startX: number;
+        startY: number;
+        type: 'rock' | 'bricks' | 'planks' | 'smooth';
+        materialName?: string;
+    }) {
+        const { startX, startY, type, materialName = 'Default' } = options;
         const tileSize = GAME_CONFIG.TILE_SIZE;
         const gridStartX = Math.round(startX / tileSize) * tileSize;
         const gridStartY = Math.round(startY / tileSize) * tileSize;
@@ -56,10 +70,10 @@ export class StructureGenerator {
             
             let wall: BaseLinkedWall;
             switch (type) {
-                case 'rock': wall = new BaseRockWall(this.scene, posX, posY, material); break;
-                case 'bricks': wall = new BaseBrickWall(this.scene, posX, posY, material); break;
-                case 'planks': wall = new BasePlankWall(this.scene, posX, posY, material); break;
-                case 'smooth': wall = new BaseSmoothWall(this.scene, posX, posY, material); break;
+                case 'rock': wall = new BaseRockWall({ scene: this.scene, x: posX, y: posY, material }); break;
+                case 'bricks': wall = new BaseBrickWall({ scene: this.scene, x: posX, y: posY, material }); break;
+                case 'planks': wall = new BasePlankWall({ scene: this.scene, x: posX, y: posY, material }); break;
+                case 'smooth': wall = new BaseSmoothWall({ scene: this.scene, x: posX, y: posY, material }); break;
             }
             
             wall.autoUpdate = false;

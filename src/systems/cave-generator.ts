@@ -197,7 +197,7 @@ export class CaveGenerator {
                 if (gridX >= 0 && gridX < this.width && gridY >= 0 && gridY < this.height) {
                     if (this.grid[gridX][gridY] === 1) {
                         // Found the shell! Dig from here inwards
-                        this.digTunnel(gridX, gridY, -dx, -dy);
+                        this.digTunnel({ startX: gridX, startY: gridY, dx: -dx, dy: -dy });
                         foundShell = true;
                         break;
                     }
@@ -210,9 +210,9 @@ export class CaveGenerator {
         }
     }
 
-    private digTunnel(startX: number, startY: number, dx: number, dy: number) {
-        let x = startX;
-        let y = startY;
+    private digTunnel(options: { startX: number; startY: number; dx: number; dy: number }) {
+        let x = options.startX;
+        let y = options.startY;
         let steps = 0;
         const maxSteps = 25; // Dig deeper for organic shapes
 
@@ -225,8 +225,8 @@ export class CaveGenerator {
 
         // Move inward
         while (steps < maxSteps) {
-            cx += dx;
-            cy += dy;
+            cx += options.dx;
+            cy += options.dy;
             steps++;
 
             const ix = Math.round(cx);

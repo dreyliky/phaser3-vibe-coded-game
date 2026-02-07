@@ -4,26 +4,57 @@ import { WallMaterial } from '../../config/wall-data';
 
 // --- Base Styles (Texture-based) ---
 
+export interface WallTypeOptions {
+    scene: Phaser.Scene;
+    x: number;
+    y: number;
+    material?: WallMaterial;
+}
+
 export class BaseRockWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
-        super(scene, x, y, 'wall_rock', material);
+    constructor(options: WallTypeOptions) {
+        super({
+            scene: options.scene,
+            x: options.x,
+            y: options.y,
+            texture: 'wall_rock',
+            material: options.material
+        });
     }
 }
 
 export class BaseBrickWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
-        super(scene, x, y, 'wall_bricks', material);
+    constructor(options: WallTypeOptions) {
+        super({
+            scene: options.scene,
+            x: options.x,
+            y: options.y,
+            texture: 'wall_bricks',
+            material: options.material
+        });
     }
 }
 
 export class BasePlankWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
-        super(scene, x, y, 'wall_planks', material);
+    constructor(options: WallTypeOptions) {
+        super({
+            scene: options.scene,
+            x: options.x,
+            y: options.y,
+            texture: 'wall_planks',
+            material: options.material
+        });
     }
 }
 
 export class BaseSmoothWall extends BaseLinkedWall {
-    constructor(scene: Phaser.Scene, x: number, y: number, material?: WallMaterial) {
-        super(scene, x, y, 'wall_smooth', material);
+    constructor(options: WallTypeOptions) {
+        super({
+            scene: options.scene,
+            x: options.x,
+            y: options.y,
+            texture: 'wall_smooth',
+            material: options.material
+        });
     }
 }

@@ -6,8 +6,16 @@ export class PauseMenu extends Phaser.GameObjects.Container {
     private closeButton: Button;
     private menuItems: Phaser.GameObjects.Container;
     
-    constructor(scene: Phaser.Scene, x: number, y: number, onExit: () => void, onResume?: () => void) {
-        super(scene, x, y);
+    constructor(options: {
+        scene: Phaser.Scene;
+        x: number;
+        y: number;
+        onExit: () => void;
+        onResume?: () => void;
+    }) {
+        super(options.scene, options.x, options.y);
+        
+        const scene = options.scene;
 
         const width = 300;
         const height = 400;
@@ -18,13 +26,20 @@ export class PauseMenu extends Phaser.GameObjects.Container {
         this.add(this.background);
 
         // Header / Close Button
-        this.closeButton = new Button(scene, width / 2 - 20, -height / 2 + 15, 'X', () => {
-            this.setVisible(false);
-            if (onResume) onResume();
-        }, {
-            fontSize: '20px',
-            backgroundColor: 0xcc0000,
-            padding: { x: 5, y: 2 }
+        this.closeButton = new Button({
+            scene,
+            x: width / 2 - 20,
+            y: -height / 2 + 15,
+            text: 'X',
+            onClick: () => {
+                this.setVisible(false);
+                if (options.onResume) options.onResume();
+            },
+            style: {
+                fontSize: '20px',
+                backgroundColor: 0xcc0000,
+                padding: { x: 5, y: 2 }
+            }
         });
         this.add(this.closeButton);
 
@@ -42,11 +57,18 @@ export class PauseMenu extends Phaser.GameObjects.Container {
         this.add(this.menuItems);
 
         // Item 1: Exit to Menu
-        const exitBtn = new Button(scene, 0, 0, 'Exit to Menu', onExit, {
-            width: 200,
-            height: 50,
-            backgroundColor: 0x444444,
-            backgroundColorOver: 0x666666
+        const exitBtn = new Button({
+            scene,
+            x: 0,
+            y: 0,
+            text: 'Exit to Menu',
+            onClick: options.onExit,
+            style: {
+                width: 200,
+                height: 50,
+                backgroundColor: 0x444444,
+                backgroundColorOver: 0x666666
+            }
         });
         this.menuItems.add(exitBtn);
 

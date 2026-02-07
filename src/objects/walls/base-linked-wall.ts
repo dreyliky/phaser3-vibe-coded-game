@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
-import { BaseWall } from './base-wall';
+import { BaseWall, BaseWallOptions } from './base-wall';
 import { DEBUG_SETTINGS, GAME_CONFIG } from '../../config/constants';
 import { WALL_ATLAS_MAPPING, WALL_SOLID_COLOR } from './wall-constants';
 import { WallMaterial } from '../../config/wall-data';
+
+export interface BaseLinkedWallOptions extends BaseWallOptions {
+    material?: WallMaterial;
+}
 
 export class BaseLinkedWall extends BaseWall {
     private static wallRegistry: Map<string, BaseLinkedWall> = new Map();
@@ -23,25 +27,25 @@ export class BaseLinkedWall extends BaseWall {
     protected currentHealth: number = 100;
     protected wallTint?: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, material?: WallMaterial, frame?: string | number) {
-        super(scene, x, y, texture, frame);
+    constructor(options: BaseLinkedWallOptions) {
+        super(options);
         
         // Snap to grid for logic
-        this.gridX = Math.round(x / GAME_CONFIG.TILE_SIZE);
-        this.gridY = Math.round(y / GAME_CONFIG.TILE_SIZE);
+        this.gridX = Math.round(options.x / GAME_CONFIG.TILE_SIZE);
+        this.gridY = Math.round(options.y / GAME_CONFIG.TILE_SIZE);
         
         // Apply Material Stats
-        if (material) {
-            this.maxHealth = material.maxHealth;
+        if (options.material) {
+            this.maxHealth = options.material.maxHealth;
             this.currentHealth = this.maxHealth;
-            this.wallTint = material.tint;
+            this.wallTint = options.material.tint;
         }
 
         // Register
         BaseLinkedWall.wallRegistry.set(this.getKey(this.gridX, this.gridY), this);
 
         // Initial update (defer to next tick to ensure neighbors are created)
-        scene.time.delayedCall(1, () => {
+        options.scene.time.delayedCall(1, () => {
             this.updateConnection();
             this.updateSurroundings();
             

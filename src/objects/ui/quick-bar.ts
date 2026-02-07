@@ -29,7 +29,14 @@ export class QuickBar extends Phaser.GameObjects.Container {
         for (let i = 0; i < 3; i++) {
             const slotX = startX + i * (this.SLOT_SIZE + this.GAP);
             
-            const slot = new InventorySlot(scene, slotX, 0, this.SLOT_SIZE, 'quick', i);
+            const slot = new InventorySlot({
+                scene,
+                x: slotX,
+                y: 0,
+                size: this.SLOT_SIZE,
+                type: 'quick',
+                index: i
+            });
             this.add(slot);
             this.slots.push(slot);
 

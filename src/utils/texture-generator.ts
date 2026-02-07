@@ -1,7 +1,13 @@
 import Phaser from 'phaser';
 
 export class TextureGenerator {
-    static createSquareTexture(scene: Phaser.Scene, key: string, color: number, size: number = 32) {
+    static createSquareTexture(options: {
+        scene: Phaser.Scene;
+        key: string;
+        color: number;
+        size?: number;
+    }) {
+        const { scene, key, color, size = 32 } = options;
         if (scene.textures.exists(key)) return;
 
         const graphics = scene.make.graphics({ x: 0, y: 0 });
@@ -13,7 +19,13 @@ export class TextureGenerator {
         graphics.generateTexture(key, size, size);
     }
 
-    static createCircleTexture(scene: Phaser.Scene, key: string, color: number, radius: number = 10) {
+    static createCircleTexture(options: {
+        scene: Phaser.Scene;
+        key: string;
+        color: number;
+        radius?: number;
+    }) {
+        const { scene, key, color, radius = 10 } = options;
         if (scene.textures.exists(key)) return;
 
         const size = radius * 2;

@@ -5,16 +5,31 @@ import { InventoryItem } from '../../systems';
 import { PlayerCombatSystem } from './systems/player-combat-system';
 import { PlayerMovementSystem } from './systems/player-movement-system';
 
+export interface PlayerOptions {
+    scene: Phaser.Scene;
+    x: number;
+    y: number;
+    definition: CharacterDefinition;
+}
+
 export class Player extends Phaser.GameObjects.Container {
     private visual: CharacterVisual;
     private movementSystem: PlayerMovementSystem;
     private combatSystem: PlayerCombatSystem;
     
-    constructor(scene: Phaser.Scene, x: number, y: number, definition: CharacterDefinition) {
-        super(scene, x, y);
+    constructor(options: PlayerOptions) {
+        super(options.scene, options.x, options.y);
+        
+        const scene = options.scene;
+        const definition = options.definition;
 
         // Visual
-        this.visual = new CharacterVisual(scene, 0, 0, definition);
+        this.visual = new CharacterVisual({
+            scene,
+            x: 0,
+            y: 0,
+            definition
+        });
         this.add(this.visual);
 
         // Physics

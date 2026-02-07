@@ -28,7 +28,12 @@ export class MapGenerator {
         const caveGrid = this.caveGenerator.generate();
 
         // Initialize Terrain System
-        this.terrainSystem = new TerrainSystem(this.scene, gridWidth, gridHeight, tileSize);
+        this.terrainSystem = new TerrainSystem({
+            scene: this.scene,
+            width: gridWidth,
+            height: gridHeight,
+            tileSize: tileSize
+        });
 
         // Generate Soil Patches (Cellular Automata)
         // We generate a separate grid for soil distribution
@@ -94,7 +99,13 @@ export class MapGenerator {
 
                 if (caveGrid[x][y] === 1) {
                     // Place a wall
-                    this.structureGenerator.generateWallRect(posX, posY, 1, 1, 'rock');
+                    this.structureGenerator.generateWallRect({
+                        startX: posX,
+                        startY: posY,
+                        width: 1,
+                        height: 1,
+                        type: 'rock'
+                    });
                 }
             }
         }
@@ -148,7 +159,12 @@ export class MapGenerator {
             return false;
         };
 
-        this.vegetationGenerator.generateVegetation(width, height, 800, checkCollision);
+        this.vegetationGenerator.generateVegetation({
+            mapWidth: width,
+            mapHeight: height,
+            count: 800,
+            collisionCheck: checkCollision
+        });
     }
 
     

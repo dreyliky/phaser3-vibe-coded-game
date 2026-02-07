@@ -158,7 +158,13 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
         return item;
     }
 
-    public moveItem(fromType: 'main' | 'quick', fromIndex: number, toType: 'main' | 'quick', toIndex: number): boolean {
+    public moveItem(options: {
+        fromType: 'main' | 'quick';
+        fromIndex: number;
+        toType: 'main' | 'quick';
+        toIndex: number;
+    }): boolean {
+        const { fromType, fromIndex, toType, toIndex } = options;
         const fromItem = this.getItemAt(fromType, fromIndex);
         const toItem = this.getItemAt(toType, toIndex);
 

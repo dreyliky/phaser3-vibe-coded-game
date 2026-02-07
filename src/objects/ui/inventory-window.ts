@@ -24,12 +24,19 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
         this.add(this.background);
 
         // Header / Close Button
-        this.closeButton = new Button(scene, width / 2 - 20, -height / 2 + 15, 'X', () => {
-            this.setVisible(false);
-        }, {
-            fontSize: '20px',
-            backgroundColor: 0xcc0000,
-            padding: { x: 5, y: 2 }
+        this.closeButton = new Button({
+            scene,
+            x: width / 2 - 20,
+            y: -height / 2 + 15,
+            text: 'X',
+            onClick: () => {
+                this.setVisible(false);
+            },
+            style: {
+                fontSize: '20px',
+                backgroundColor: 0xcc0000,
+                padding: { x: 5, y: 2 }
+            }
         });
         this.add(this.closeButton);
 
@@ -44,7 +51,14 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
             const slotX = startX + col * (this.SLOT_SIZE + this.GAP);
             const slotY = startY + row * (this.SLOT_SIZE + this.GAP);
 
-            const slot = new InventorySlot(scene, slotX, slotY, this.SLOT_SIZE, 'main', i);
+            const slot = new InventorySlot({
+                scene,
+                x: slotX,
+                y: slotY,
+                size: this.SLOT_SIZE,
+                type: 'main',
+                index: i
+            });
             
             // First 4 slots enabled, rest disabled
             if (i >= 4) {

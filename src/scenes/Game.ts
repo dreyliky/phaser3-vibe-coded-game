@@ -50,7 +50,12 @@ export class Game extends Phaser.Scene {
         this.mapGenerator.generateMap(mapWidth, mapHeight);
 
         // Create Player
-        this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
+        this.player = new Player({
+            scene: this,
+            x: width * 0.5,
+            y: height * 0.5,
+            definition: this.characterDefinition
+        });
         // Depth is handled in Player.update() for Y-sorting
         
         // Camera setup
@@ -73,18 +78,18 @@ export class Game extends Phaser.Scene {
         this.physics.add.collider(this.player, this.mapGenerator.getWalls());
 
         // Spawn test items
-        this.itemInteractionSystem.spawnItem(new AssaultRifle(), 300, 300);
-        this.itemInteractionSystem.spawnItem(new Pistol(), 400, 300);
-        this.itemInteractionSystem.spawnItem(new Shotgun(), 500, 300);
+        this.itemInteractionSystem.spawnItem({ item: new AssaultRifle(), x: 300, y: 300 });
+        this.itemInteractionSystem.spawnItem({ item: new Pistol(), x: 400, y: 300 });
+        this.itemInteractionSystem.spawnItem({ item: new Shotgun(), x: 500, y: 300 });
         
         // Extra weapons
-        this.itemInteractionSystem.spawnItem(new AssaultRifle(), 320, 350);
-        this.itemInteractionSystem.spawnItem(new Pistol(), 420, 350);
-        this.itemInteractionSystem.spawnItem(new Shotgun(), 520, 350);
+        this.itemInteractionSystem.spawnItem({ item: new AssaultRifle(), x: 320, y: 350 });
+        this.itemInteractionSystem.spawnItem({ item: new Pistol(), x: 420, y: 350 });
+        this.itemInteractionSystem.spawnItem({ item: new Shotgun(), x: 520, y: 350 });
 
-        this.itemInteractionSystem.spawnItem(new StandardAmmo(), 350, 400, 60);
-        this.itemInteractionSystem.spawnItem(new LightAmmo(), 450, 400, 100);
-        this.itemInteractionSystem.spawnItem(new BuckshotAmmo(), 550, 400, 40);
+        this.itemInteractionSystem.spawnItem({ item: new StandardAmmo(), x: 350, y: 400, quantity: 60 });
+        this.itemInteractionSystem.spawnItem({ item: new LightAmmo(), x: 450, y: 400, quantity: 100 });
+        this.itemInteractionSystem.spawnItem({ item: new BuckshotAmmo(), x: 550, y: 400, quantity: 40 });
 
         // Input for interaction
         if (this.input.keyboard) {

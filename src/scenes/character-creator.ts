@@ -33,57 +33,106 @@ export class CharacterCreator extends Phaser.Scene {
         this.add.rectangle(0, 0, width, height, 0x222222).setOrigin(0);
 
         // Character Visual
-        this.characterVisual = new CharacterVisual(this, width * 0.5, height * 0.4, this.character);
+        this.characterVisual = new CharacterVisual({
+            scene: this,
+            x: width * 0.5,
+            y: height * 0.4,
+            definition: this.character
+        });
         this.add.existing(this.characterVisual);
 
         // Controls
         const startY = height * 0.65;
         const gapY = 40;
 
-        this.genderSelector = new TextSelector(this, width * 0.5, startY, 'Gender', Object.values(Gender), 
-            this.character.gender, 
-            (val) => { 
+        this.genderSelector = new TextSelector({
+            scene: this,
+            x: width * 0.5,
+            y: startY,
+            label: 'Gender',
+            options: Object.values(Gender),
+            initialValue: this.character.gender,
+            onChange: (val) => { 
                 this.character.gender = val as Gender; 
                 this.onGenderChange();
                 this.updateCharacter(); 
-            });
+            }
+        });
 
-        this.bodySelector = new TextSelector(this, width * 0.5, startY + gapY, 'Body', this.getAvailableBodyTypes(), 
-            this.character.bodyType, 
-            (val) => { 
+        this.bodySelector = new TextSelector({
+            scene: this,
+            x: width * 0.5,
+            y: startY + gapY,
+            label: 'Body',
+            options: this.getAvailableBodyTypes(),
+            initialValue: this.character.bodyType,
+            onChange: (val) => { 
                 this.character.bodyType = val as BodyType; 
                 this.onBodyTypeChange();
                 this.updateCharacter(); 
-            });
+            }
+        });
 
-        new TextSelector(this, width * 0.5, startY + gapY * 2, 'Hair', Object.values(HairType), 
-            this.character.hairType, 
-            (val) => { this.character.hairType = val as HairType; this.updateCharacter(); });
+        new TextSelector({
+            scene: this,
+            x: width * 0.5,
+            y: startY + gapY * 2,
+            label: 'Hair',
+            options: Object.values(HairType),
+            initialValue: this.character.hairType,
+            onChange: (val) => { this.character.hairType = val as HairType; this.updateCharacter(); }
+        });
 
         // Colors
-        new ColorSelector(this, width * 0.3, startY + gapY * 3.5, 'Skin', SKIN_COLORS, 
-            this.character.skinColor,
-            (val) => { this.character.skinColor = val; this.updateCharacter(); });
+        new ColorSelector({
+            scene: this,
+            x: width * 0.3,
+            y: startY + gapY * 3.5,
+            label: 'Skin',
+            colors: SKIN_COLORS,
+            initialValue: this.character.skinColor,
+            onChange: (val) => { this.character.skinColor = val; this.updateCharacter(); }
+        });
 
-        new ColorSelector(this, width * 0.7, startY + gapY * 3.5, 'Hair Color', HAIR_COLORS, 
-            this.character.hairColor,
-            (val) => { this.character.hairColor = val; this.updateCharacter(); });
+        new ColorSelector({
+            scene: this,
+            x: width * 0.7,
+            y: startY + gapY * 3.5,
+            label: 'Hair Color',
+            colors: HAIR_COLORS,
+            initialValue: this.character.hairColor,
+            onChange: (val) => { this.character.hairColor = val; this.updateCharacter(); }
+        });
 
         // Play Button
-        new Button(this, width * 0.5, height - 50, 'Play', () => this.startGame(), {
-            fontSize: '24px',
-            textColor: '#00ff00',
-            backgroundColor: 0x333333,
-            textColorOver: '#ffff00',
-            padding: { x: 20, y: 10 }
+        new Button({
+            scene: this,
+            x: width * 0.5,
+            y: height - 50,
+            text: 'Play',
+            onClick: () => this.startGame(),
+            style: {
+                fontSize: '24px',
+                textColor: '#00ff00',
+                backgroundColor: 0x333333,
+                textColorOver: '#ffff00',
+                padding: { x: 20, y: 10 }
+            }
         });
 
         // Back Button
-        new Button(this, 90, 60, '< Back', () => this.scene.start('MainMenu'), {
-            fontSize: '20px',
-            backgroundColor: 0x000000,
-            padding: { x: 10, y: 5 },
-            backgroundAlpha: 0 // Optional: make it transparent if desired, but 0x000000 is fine
+        new Button({
+            scene: this,
+            x: 90,
+            y: 60,
+            text: '< Back',
+            onClick: () => this.scene.start('MainMenu'),
+            style: {
+                fontSize: '20px',
+                backgroundColor: 0x000000,
+                padding: { x: 10, y: 5 },
+                backgroundAlpha: 0 // Optional: make it transparent if desired, but 0x000000 is fine
+            }
         });
     }
 

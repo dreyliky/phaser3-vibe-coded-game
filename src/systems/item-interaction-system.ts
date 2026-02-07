@@ -19,8 +19,22 @@ export class ItemInteractionSystem {
         this.updateItemHighlight();
     }
 
-    public spawnItem(item: BaseItem, x: number, y: number, quantity: number = 1, extraData?: ItemExtraData) {
-        const worldItem = new WorldItem(this.scene, x, y, item, quantity, extraData);
+    public spawnItem(options: {
+        item: BaseItem;
+        x: number;
+        y: number;
+        quantity?: number;
+        extraData?: ItemExtraData;
+    }) {
+        const { item, x, y, quantity = 1, extraData } = options;
+        const worldItem = new WorldItem({
+            scene: this.scene,
+            x,
+            y,
+            item,
+            quantity,
+            extraData
+        });
         this.worldItems.add(worldItem);
     }
 
@@ -39,7 +53,14 @@ export class ItemInteractionSystem {
         const targetY = this.player.y + Math.sin(finalAngle) * dist;
         
         // Spawn at player position
-        const worldItem = new WorldItem(this.scene, this.player.x, this.player.y, item, quantity, extraData);
+        const worldItem = new WorldItem({
+            scene: this.scene,
+            x: this.player.x,
+            y: this.player.y,
+            item,
+            quantity,
+            extraData
+        });
         this.worldItems.add(worldItem);
         
         // Animation: Start larger (Container scale 0.8), move to position, scale back to 1 (Container scale)

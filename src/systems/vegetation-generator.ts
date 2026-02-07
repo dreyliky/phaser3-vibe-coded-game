@@ -13,7 +13,13 @@ export class VegetationGenerator {
         this.plants = this.scene.add.group(); 
     }
 
-    public generateVegetation(mapWidth: number, mapHeight: number, count: number, collisionCheck?: (x: number, y: number) => boolean) {
+    public generateVegetation(options: {
+        mapWidth: number;
+        mapHeight: number;
+        count: number;
+        collisionCheck?: (x: number, y: number) => boolean;
+    }) {
+        const { mapWidth, mapHeight, count, collisionCheck } = options;
         const treeTypes = [
             'plant_tree_bamboo', 'plant_tree_cecropia', 'plant_tree_palm', 
             'plant_tree_teak', 'plant_tree_willow'
@@ -66,10 +72,10 @@ export class VegetationGenerator {
                 let plant;
                 if (isTree) {
                     const type = Phaser.Utils.Array.GetRandom(treeTypes);
-                    plant = new Tree(this.scene, x, y, type);
+                    plant = new Tree({ scene: this.scene, x, y, texture: type });
                 } else {
                     const type = Phaser.Utils.Array.GetRandom(bushTypes);
-                    plant = new Bush(this.scene, x, y, type);
+                    plant = new Bush({ scene: this.scene, x, y, texture: type });
                 }
                 
                 this.plants.add(plant);

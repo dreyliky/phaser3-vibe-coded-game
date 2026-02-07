@@ -1,6 +1,13 @@
 import Phaser from 'phaser';
 import { BodyType, CharacterDefinition } from '../../types/character';
 
+export interface CharacterVisualOptions {
+    scene: Phaser.Scene;
+    x: number;
+    y: number;
+    definition: CharacterDefinition;
+}
+
 export class CharacterVisual extends Phaser.GameObjects.Container {
     private bodySprite: Phaser.GameObjects.Sprite;
     private headSprite: Phaser.GameObjects.Sprite;
@@ -8,9 +15,11 @@ export class CharacterVisual extends Phaser.GameObjects.Container {
     private definition: CharacterDefinition;
     private direction: 'north' | 'south' | 'east' | 'west' = 'south';
 
-    constructor(scene: Phaser.Scene, x: number, y: number, definition: CharacterDefinition) {
-        super(scene, x, y);
-        this.definition = definition;
+    constructor(options: CharacterVisualOptions) {
+        super(options.scene, options.x, options.y);
+        this.definition = options.definition;
+        
+        const scene = options.scene;
 
         // Create sprites
         this.bodySprite = scene.add.sprite(0, 0, '');
