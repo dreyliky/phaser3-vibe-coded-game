@@ -84,6 +84,13 @@ export class Boot extends Phaser.Scene {
         this.load.image('plant_tree_palm', `${plantPath}/TreePalm.png`);
         this.load.image('plant_tree_teak', `${plantPath}/TreeTeak.png`);
         this.load.image('plant_tree_willow', `${plantPath}/TreeWillow.png`);
+
+        // Load Walls
+        const wallPath = 'assets/sprites/things/buildings/linked';
+        this.load.spritesheet('wall_rock', `${wallPath}/Rock_Atlas.png`, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_bricks', `${wallPath}/Wall_Atlas_Bricks.png`, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_planks', `${wallPath}/Wall_Atlas_Planks.png`, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_smooth', `${wallPath}/Wall_Atlas_Smooth.png`, { frameWidth: 80, frameHeight: 80 });
     }
 
     create() {

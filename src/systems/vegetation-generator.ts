@@ -13,7 +13,7 @@ export class VegetationGenerator {
         this.plants = this.scene.add.group(); 
     }
 
-    public generateVegetation(mapWidth: number, mapHeight: number, count: number) {
+    public generateVegetation(mapWidth: number, mapHeight: number, count: number, collisionCheck?: (x: number, y: number) => boolean) {
         const treeTypes = [
             'plant_tree_bamboo', 'plant_tree_cecropia', 'plant_tree_palm', 
             'plant_tree_teak', 'plant_tree_willow'
@@ -39,12 +39,22 @@ export class VegetationGenerator {
                 y = Phaser.Math.Between(0, mapHeight);
                 
                 validPosition = true;
+                
+                // Check distance to other plants
                 for (const pos of placedPositions) {
                     if (Phaser.Math.Distance.Between(x, y, pos.x, pos.y) < minDistance) {
                         validPosition = false;
                         break;
                     }
                 }
+
+                // Check external collision (e.g. walls)
+                if (validPosition && collisionCheck) {
+                    if (collisionCheck(x, y)) {
+                        validPosition = false;
+                    }
+                }
+
                 attempts++;
             }
 

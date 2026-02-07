@@ -23,6 +23,6 @@ export const ASSETS = {
 };
 
 export const DEBUG_SETTINGS = {
-    SHOW_COLLIDERS: true, // Set to true to see physics bodies
+    SHOW_COLLIDERS: false, // Set to true to see physics bodies
     SHOW_FPS: true        // Set to true to see FPS counter
 };
