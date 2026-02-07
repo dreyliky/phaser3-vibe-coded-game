@@ -30,12 +30,61 @@ export class MapGenerator {
         // Initialize Terrain System
         this.terrainSystem = new TerrainSystem(this.scene, gridWidth, gridHeight, tileSize);
 
-        // Populate Terrain Grid based on Cave Generator
+        // Generate Soil Patches (Cellular Automata)
+        // We generate a separate grid for soil distribution
+        const soilGrid: number[][] = [];
+        for (let x = 0; x < gridWidth; x++) {
+            soilGrid[x] = [];
+            for (let y = 0; y < gridHeight; y++) {
+                // 40% chance to start as soil
+                soilGrid[x][y] = Math.random() < 0.4 ? 1 : 0;
+            }
+        }
+
+        // Smooth Soil Grid (3 iterations)
+        for (let i = 0; i < 3; i++) {
+            const newGrid: number[][] = [];
+            for (let x = 0; x < gridWidth; x++) {
+                newGrid[x] = [];
+                for (let y = 0; y < gridHeight; y++) {
+                    let neighbors = 0;
+                    for (let nx = x - 1; nx <= x + 1; nx++) {
+                        for (let ny = y - 1; ny <= y + 1; ny++) {
+                            if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
+                                if (nx !== x || ny !== y) {
+                                    neighbors += soilGrid[nx][ny];
+                                }
+                            }
+                        }
+                    }
+                    // Standard CA rules for smooth blobs
+                    if (neighbors > 4) newGrid[x][y] = 1;
+                    else if (neighbors < 4) newGrid[x][y] = 0;
+                    else newGrid[x][y] = soilGrid[x][y];
+                }
+            }
+            // Copy back
+            for (let x = 0; x < gridWidth; x++) {
+                for (let y = 0; y < gridHeight; y++) {
+                    soilGrid[x][y] = newGrid[x][y];
+                }
+            }
+        }
+
+        // Populate Terrain Grid based on Cave Generator and Soil Grid
         for (let x = 0; x < gridWidth; x++) {
             for (let y = 0; y < gridHeight; y++) {
                 // Default is SAND (handled by TerrainSystem init)
 
-                // If inside cave, set ROCK
+                // If soil patch exists, set SOIL
+                if (soilGrid[x][y] === 1) {
+                    this.terrainSystem.setTerrain(x, y, TerrainType.SOIL);
+                }
+
+                // If inside cave, overwrite with ROCK (Higher priority/layer)
+                // Actually, setTerrain overwrites the grid value.
+                // Since Rock is conceptually "above" or "replaces" soil/sand in this specific map logic (cave overrides outside),
+                // we check cave last or just overwrite.
                 if (this.caveGenerator.isInsideCave(x, y)) {
                     this.terrainSystem.setTerrain(x, y, TerrainType.ROCK);
                 }

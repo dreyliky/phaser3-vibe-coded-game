@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 export enum TerrainType {
     SAND = 'SAND',
+    SOIL = 'SOIL',
     ROCK = 'ROCK'
 }
 
@@ -17,9 +18,14 @@ const TERRAIN_DATA: Record<TerrainType, TerrainConfig> = {
         layer: 0,
         z: -100
     },
+    [TerrainType.SOIL]: { 
+        asset: 'floor_soil', 
+        layer: 1,
+        z: -95
+    },
     [TerrainType.ROCK]: { 
         asset: 'floor_cave', 
-        layer: 1,
+        layer: 2,
         z: -90
     }
 };
@@ -150,10 +156,19 @@ export class TerrainSystem {
             { x: vx, y: vy }
         ];
 
+        const targetLayer = TERRAIN_DATA[type].layer;
+
         for (const p of neighbors) {
+            const neighborType = this.getTerrain(p.x, p.y);
+            
             // Check if this neighbor cell matches the target terrain type
-            if (this.getTerrain(p.x, p.y) === type) {
-                matchCount++;
+            // OR if the neighbor is a "higher" layer (which implies it covers this layer)
+            // This prevents gaps (e.g. seeing Sand between Soil and Rock)
+            if (neighborType) {
+                const neighborLayer = TERRAIN_DATA[neighborType].layer;
+                if (neighborType === type || neighborLayer > targetLayer) {
+                    matchCount++;
+                }
             }
         }
 
