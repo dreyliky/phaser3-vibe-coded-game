@@ -56,6 +56,8 @@ export class Game extends Phaser.Scene {
         // Create Player
         this.player = new Player(this, width * 0.5, height * 0.5, this.characterDefinition);
         // Depth is handled in Player.update() for Y-sorting
+
+        this.mapGenerator.generateWalls(this.player.x, this.player.y);
         
         // Camera setup
         this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
@@ -74,6 +76,7 @@ export class Game extends Phaser.Scene {
 
         // Colliders
         this.physics.add.collider(this.player, this.mapGenerator.getVegetation());
+        this.physics.add.collider(this.player, this.mapGenerator.getWalls());
 
         // Spawn test items
         this.itemInteractionSystem.spawnItem(new AssaultRifle(), 300, 300);
@@ -144,4 +147,3 @@ export class Game extends Phaser.Scene {
         }
     }
 }
-
