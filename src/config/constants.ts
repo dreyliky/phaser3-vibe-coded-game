@@ -25,7 +25,7 @@ export const ASSETS = {
 export const DEBUG_SETTINGS = {
     SHOW_COLLIDERS: false, // Set to true to see physics bodies
     SHOW_FPS: true,        // Set to true to see FPS counter
-    SHOW_WALL_DEBUG: true  // Set to true to see wall mask/frame info
+    SHOW_WALL_DEBUG: false  // Set to true to see wall mask/frame info
 };
 
 export const GAME_CONFIG = {

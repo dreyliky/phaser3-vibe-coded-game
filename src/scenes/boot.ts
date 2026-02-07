@@ -69,7 +69,8 @@ export class Boot extends Phaser.Scene {
         this.load.image('projectile_light', 'assets/sprites/things/projectile/Bullet_Small.png');
         
         // Load Environment
-        this.load.image('background_sand', 'assets/sprites/things/projectile/Sand.png');
+        this.load.image('background_sand', 'assets/sprites/terrain/surfaces/Sand.png');
+        this.load.image('floor_cave', 'assets/sprites/terrain/surfaces/RoughHewnRock.png');
 
         // Load Plants - Bushes/Cacti
         const plantPath = 'assets/sprites/things/plant';
@@ -94,7 +95,7 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
-        // Go to Wall Test Scene
-        this.scene.start('WallTestScene');
+        // Go to Main Menu
+        this.scene.start('MainMenu');
     }
 }

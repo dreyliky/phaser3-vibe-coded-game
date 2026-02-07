@@ -11,7 +11,7 @@ export class Game extends Phaser.Scene {
     public player!: Player;
     private characterDefinition!: CharacterDefinition;
     public itemInteractionSystem!: ItemInteractionSystem;
-    private background!: Phaser.GameObjects.TileSprite;
+    // private background!: Phaser.GameObjects.TileSprite; // Removed
     private mapGenerator!: MapGenerator;
 
     constructor() {
@@ -40,11 +40,7 @@ export class Game extends Phaser.Scene {
         const mapHeight = 4000;
         this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
 
-        // Background
-        this.background = this.add.tileSprite(0, 0, width, height, 'background_sand')
-            .setOrigin(0)
-            .setScrollFactor(0)
-            .setDepth(-100);
+        // Background is now handled by MapGenerator (as tiles)
 
         // Launch HUD
         this.scene.launch('HUD');
@@ -131,17 +127,10 @@ export class Game extends Phaser.Scene {
     update() {
         this.player.update();
         this.itemInteractionSystem.update();
-
-        if (this.background) {
-            this.background.tilePositionX = Math.round(this.cameras.main.scrollX);
-            this.background.tilePositionY = Math.round(this.cameras.main.scrollY);
-        }
     }
 
     handleResize(gameSize: Phaser.Structs.Size) {
-        const { width, height } = gameSize;
-        if (this.background) {
-            this.background.setSize(width, height);
-        }
+        // const { width, height } = gameSize;
+        // Background is tile-based now, no need to resize a TileSprite
     }
 }

@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 export class MainMenu extends Phaser.Scene {
     private titleText!: Phaser.GameObjects.Text;
     private playButton!: Phaser.GameObjects.Text;
+    private wallTestButton!: Phaser.GameObjects.Text;
 
     constructor() {
         super('MainMenu');
@@ -33,6 +34,21 @@ export class MainMenu extends Phaser.Scene {
         })
         .on('pointerover', () => this.playButton.setStyle({ fill: '#ffff00' }))
         .on('pointerout', () => this.playButton.setStyle({ fill: '#00ff00' }));
+
+        this.wallTestButton = this.add.text(width * 0.5, height * 0.6, 'Walls Test Scene', {
+            fontSize: '24px',
+            color: '#ffffff',
+            fontFamily: 'Arial',
+            backgroundColor: '#333333',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+            this.scene.start('WallTestScene');
+        })
+        .on('pointerover', () => this.wallTestButton.setStyle({ fill: '#ffff00' }))
+        .on('pointerout', () => this.wallTestButton.setStyle({ fill: '#ffffff' }));
     }
 
     handleResize(gameSize: Phaser.Structs.Size) {
@@ -42,6 +58,9 @@ export class MainMenu extends Phaser.Scene {
         }
         if (this.playButton) {
             this.playButton.setPosition(width * 0.5, height * 0.5);
+        }
+        if (this.wallTestButton) {
+            this.wallTestButton.setPosition(width * 0.5, height * 0.6);
         }
     }
 }

@@ -41,6 +41,22 @@ export class WallTestScene extends Phaser.Scene {
             backgroundColor: '#ffffff'
         }).setScrollFactor(0).setDepth(100);
 
+        // Back to Menu Button
+        const backButton = this.add.text(10, this.scale.height - 40, 'Back to Menu', {
+            fontSize: '20px',
+            color: '#ffffff',
+            backgroundColor: '#000000',
+            padding: { x: 10, y: 5 }
+        })
+        .setScrollFactor(0)
+        .setDepth(100)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+            this.scene.start('MainMenu');
+        })
+        .on('pointerover', () => backButton.setStyle({ fill: '#ffff00' }))
+        .on('pointerout', () => backButton.setStyle({ fill: '#ffffff' }));
+
         // Camera Controls
         if (this.input.keyboard) {
             const cursors = this.input.keyboard.createCursorKeys();
