@@ -10,6 +10,7 @@ import { MapService } from '../services/map-service';
 import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../objects/walls/wall-types';
 import { Tree, Bush } from '../objects/plants';
 import { TerrainSystem, TerrainType } from '../systems/terrain-system';
+import { Damageable } from '../types/damageable';
 
 export class Game extends Phaser.Scene {
     public player!: Player;
@@ -19,7 +20,10 @@ export class Game extends Phaser.Scene {
     private mapId?: string;
     
     private wallsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
-    private plantsGroup!: Phaser.GameObjects.Group;
+    private plantsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
+    
+    private bulletsGroup!: Phaser.GameObjects.Group;
+    private treeHitboxesGroup!: Phaser.GameObjects.Group;
 
     constructor() {
         super('GameScene');
@@ -42,6 +46,17 @@ export class Game extends Phaser.Scene {
         
         this.scale.on('resize', this.handleResize, this);
 
+        // Physics Groups
+        this.bulletsGroup = this.physics.add.group({
+            classType: Phaser.Physics.Arcade.Sprite,
+            maxSize: 100
+        });
+
+        this.treeHitboxesGroup = this.physics.add.group({
+            classType: Phaser.Physics.Arcade.Sprite,
+            immovable: true
+        });
+
         // Launch HUD
         this.scene.launch('HUD');
 
@@ -50,7 +65,8 @@ export class Game extends Phaser.Scene {
             scene: this,
             x: width * 0.5,
             y: height * 0.5,
-            definition: this.characterDefinition
+            definition: this.characterDefinition,
+            bulletsGroup: this.bulletsGroup
         });
 
         // Initialize Item Interaction System
@@ -61,6 +77,9 @@ export class Game extends Phaser.Scene {
         } else {
             this.generateProceduralMap();
         }
+
+        // Initialize Tree Hitboxes
+        this.initializeTreeHitboxes();
         
         // Camera setup
         this.cameras.main.startFollow(this.player, true); 
@@ -76,6 +95,10 @@ export class Game extends Phaser.Scene {
         // Colliders
         this.physics.add.collider(this.player, this.plantsGroup);
         this.physics.add.collider(this.player, this.wallsGroup);
+        
+        // Bullet Collisions
+        this.physics.add.overlap(this.bulletsGroup, this.wallsGroup, this.handleBulletWallCollision, undefined, this);
+        this.physics.add.overlap(this.bulletsGroup, this.treeHitboxesGroup, this.handleBulletTreeCollision, undefined, this);
 
         // Input for interaction
         if (this.input.keyboard) {
@@ -111,6 +134,67 @@ export class Game extends Phaser.Scene {
         const initialQuickItem = inventorySystem.getItemAt('quick', 0);
         if (initialQuickItem) {
             this.player.equipWeapon(initialQuickItem);
+        }
+    }
+
+    private initializeTreeHitboxes() {
+        if (!this.plantsGroup) return;
+
+        this.plantsGroup.getChildren().forEach((plant: Phaser.GameObjects.GameObject) => {
+            if (plant instanceof Tree) {
+                const hitbox = plant.getBulletHitbox();
+                if (hitbox) {
+                    this.treeHitboxesGroup.add(hitbox);
+                }
+            }
+        });
+    }
+
+    private handleBulletWallCollision(obj1: any, obj2: any) {
+        // Identify bullet and wall using group membership for robustness
+        const isObj1Bullet = this.bulletsGroup.contains(obj1);
+        const isObj2Bullet = this.bulletsGroup.contains(obj2);
+
+        // Safety checks
+        if (!isObj1Bullet && !isObj2Bullet) return;
+        if (isObj1Bullet && isObj2Bullet) return;
+
+        const bullet = (isObj1Bullet ? obj1 : obj2) as Phaser.Physics.Arcade.Sprite;
+        const wall = (isObj1Bullet ? obj2 : obj1) as unknown as Damageable;
+
+        // Ensure bullet is active (not already destroyed in this frame)
+        if (!bullet.active) return;
+
+        // Destroy bullet immediately
+        bullet.destroy();
+
+        // Damage wall
+        if (wall && typeof wall.takeDamage === 'function') {
+             const damage = (bullet as any).damage || 10;
+             wall.takeDamage(damage);
+        }
+    }
+
+    private handleBulletTreeCollision(obj1: any, obj2: any) {
+        const isObj1Bullet = this.bulletsGroup.contains(obj1);
+        const isObj2Bullet = this.bulletsGroup.contains(obj2);
+
+        if (!isObj1Bullet && !isObj2Bullet) return;
+
+        const bullet = (isObj1Bullet ? obj1 : obj2) as Phaser.Physics.Arcade.Sprite;
+        const hitbox = (isObj1Bullet ? obj2 : obj1) as Phaser.Physics.Arcade.Sprite;
+        
+        if (!bullet.active) return;
+
+        bullet.destroy();
+
+        // Check if hitbox has parentTree
+        if ('parentTree' in hitbox) {
+            const tree = (hitbox as any).parentTree as Tree;
+            if (tree && typeof tree.takeDamage === 'function') {
+                const damage = (bullet as any).damage || 10;
+                tree.takeDamage(damage);
+            }
         }
     }
 

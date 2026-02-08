@@ -4,11 +4,13 @@ import { DEBUG_SETTINGS, GAME_CONFIG } from '../../config/constants';
 import { WALL_ATLAS_MAPPING, WALL_SOLID_COLOR } from './wall-constants';
 import { WallMaterial } from '../../config/wall-data';
 
+import { Damageable } from '../../types/damageable';
+
 export interface BaseLinkedWallOptions extends BaseWallOptions {
     material?: WallMaterial;
 }
 
-export class BaseLinkedWall extends BaseWall {
+export class BaseLinkedWall extends BaseWall implements Damageable {
     private static wallRegistry: Map<string, BaseLinkedWall> = new Map();
 
     public static getWallAt(gridX: number, gridY: number): BaseLinkedWall | undefined {
@@ -30,6 +32,7 @@ export class BaseLinkedWall extends BaseWall {
     protected maxHealth: number = 100;
     protected currentHealth: number = 100;
     protected wallTint?: number;
+    private crackGraphics?: Phaser.GameObjects.Graphics;
 
     constructor(options: BaseLinkedWallOptions) {
         super(options);
@@ -63,6 +66,73 @@ export class BaseLinkedWall extends BaseWall {
         });
     }
 
+
+    public getHealth(): number {
+        return this.currentHealth;
+    }
+
+    public getMaxHealth(): number {
+        return this.maxHealth;
+    }
+
+    public takeDamage(amount: number): void {
+        this.currentHealth -= amount;
+        
+        // Visual feedback (flash red)
+        this.scene.tweens.add({
+            targets: this,
+            alpha: 0.5,
+            duration: 50,
+            yoyo: true,
+            repeat: 1
+        });
+
+        this.updateCracks();
+
+        if (this.currentHealth <= 0) {
+            this.destroy();
+        }
+    }
+
+    private updateCracks() {
+        if (!this.crackGraphics) {
+            this.crackGraphics = this.scene.add.graphics();
+            this.crackGraphics.setDepth(this.depth + 1);
+        }
+
+        this.crackGraphics.clear();
+        
+        const healthRatio = this.currentHealth / this.maxHealth;
+        if (healthRatio >= 1) return;
+
+        // Draw cracks based on damage
+        this.crackGraphics.lineStyle(2, 0x000000, 0.7);
+        
+        const centerX = this.x;
+        const centerY = this.y;
+        const size = GAME_CONFIG.TILE_SIZE;
+        
+        // More cracks as health gets lower
+        const crackCount = Math.floor((1 - healthRatio) * 5);
+        
+        for (let i = 0; i < crackCount; i++) {
+            // Pseudo-random based on position and index to keep cracks consistent-ish
+            // (In a real game, use a seeded random or stored crack data)
+            const seed = (this.gridX * 100 + this.gridY) * 10 + i;
+            const r1 = Math.sin(seed) * 0.5 + 0.5;
+            const r2 = Math.cos(seed) * 0.5 + 0.5;
+            const r3 = Math.sin(seed * 2) * 0.5 + 0.5;
+            
+            const startX = centerX + (r1 - 0.5) * size * 0.8;
+            const startY = centerY + (r2 - 0.5) * size * 0.8;
+            
+            const endX = startX + (r3 - 0.5) * size * 0.6;
+            const endY = startY + (Math.cos(seed * 2) - 0.5) * size * 0.6;
+            
+            this.crackGraphics.moveTo(startX, startY);
+            this.crackGraphics.lineTo(endX, endY);
+        }
+    }
 
     private getKey(gx: number, gy: number): string {
         return `${gx},${gy}`;
@@ -223,6 +293,9 @@ export class BaseLinkedWall extends BaseWall {
 
         if (this.solidGraphics) {
             this.solidGraphics.destroy();
+        }
+        if (this.crackGraphics) {
+            this.crackGraphics.destroy();
         }
         if (this.debugText) {
             this.debugText.destroy();

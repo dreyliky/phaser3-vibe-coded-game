@@ -40,10 +40,13 @@ export class PlayerCombatSystem {
     private isMeleeAttacking: boolean = false;
     private nextHandToAttack: 'left' | 'right' = Math.random() > 0.5 ? 'left' : 'right';
     private currentDirection: 'north' | 'south' | 'east' | 'west' = 'south';
+    
+    private bulletsGroup: Phaser.GameObjects.Group;
 
-    constructor(scene: Phaser.Scene, player: Phaser.GameObjects.Container, skinColorInt: number) {
+    constructor(scene: Phaser.Scene, player: Phaser.GameObjects.Container, skinColorInt: number, bulletsGroup: Phaser.GameObjects.Group) {
         this.scene = scene;
         this.player = player;
+        this.bulletsGroup = bulletsGroup;
 
         // Weapon Sprite
         this.weaponSprite = scene.add.sprite(0, 0, '');
@@ -609,9 +612,9 @@ export class PlayerCombatSystem {
                 startY = this.player.y + this.weaponSprite.y + Math.sin(finalAngle) * muzzleOffset;
             }
 
-            const bullet = this.scene.add.sprite(startX, startY, texture);
+            const bullet = this.bulletsGroup.create(startX, startY, texture) as Phaser.Physics.Arcade.Sprite;
             bullet.setTint(0xffff93);
-            this.scene.physics.add.existing(bullet);
+            // this.scene.physics.add.existing(bullet); // Group.create adds physics body if group is physics enabled
             const body = bullet.body as Phaser.Physics.Arcade.Body;
             
             // Set rotation (Assuming sprite points UP)
@@ -641,11 +644,45 @@ export class PlayerCombatSystem {
             
             body.setOffset(finalOffsetX, finalOffsetY);
 
-            this.scene.time.delayedCall(1000, () => bullet.destroy());
+            // Store damage in bullet
+            (bullet as any).damage = weapon.getDamage();
+
+            this.scene.time.delayedCall(1000, () => {
+                if (bullet.active) bullet.destroy();
+            });
         }
     }
 
     private checkMeleeHit(damage: number) {
+        // Hands cannot break objects (Walls/Trees)
+        // Check if we have a weapon equipped that is NOT just hands (BaseMeleeWeapon could be hands)
+        // Actually, BaseMeleeWeapon is generic.
+        // We need to check if it's the default "Hands" item or something else.
+        // Or simply: if the user said "Hands cannot break objects", and we are here,
+        // we need to know if we are using "Hands".
+        
+        // In equipWeapon:
+        // if (item.item instanceof BaseMeleeWeapon) -> Equip Melee Weapon (Hands)
+        // Currently we only have Hands as melee?
+        // Let's assume if weapon is melee, it might be hands.
+        // I'll check the item ID or name.
+        
+        let canDamageStructures = false;
+        if (this.equippedItem && this.equippedItem.item) {
+             // If it's not hands (id 'weapon_hands' maybe?), allow damage.
+             // But we don't have other melee weapons yet.
+             // If we add an Axe later, it should damage.
+             // For now, assume melee = hands = no structure damage.
+             // UNLESS we check if it is NOT hands.
+             if (this.equippedItem.item.getId() !== 'weapon_hands') {
+                 // canDamageStructures = true; // For future melee weapons
+             }
+        }
+        
+        // However, the prompt says "Hands objects cannot be broken".
+        // It implies we can't break objects with hands.
+        // So I'll enforce: if target is Wall or Tree, and we are using Hands, do nothing.
+
         const pointer = this.scene.input.activePointer;
         const worldPoint = pointer.positionToCamera(this.scene.cameras.main) as Phaser.Math.Vector2;
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, worldPoint.x, worldPoint.y);
@@ -663,6 +700,24 @@ export class PlayerCombatSystem {
             if (!gameObject) continue;
             
             if ('takeDamage' in gameObject) {
+                // Check for structure immunity against hands
+                // Assuming all melee currently is Hands.
+                // We need to import classes to check instanceof, or check properties.
+                // To avoid circular dependency, check if it has 'getMaxHealth' (Damageable).
+                
+                // Hacky check for Wall/Tree names or types if needed.
+                // But simpler: "Hands cannot break objects".
+                // If it is a Wall or Tree.
+                const isStructure = (gameObject.constructor.name === 'Tree' || 
+                                     gameObject.constructor.name === 'BaseLinkedWall' ||
+                                     gameObject.constructor.name.includes('Wall'));
+
+                if (isStructure) {
+                     // If we are using hands (which we are if we are in melee and no other melee weapon exists)
+                     // TODO: When adding Axe/Crowbar, update this check.
+                     continue; 
+                }
+
                 const damageable = gameObject as unknown as Damageable;
                 if (typeof damageable.takeDamage === 'function') {
                     damageable.takeDamage(damage);

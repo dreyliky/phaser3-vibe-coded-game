@@ -26,6 +26,22 @@ export class InventorySystem extends Phaser.Events.EventEmitter {
         this.quickSlots[0] = this.createInventoryItem(new Hands(), 1);
     }
 
+    public reset() {
+        this.slots = new Array(this.INVENTORY_SIZE).fill(null);
+        this.quickSlots = new Array(this.QUICK_SIZE).fill(null);
+        
+        // Initialize Hands in slot 0
+        this.quickSlots[0] = this.createInventoryItem(new Hands(), 1);
+
+        // Notify UI to clear
+        for (let i = 0; i < this.INVENTORY_SIZE; i++) {
+            this.emit('update', { type: 'main', index: i, item: null });
+        }
+        for (let i = 0; i < this.QUICK_SIZE; i++) {
+            this.emit('update', { type: 'quick', index: i, item: this.quickSlots[i] });
+        }
+    }
+
     public addItem(item: BaseItem, quantity: number = 1, extraData?: ItemExtraData): boolean {
         // Weapon Logic: Try Quick Slots first
         if (item instanceof BaseRangeWeapon || (item instanceof BaseMeleeWeapon && !(item instanceof Hands))) {

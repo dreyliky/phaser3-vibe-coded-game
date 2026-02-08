@@ -64,6 +64,7 @@ export class HUD extends Phaser.Scene {
             x: width * 0.5,
             y: height * 0.5,
             onExit: () => {
+                inventorySystem.reset();
                 this.scene.stop('GameScene');
                 this.scene.stop('HUD');
                 this.scene.start('MainMenu');

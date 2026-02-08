@@ -10,6 +10,7 @@ export interface PlayerOptions {
     x: number;
     y: number;
     definition: CharacterDefinition;
+    bulletsGroup: Phaser.GameObjects.Group;
 }
 
 export class Player extends Phaser.GameObjects.Container {
@@ -41,7 +42,7 @@ export class Player extends Phaser.GameObjects.Container {
 
         // Systems
         const skinColorInt = parseInt(definition.skinColor.replace('#', '0x'), 16);
-        this.combatSystem = new PlayerCombatSystem(scene, this, skinColorInt);
+        this.combatSystem = new PlayerCombatSystem(scene, this, skinColorInt, options.bulletsGroup);
         this.movementSystem = new PlayerMovementSystem(scene, body);
 
         // Add to scene
