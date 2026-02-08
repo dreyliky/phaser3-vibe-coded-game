@@ -141,8 +141,12 @@ export class TerrainSystem {
         const terrainTypes = Object.keys(TERRAIN_DATA) as TerrainType[];
         const sortedTypes = terrainTypes.sort((a, b) => TERRAIN_DATA[a].layer - TERRAIN_DATA[b].layer);
 
+        // Pre-calculate texture dimensions
+        const textureDims = this.calculateTextureDimensions(sortedTypes);
+
         for (const type of sortedTypes) {
             const config = TERRAIN_DATA[type];
+            const dims = textureDims[config.asset];
             
             // Render all layers as overlays
             for (let x = 0; x < this.width; x++) {
@@ -155,8 +159,10 @@ export class TerrainSystem {
                     if (tl > 0 || tr > 0 || bl > 0 || br > 0) {
                         const posX = x * this.tileSize;
                         const posY = y * this.tileSize;
+                        
+                        const frameName = this.getOrCreateFrame(config.asset, x, y, dims);
 
-                        const tile = this.scene.add.image(posX, posY, config.asset)
+                        const tile = this.scene.add.image(posX, posY, config.asset, frameName)
                             .setDisplaySize(this.tileSize, this.tileSize)
                             .setDepth(config.z)
                             .setOrigin(0, 0)
@@ -168,6 +174,45 @@ export class TerrainSystem {
                 }
             }
         }
+    }
+
+    private calculateTextureDimensions(sortedTypes: TerrainType[]): Record<string, { w: number, h: number, cols: number, rows: number }> {
+        const textureDims: Record<string, { w: number, h: number, cols: number, rows: number }> = {};
+        
+        for (const type of sortedTypes) {
+            const config = TERRAIN_DATA[type];
+            if (!textureDims[config.asset]) {
+                const texture = this.scene.textures.get(config.asset);
+                const source = texture.getSourceImage();
+                // Check if source exists and has dimensions
+                if (source) {
+                    const w = (source as HTMLImageElement).width || 1024; // fallback
+                    const h = (source as HTMLImageElement).height || 1024;
+                    textureDims[config.asset] = {
+                        w,
+                        h,
+                        cols: Math.floor(w / this.tileSize),
+                        rows: Math.floor(h / this.tileSize)
+                    };
+                }
+            }
+        }
+        return textureDims;
+    }
+
+    private getOrCreateFrame(asset: string, x: number, y: number, dims?: { w: number, h: number, cols: number, rows: number }): string | undefined {
+        if (dims && dims.cols > 0 && dims.rows > 0) {
+            const col = x % dims.cols;
+            const row = y % dims.rows;
+            const frameName = `${asset}_frame_${col}_${row}`;
+            
+            const texture = this.scene.textures.get(asset);
+            if (!texture.has(frameName)) {
+                texture.add(frameName, 0, col * this.tileSize, row * this.tileSize, this.tileSize, this.tileSize);
+            }
+            return frameName;
+        }
+        return undefined;
     }
 
     private getVertexAlpha(vx: number, vy: number, type: TerrainType): number {
