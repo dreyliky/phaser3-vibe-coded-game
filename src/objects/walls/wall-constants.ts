@@ -23,4 +23,4 @@ export const WALL_ATLAS_MAPPING = [
     6   // 15: All -> Cross/Center (Frame 6)
 ];
 
-export const WALL_SOLID_COLOR = 0x444444;
+export const WALL_SOLID_COLOR = 0x2b2b2b;
