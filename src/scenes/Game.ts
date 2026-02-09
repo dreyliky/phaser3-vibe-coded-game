@@ -11,12 +11,14 @@ import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../o
 import { Tree, Bush } from '../objects/plants';
 import { TerrainSystem, TerrainType } from '../systems/terrain-system';
 import { Damageable } from '../types/damageable';
+import { FogOfWarSystem } from '../systems/fog-of-war';
 
 export class Game extends Phaser.Scene {
     public player!: Player;
     private characterDefinition!: CharacterDefinition;
     public itemInteractionSystem!: ItemInteractionSystem;
     private mapGenerator!: MapGenerator;
+    private fogOfWarSystem!: FogOfWarSystem;
     private mapId?: string;
     
     private wallsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
@@ -135,6 +137,9 @@ export class Game extends Phaser.Scene {
         if (initialQuickItem) {
             this.player.equipWeapon(initialQuickItem);
         }
+
+        // Initialize Fog of War
+        this.fogOfWarSystem = new FogOfWarSystem(this, this.player);
     }
 
     private initializeTreeHitboxes() {
@@ -335,6 +340,9 @@ export class Game extends Phaser.Scene {
     update() {
         this.player.update();
         this.itemInteractionSystem.update();
+        if (this.fogOfWarSystem) {
+            this.fogOfWarSystem.update();
+        }
     }
 
     handleResize(_gameSize: Phaser.Structs.Size) {
