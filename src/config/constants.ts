@@ -29,5 +29,6 @@ export const DEBUG_SETTINGS = {
 };
 
 export const GAME_CONFIG = {
-    TILE_SIZE: 80
+    TILE_SIZE: 80,
+    REAL_SECONDS_PER_GAME_HOUR: 10
 };

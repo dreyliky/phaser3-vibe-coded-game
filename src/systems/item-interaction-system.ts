@@ -15,6 +15,10 @@ export class ItemInteractionSystem {
         this.worldItems = scene.physics.add.group();
     }
 
+    public get worldItemsGroup(): Phaser.Physics.Arcade.Group {
+        return this.worldItems;
+    }
+
     public update() {
         this.updateItemHighlight();
     }

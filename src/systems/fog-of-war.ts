@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { Player } from '../objects';
-import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { GAME_CONFIG } from '../config/constants';
+// @ts-ignore
+import PhaserRaycaster from 'phaser-raycaster';
 
 const FOW_CONFIG = {
     VISION_RADIUS: 700,
@@ -16,43 +17,149 @@ const FOW_CONFIG = {
 interface VisibilityPoint {
     x: number;
     y: number;
-    angle: number;
 }
 
 export class FogOfWarSystem {
     private scene: Phaser.Scene;
     private player: Player;
     
+    // Raycaster
+    private raycaster!: any; // Using any to avoid strict type issues with the plugin
+    private ray!: any;
+
     // Rendering Components
     private memoryTexture!: Phaser.GameObjects.RenderTexture;
-    private shadowGraphics!: Phaser.GameObjects.Graphics;
+    private shadowRT!: Phaser.GameObjects.RenderTexture; // New layer for visited areas (50% opacity)
     
     // Soft Mask Components
     private visionGraphics!: Phaser.GameObjects.Graphics; // Used to draw the polygon
     private maskRT!: Phaser.GameObjects.RenderTexture; // Low-res render texture
     private maskImage!: Phaser.GameObjects.Image; // Image wrapping the RT
     
-    // Raycasting Cache
-    private segments: Phaser.Geom.Line[] = [];
-    private endpoints: number[] = [];
-    private rayLine: Phaser.Geom.Line;
-    private tempPoint: Phaser.Geom.Point;
+    // State for optimization
+    private lastPlayerX: number = 0;
+    private lastPlayerY: number = 0;
+    private lastPointerX: number = 0;
+    private lastPointerY: number = 0;
+    private lastScrollX: number = 0;
+    private lastScrollY: number = 0;
+    private frameCount: number = 0;
+    private readonly UPDATE_INTERVAL = 2; // Update every 2 frames
+    
+    // Dynamic Mapping State
+    private currentMappedObjects: Phaser.GameObjects.GameObject[] = [];
+    private lastMapUpdatePos: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
+    private readonly MAP_UPDATE_DISTANCE = 200; // Update map when moved 200px
+    
+    // Groups for mapping
+    private wallsGroup?: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
+    private treeHitboxesGroup?: Phaser.GameObjects.Group;
 
-    constructor(scene: Phaser.Scene, player: Player) {
+    constructor(scene: Phaser.Scene, player: Player, 
+                wallsGroup?: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup,
+                treeHitboxesGroup?: Phaser.GameObjects.Group) {
         this.scene = scene;
         this.player = player;
-        this.rayLine = new Phaser.Geom.Line();
-        this.tempPoint = new Phaser.Geom.Point();
+        this.wallsGroup = wallsGroup;
+        this.treeHitboxesGroup = treeHitboxesGroup;
         
         this.initialize();
     }
 
     private initialize() {
+        this.initializeRaycaster();
         this.createVisionGraphics();
         this.createSoftMaskSystem();
         this.createMemoryTexture();
         this.createShadowLayer();
         this.setupResizeHandler();
+    }
+
+    private initializeRaycaster() {
+        // Access plugin
+        // @ts-ignore
+        const raycasterPlugin = this.scene.raycasterPlugin;
+        if (!raycasterPlugin) {
+            console.warn('PhaserRaycaster plugin not found! Ensure it is registered in config.');
+            return;
+        }
+
+        // Create Raycaster
+        this.raycaster = raycasterPlugin.createRaycaster({
+            debug: false
+        });
+
+        // Create Ray
+        this.ray = this.raycaster.createRay({
+            origin: { x: this.player.x, y: this.player.y }
+        });
+        
+        // Set Ray Properties
+        this.ray.setRayRange(FOW_CONFIG.VISION_RADIUS);
+
+        // Initial Map Update
+        this.updateMappedObjects(true);
+    }
+
+    private updateMappedObjects(force: boolean = false) {
+        if (!this.wallsGroup && !this.treeHitboxesGroup) return;
+
+        // Check distance
+        const dist = Phaser.Math.Distance.Between(
+            this.player.x, this.player.y,
+            this.lastMapUpdatePos.x, this.lastMapUpdatePos.y
+        );
+
+        if (!force && dist < this.MAP_UPDATE_DISTANCE) {
+            return;
+        }
+
+        // Update last pos
+        this.lastMapUpdatePos.set(this.player.x, this.player.y);
+
+        // Calculate cull radius (Vision + Buffer)
+        const checkRadius = FOW_CONFIG.VISION_RADIUS + this.MAP_UPDATE_DISTANCE;
+        const checkRadiusSq = checkRadius * checkRadius;
+        const pX = this.player.x;
+        const pY = this.player.y;
+
+        const nearbyObjects: Phaser.GameObjects.GameObject[] = [];
+
+        // Helper to check and add
+        const checkAndAdd = (group: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup) => {
+            // @ts-ignore
+            const children = group.getChildren ? group.getChildren() : group.children.entries;
+            
+            for (const child of children) {
+                // @ts-ignore
+                if (!child.active) continue; // Skip inactive
+
+                // Fast distance check
+                // @ts-ignore
+                const dx = child.x - pX;
+                // @ts-ignore
+                const dy = child.y - pY;
+                
+                if (dx * dx + dy * dy <= checkRadiusSq) {
+                    nearbyObjects.push(child);
+                }
+            }
+        };
+
+        if (this.wallsGroup) checkAndAdd(this.wallsGroup);
+        if (this.treeHitboxesGroup) checkAndAdd(this.treeHitboxesGroup);
+
+        // Update Raycaster
+        if (this.currentMappedObjects.length > 0) {
+            this.raycaster.removeMappedObjects(this.currentMappedObjects);
+        }
+
+        if (nearbyObjects.length > 0) {
+            // Map as static (false) because they don't move per frame
+            this.raycaster.mapGameObjects(nearbyObjects, false);
+        }
+
+        this.currentMappedObjects = nearbyObjects;
     }
 
     private createVisionGraphics() {
@@ -96,51 +203,76 @@ export class FogOfWarSystem {
     private createShadowLayer() {
         const { width, height } = this.scene.scale;
         
-        this.shadowGraphics = this.scene.add.graphics()
+        // Shadow RT covers the screen, moves with camera (scrollFactor 0)
+        // It sits BELOW the Memory Texture but ABOVE the game world
+        this.shadowRT = this.scene.add.renderTexture(0, 0, width, height)
+            .setOrigin(0, 0)
             .setScrollFactor(0)
-            .setDepth(FOW_CONFIG.DEPTH + 1)
-            .fillStyle(FOW_CONFIG.FOG_COLOR, 0.5)
-            .fillRect(0, 0, width, height);
-
-        // Setup Bitmap Mask (Inverted)
-        // Areas drawn in White on the maskImage will be HOLES in the shadow
-        const mask = this.shadowGraphics.createBitmapMask(this.maskImage);
-        mask.invertAlpha = true;
-        this.shadowGraphics.setMask(mask);
+            .setDepth(FOW_CONFIG.DEPTH - 1); // Depth 9999
     }
 
     private setupResizeHandler() {
-        this.scene.scale.on('resize', this.handleResize, this);
-    }
-
-    private handleResize(gameSize: Phaser.Structs.Size) {
-        // Resize Shadow Layer
-        if (this.shadowGraphics) {
-            this.shadowGraphics.clear();
-            this.shadowGraphics.fillStyle(FOW_CONFIG.FOG_COLOR, 0.5);
-            this.shadowGraphics.fillRect(0, 0, gameSize.width, gameSize.height);
-        }
-        
-        // Resize Mask RT
-        if (this.maskRT) {
+        this.scene.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+            const width = gameSize.width;
+            const height = gameSize.height;
+            
+            // Resize mask RT
             this.maskRT.resize(
-                gameSize.width * FOW_CONFIG.MASK_RESOLUTION_SCALE, 
-                gameSize.height * FOW_CONFIG.MASK_RESOLUTION_SCALE
+                width * FOW_CONFIG.MASK_RESOLUTION_SCALE, 
+                height * FOW_CONFIG.MASK_RESOLUTION_SCALE
             );
+            
+            // Update mask image scale
             this.maskImage.setScale(1 / FOW_CONFIG.MASK_RESOLUTION_SCALE);
-        }
+            
+            // Resize Shadow RT
+            this.shadowRT.resize(width, height);
+            
+            // Resize memory texture (if world bounds change, but here we handle screen resize)
+            // Note: Memory texture usually matches world bounds, not screen.
+        });
     }
 
     public update() {
-        if (!this.player.active) return;
+        if (!this.ray) return;
+        
+        // Throttling: Update logic only every N frames
+        this.frameCount++;
+        if (this.frameCount % this.UPDATE_INTERVAL !== 0) {
+            return;
+        }
 
-        // 1. Calculate Visibility
+        const pointer = this.scene.input.activePointer;
+        const camera = this.scene.cameras.main;
+        
+        // Check if anything significant changed
+        const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.lastPlayerX, this.lastPlayerY);
+        const pointerDist = Phaser.Math.Distance.Between(pointer.x, pointer.y, this.lastPointerX, this.lastPointerY);
+        const scrollDist = Phaser.Math.Distance.Between(camera.scrollX, camera.scrollY, this.lastScrollX, this.lastScrollY);
+
+        // Update only if moved > 0.5px or pointer moved > 1px or camera moved
+        if (dist < 0.5 && pointerDist < 1 && scrollDist < 0.5) {
+            return;
+        }
+
+        // Update state
+        this.lastPlayerX = this.player.x;
+        this.lastPlayerY = this.player.y;
+        this.lastPointerX = pointer.x;
+        this.lastPointerY = pointer.y;
+        this.lastScrollX = camera.scrollX;
+        this.lastScrollY = camera.scrollY;
+        
+        // Update Mapped Objects (Dynamic Culling)
+        this.updateMappedObjects();
+
         const points = this.computeVisibilityPolygon();
-
-        // 2. Render Vision Mask (Screen Space)
         this.renderVisionMask(points);
         
-        // 3. Update Memory Texture (World Space)
+        // 1. Update Shadow Layer (Screen Space, Dynamic)
+        this.updateShadowLayer();
+        
+        // 2. Update Memory Texture (World Space, Persistent)
         this.updateMemoryTexture();
     }
 
@@ -151,15 +283,14 @@ export class FogOfWarSystem {
         const camera = this.scene.cameras.main;
         const zoom = camera.zoom;
         const scale = FOW_CONFIG.MASK_RESOLUTION_SCALE;
-
-        // Draw Cone Polygon
+        
         if (points.length > 0) {
             this.visionGraphics.beginPath();
             
-            // Start at player center
-            const startX = (this.player.x - camera.scrollX) * zoom * scale;
-            const startY = (this.player.y - camera.scrollY) * zoom * scale;
-            this.visionGraphics.moveTo(startX, startY);
+            // Start at player (screen space scaled)
+            const playerScreenX = (this.player.x - camera.scrollX) * zoom * scale;
+            const playerScreenY = (this.player.y - camera.scrollY) * zoom * scale;
+            this.visionGraphics.moveTo(playerScreenX, playerScreenY);
             
             for (const p of points) {
                 this.visionGraphics.lineTo(
@@ -185,6 +316,19 @@ export class FogOfWarSystem {
         this.maskRT.draw(this.visionGraphics);
     }
 
+    private updateShadowLayer() {
+        // Clear previous frame
+        this.shadowRT.clear();
+        
+        // Fill with 50% black (0.5 opacity)
+        this.shadowRT.fill(FOW_CONFIG.FOG_COLOR, 0.5);
+        
+        // Erase current vision cone
+        // Since maskImage is currently in Screen Space (because updateMemoryTexture hasn't run yet),
+        // we can just erase at 0,0
+        this.shadowRT.erase(this.maskImage, 0, 0);
+    }
+
     private updateMemoryTexture() {
         const camera = this.scene.cameras.main;
         
@@ -201,172 +345,36 @@ export class FogOfWarSystem {
             camera.scrollY
         );
         
-        // Restore original scale for Screen Space rendering (Shadow Layer)
+        // Restore original scale
         this.maskImage.setScale(originalScale);
     }
 
     private computeVisibilityPolygon(): VisibilityPoint[] {
-        const origin = { x: this.player.x, y: this.player.y };
-        const radius = FOW_CONFIG.VISION_RADIUS;
+        // Update Ray Origin
+        this.ray.setOrigin(this.player.x, this.player.y);
 
-        // 1. Calculate Mouse Angle and Cone
+        // 1. Calculate Mouse Angle and Cone (Screen Space)
         const pointer = this.scene.input.activePointer;
-        const mouseAngle = Phaser.Math.Angle.Between(origin.x, origin.y, pointer.worldX, pointer.worldY);
-        const halfCone = FOW_CONFIG.VIEW_CONE_ANGLE / 2;
-
-        // 2. Collect Segments (Walls & Bounds)
-        this.collectSegments(origin, radius);
-
-        // 3. Determine Ray Angles
-        const angles = this.collectRayAngles(mouseAngle, halfCone);
-
-        // 4. Cast Rays
-        return this.castRays(origin, radius, angles);
-    }
-
-    private collectSegments(origin: { x: number, y: number }, radius: number) {
-        this.segments = [];
-        this.endpoints = [];
+        const camera = this.scene.cameras.main;
         
-        // Bounding Box for relevant walls
-        const bbox = {
-            x: origin.x - radius,
-            y: origin.y - radius,
-            w: radius * 2,
-            h: radius * 2
-        };
+        const playerScreenX = (this.player.x - camera.scrollX) * camera.zoom;
+        const playerScreenY = (this.player.y - camera.scrollY) * camera.zoom;
         
-        this.addBoxSegments(bbox.x, bbox.y, bbox.w, bbox.h);
+        const mouseAngle = Phaser.Math.Angle.Between(
+            playerScreenX, 
+            playerScreenY, 
+            pointer.x, 
+            pointer.y
+        );
 
-        const minGridX = Math.floor(bbox.x / FOW_CONFIG.TILE_SIZE);
-        const maxGridX = Math.floor((bbox.x + bbox.w) / FOW_CONFIG.TILE_SIZE);
-        const minGridY = Math.floor(bbox.y / FOW_CONFIG.TILE_SIZE);
-        const maxGridY = Math.floor((bbox.y + bbox.h) / FOW_CONFIG.TILE_SIZE);
-
-        for (let y = minGridY; y <= maxGridY; y++) {
-            for (let x = minGridX; x <= maxGridX; x++) {
-                if (BaseLinkedWall.getWallAt(x, y)) {
-                    this.addWallSegments(x, y);
-                }
-            }
-        }
-    }
-
-    private collectRayAngles(mouseAngle: number, halfCone: number): number[] {
-        const angles = new Set<number>();
-
-        // Filter endpoints to only those inside the cone
-        this.endpoints.forEach(angle => {
-            const diff = Phaser.Math.Angle.Wrap(angle - mouseAngle);
-            if (Math.abs(diff) <= halfCone) {
-                angles.add(angle);
-                angles.add(angle - 0.0001);
-                angles.add(angle + 0.0001);
-            }
-        });
+        // Set Ray Cone
+        this.ray.setAngle(mouseAngle);
+        this.ray.setCone(FOW_CONFIG.VIEW_CONE_ANGLE);
         
-        // Add fixed rays for smooth arc
-        const fixedRays = 32;
-        for (let i = 0; i <= fixedRays; i++) {
-             const offset = -halfCone + (FOW_CONFIG.VIEW_CONE_ANGLE * (i / fixedRays));
-             angles.add(mouseAngle + offset);
-        }
-
-        // Add Cone Boundaries
-        angles.add(mouseAngle - halfCone);
-        angles.add(mouseAngle + halfCone);
-
-        // Sort angles by relative position in cone
-        return Array.from(angles).sort((a, b) => {
-            const diffA = Phaser.Math.Angle.Wrap(a - mouseAngle);
-            const diffB = Phaser.Math.Angle.Wrap(b - mouseAngle);
-            return diffA - diffB;
-        });
-    }
-
-    private castRays(origin: { x: number, y: number }, radius: number, sortedAngles: number[]): VisibilityPoint[] {
-        const points: VisibilityPoint[] = [];
+        // Cast Cone
+        // castCone() returns an array of intersection points
+        const intersections = this.ray.castCone();
         
-        // Set helper ray origin once
-        this.rayLine.x1 = origin.x;
-        this.rayLine.y1 = origin.y;
-
-        for (const angle of sortedAngles) {
-            const dx = Math.cos(angle);
-            const dy = Math.sin(angle);
-            
-            this.rayLine.x2 = origin.x + dx * radius;
-            this.rayLine.y2 = origin.y + dy * radius;
-            
-            let closestDist = radius;
-            
-            // Check intersection with all collected segments
-            for (const seg of this.segments) {
-                if (Phaser.Geom.Intersects.LineToLine(this.rayLine, seg, this.tempPoint)) {
-                    const d = Phaser.Math.Distance.Between(origin.x, origin.y, this.tempPoint.x, this.tempPoint.y);
-                    if (d < closestDist) {
-                        closestDist = d;
-                    }
-                }
-            }
-            
-            points.push({
-                x: origin.x + dx * closestDist,
-                y: origin.y + dy * closestDist,
-                angle: angle
-            });
-        }
-        
-        return points;
-    }
-
-    private addBoxSegments(x: number, y: number, w: number, h: number) {
-        this.segments.push(new Phaser.Geom.Line(x, y, x + w, y));
-        this.segments.push(new Phaser.Geom.Line(x + w, y, x + w, y + h));
-        this.segments.push(new Phaser.Geom.Line(x + w, y + h, x, y + h));
-        this.segments.push(new Phaser.Geom.Line(x, y + h, x, y));
-        
-        this.addEndpoint(x, y);
-        this.addEndpoint(x + w, y);
-        this.addEndpoint(x + w, y + h);
-        this.addEndpoint(x, y + h);
-    }
-
-    private addWallSegments(gridX: number, gridY: number) {
-        const x = gridX * FOW_CONFIG.TILE_SIZE;
-        const y = gridY * FOW_CONFIG.TILE_SIZE;
-        const s = FOW_CONFIG.TILE_SIZE;
-        
-        // Check neighbors to avoid adding internal segments
-        const n = !!BaseLinkedWall.getWallAt(gridX, gridY - 1);
-        const e = !!BaseLinkedWall.getWallAt(gridX + 1, gridY);
-        const south = !!BaseLinkedWall.getWallAt(gridX, gridY + 1);
-        const w = !!BaseLinkedWall.getWallAt(gridX - 1, gridY);
-
-        if (!n) { 
-            this.segments.push(new Phaser.Geom.Line(x, y, x + s, y));
-            this.addEndpoint(x, y);
-            this.addEndpoint(x + s, y);
-        }
-        if (!e) { 
-            this.segments.push(new Phaser.Geom.Line(x + s, y, x + s, y + s));
-            this.addEndpoint(x + s, y);
-            this.addEndpoint(x + s, y + s);
-        }
-        if (!south) { 
-            this.segments.push(new Phaser.Geom.Line(x + s, y + s, x, y + s));
-            this.addEndpoint(x + s, y + s);
-            this.addEndpoint(x, y + s);
-        }
-        if (!w) { 
-            this.segments.push(new Phaser.Geom.Line(x, y + s, x, y));
-            this.addEndpoint(x, y + s);
-            this.addEndpoint(x, y);
-        }
-    }
-
-    private addEndpoint(x: number, y: number) {
-        const angle = Math.atan2(y - this.player.y, x - this.player.x);
-        this.endpoints.push(angle);
+        return intersections;
     }
 }

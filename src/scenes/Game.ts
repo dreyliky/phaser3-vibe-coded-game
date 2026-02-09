@@ -3,7 +3,7 @@ import { Player } from '../objects';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { AssaultRifle, Pistol, Shotgun, LightAmmo, StandardAmmo, HeavyAmmo, BuckshotAmmo } from '../objects/items';
-import { inventorySystem, InventoryItem, ItemInteractionSystem, MapGenerator } from '../systems';
+import { inventorySystem, InventoryItem, ItemInteractionSystem, MapGenerator, TimeSystem, LightingSystem, ShadowSystem } from '../systems';
 import { DEBUG_SETTINGS } from '../config/constants';
 import { HUD } from './hud';
 import { MapService } from '../services/map-service';
@@ -19,6 +19,9 @@ export class Game extends Phaser.Scene {
     public itemInteractionSystem!: ItemInteractionSystem;
     private mapGenerator!: MapGenerator;
     private fogOfWarSystem!: FogOfWarSystem;
+    private timeSystem!: TimeSystem;
+    private lightingSystem!: LightingSystem;
+    private shadowSystem!: ShadowSystem;
     private mapId?: string;
     
     private wallsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
@@ -139,7 +142,57 @@ export class Game extends Phaser.Scene {
         }
 
         // Initialize Fog of War
-        this.fogOfWarSystem = new FogOfWarSystem(this, this.player);
+        this.fogOfWarSystem = new FogOfWarSystem(this, this.player, this.wallsGroup, this.treeHitboxesGroup);
+
+        // Initialize Time, Lighting, and Shadow Systems
+        this.timeSystem = new TimeSystem(this);
+        this.lightingSystem = new LightingSystem(this, this.player, this.timeSystem, this.wallsGroup, this.treeHitboxesGroup);
+        // Pass item interaction system group to shadow system
+        this.shadowSystem = new ShadowSystem(this, this.timeSystem, this.lightingSystem, this.itemInteractionSystem.worldItemsGroup);
+
+        // Register initial shadows
+        this.registerShadows();
+    }
+    
+    update(time: number, delta: number) {
+        this.player.update();
+        this.timeSystem.update(delta);
+        this.lightingSystem.update();
+        this.shadowSystem.update();
+        this.itemInteractionSystem.update();
+        if (this.fogOfWarSystem) {
+            this.fogOfWarSystem.update();
+        }
+    }
+
+    private registerShadows() {
+        // Player
+        this.shadowSystem.registerObject(this.player, 'Player');
+
+        // Walls
+        if (this.wallsGroup) {
+            this.wallsGroup.getChildren().forEach(wall => {
+                this.shadowSystem.registerObject(wall, 'Wall');
+            });
+        }
+
+        // Plants
+        if (this.plantsGroup) {
+            this.plantsGroup.getChildren().forEach(plant => {
+                if (plant instanceof Tree) {
+                    this.shadowSystem.registerObject(plant, 'Tree');
+                } else if (plant instanceof Bush) {
+                    this.shadowSystem.registerObject(plant, 'Bush');
+                }
+            });
+        }
+        
+        // Items
+        if (this.itemInteractionSystem && this.itemInteractionSystem.worldItemsGroup) {
+            this.itemInteractionSystem.worldItemsGroup.getChildren().forEach(item => {
+                this.shadowSystem.registerObject(item, 'Item');
+            });
+        }
     }
 
     private initializeTreeHitboxes() {
@@ -337,13 +390,6 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    update() {
-        this.player.update();
-        this.itemInteractionSystem.update();
-        if (this.fogOfWarSystem) {
-            this.fogOfWarSystem.update();
-        }
-    }
 
     handleResize(_gameSize: Phaser.Structs.Size) {
         // No-op
