@@ -49,13 +49,13 @@ export class LightingSystem {
             // x0, y0, r0, x1, y1, r1
             const gradient = context.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
             
-            // Core is bright (Gold/Yellow)
+            // Core is bright Yellow
             // Alpha is HIGH (1.0) for effective erasing of darkness.
             // We will control visual intensity via lightRT.setAlpha().
-            gradient.addColorStop(0, 'rgba(255, 220, 100, 1.0)'); 
-            gradient.addColorStop(0.3, 'rgba(255, 200, 50, 0.7)');
-            gradient.addColorStop(0.7, 'rgba(255, 180, 0, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 180, 0, 0)');
+            gradient.addColorStop(0, 'rgba(255, 255, 0, 1.0)'); 
+            gradient.addColorStop(0.6, 'rgba(255, 255, 0, 1.0)'); // Extended bright center
+            gradient.addColorStop(0.8, 'rgba(255, 255, 0, 0.5)');
+            gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
             
             context.fillStyle = gradient;
             context.fillRect(0, 0, size, size);
@@ -81,7 +81,13 @@ export class LightingSystem {
         this.lightRT.setDepth(9002); // Above darkness
         this.lightRT.setScrollFactor(0);
         this.lightRT.setBlendMode(Phaser.BlendModes.ADD); // Additive blending for glow
-        this.lightRT.setAlpha(0.3); // Soften the visual overlay so it's not opaque gold
+        this.lightRT.setAlpha(0.4); // Stronger yellow overlay
+        
+        // Create a BitmapMask from the lightRT to cut the darkness
+        // invertAlpha = true means: Show darkness where mask is transparent. Hide darkness where mask is opaque.
+        const mask = new Phaser.Display.Masks.BitmapMask(this.scene, this.lightRT);
+        mask.invertAlpha = true;
+        this.darknessTexture.setMask(mask);
         
         // Flashlight Sprite (Gradient)
         this.lightSprite = this.scene.add.image(0, 0, 'flashlight_cone');
@@ -176,16 +182,9 @@ export class LightingSystem {
         if (localPoints.length < 3) return;
 
         // Prepare the hard polygon mask (White for Masking)
-        // We use WHITE here so that when we multiply with the gradient, the gradient's color is preserved.
         const holeGraphics = this.scene.make.graphics({ x: 0, y: 0 }, false);
-        holeGraphics.fillStyle(0xFFFFFF, 1); // White for mask
-        holeGraphics.beginPath();
-        holeGraphics.moveTo(localPoints[0].x, localPoints[0].y);
-        for (let i = 1; i < localPoints.length; i++) {
-            holeGraphics.lineTo(localPoints[i].x, localPoints[i].y);
-        }
-        holeGraphics.closePath();
-        holeGraphics.fillPath();
+        holeGraphics.fillStyle(0xFFFFFF, 1);
+        holeGraphics.fillPoints(localPoints);
         
         // Prepare the Light Sprite (Soft Gradient)
         // Texture is 512x512. Radius is 300.
@@ -195,32 +194,29 @@ export class LightingSystem {
         
         this.lightSprite.setPosition(localPoints[0].x, localPoints[0].y);
         this.lightSprite.setScale(scale);
+        this.lightSprite.setAlpha(1); // Full alpha for composition
         
         // Compositing:
         // 1. Clear LightRT
         this.lightRT.clear();
         
-        // 2. Draw the Hard Polygon (Gold)
+        // 2. Draw the Hard Polygon (White)
         this.lightRT.draw(holeGraphics, 0, 0);
         
-        // 3. Draw the Soft Gradient (Gold/Yellow) with MULTIPLY
+        // 3. Draw the Soft Gradient (Yellow) with MULTIPLY
         // This masks the hard polygon with the gradient, creating a soft lighted area
         this.lightSprite.setBlendMode(Phaser.BlendModes.MULTIPLY);
         // Important: Draw at the sprite's position! passing 0,0 draws at RT origin.
-        this.lightRT.draw(this.lightSprite, this.lightSprite.x, this.lightSprite.y, 1, 0xffffff);
+        this.lightRT.draw(this.lightSprite, this.lightSprite.x, this.lightSprite.y);
         
         // 4. Erase Darkness with the Result (Soft Cut)
-        if (isDark) {
-            // Temporarily set alpha to 1.0 for maximum erasing power
-            // The texture content has the gradient alpha (1.0 -> 0.0), which provides the soft edge.
-            this.lightRT.setAlpha(1.0);
-            this.darknessTexture.erase(this.lightRT);
-            // Restore low alpha for the visual overlay (so it looks like a beam of light, not a solid wall)
-            this.lightRT.setAlpha(0.3);
-        }
+        // No manual erase needed anymore! The BitmapMask handles the cutting automatically.
+        // The mask uses the pixel data of lightRT.
         
-        // 5. No need to draw back into darknessTexture. 
-        // lightRT is now a visible overlay with ADD blend mode.
+        // 5. Visual Overlay (Always apply for rendering)
+        // Restore low alpha for the visual overlay (so it looks like a beam of light)
+        this.lightRT.setAlpha(0.4);
+        this.lightRT.setBlendMode(Phaser.BlendModes.ADD);
         
         holeGraphics.destroy();
     }
