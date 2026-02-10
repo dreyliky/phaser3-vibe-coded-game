@@ -13,13 +13,13 @@ export class ShadowSystem {
     private shadowMap: Map<Phaser.GameObjects.GameObject, Phaser.GameObjects.Image> = new Map();
     
     // Config for shadow lengths (scale factors)
-    // Reduced by another 2x (Total 6x reduction from original)
+    // Adjusted for better visibility
     private readonly SHADOW_LENGTHS = {
-        'Wall': 2.0 / 6,
-        'Tree': 1.5 / 6,
-        'Player': 0.8 / 6,
-        'Bush': 0.5 / 6,
-        'Item': 0.3 / 6
+        'Wall': 2.6 / 2,
+        'Tree': 1.95 / 2,
+        'Player': 1.04 / 2,
+        'Bush': 0.65 / 2,
+        'Item': 0.39 / 2
     };
 
     constructor(scene: Phaser.Scene, timeSystem: TimeSystem, lightingSystem?: LightingSystem, worldItemsGroup?: Phaser.GameObjects.Group | Phaser.Physics.Arcade.Group) {
@@ -36,10 +36,18 @@ export class ShadowSystem {
     private createShadowTexture() {
         if (this.scene.textures.exists('shadow_blob')) return;
         
-        const graphics = this.scene.make.graphics({ x: 0, y: 0 });
-        graphics.fillStyle(0xffffff);
-        graphics.fillCircle(32, 32, 30);
-        graphics.generateTexture('shadow_blob', 64, 64);
+        const size = 64;
+        const texture = this.scene.textures.createCanvas('shadow_blob', size, size);
+        if (texture) {
+            const context = texture.getContext();
+            const gradient = context.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, size, size);
+            texture.refresh();
+        }
     }
 
     public registerObject(obj: Phaser.GameObjects.GameObject, type: 'Wall' | 'Tree' | 'Player' | 'Bush' | 'Item') {
@@ -101,8 +109,10 @@ export class ShadowSystem {
         const sunShadowAngle = sunAngle + Math.PI; // Opposite direction
         
         // Sun Height proxy:
-        // Top (-90) is Noon. Height = 1.
-        const sunHeight = -Math.sin(sunAngle); 
+        // Top (-90) is Midnight (if Sun from Bottom is Noon).
+        // Bottom (90) is Noon.
+        // So we want Height = 1 at 90 deg.
+        const sunHeight = Math.sin(sunAngle);  
         
         let activeShadowAngle = sunShadowAngle;
         let activeShadowScale = 0;
@@ -237,7 +247,8 @@ export class ShadowSystem {
             }
 
             shadow.setRotation(currentAngle + Math.PI/2); 
-            shadow.setAlpha(currentAlpha);
+            // Apply gradient alpha: Top (Head) -> 0, Bottom (Feet) -> currentAlpha
+            shadow.setAlpha(0, 0, currentAlpha, currentAlpha);
             
             // Length
             const type = shadow.getData('type') as keyof typeof this.SHADOW_LENGTHS;
@@ -257,7 +268,7 @@ export class ShadowSystem {
             const shadowSourceWidth = shadowTexture.source[0].width;
             const shadowSourceHeight = shadowTexture.source[0].height;
 
-            const scaleX = parentWidth / shadowSourceWidth;
+            const scaleX = (parentWidth / shadowSourceWidth) * 0.7;
             
             // Y Scale: Stretch to target length
             const scaleY = targetShadowLength / shadowSourceHeight;

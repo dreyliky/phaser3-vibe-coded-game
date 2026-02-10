@@ -242,10 +242,6 @@ export class BaseLinkedWall extends BaseWall implements Damageable {
                this.getAnyNeighbor(-1, 0) !== undefined;
     }
 
-    private hasNeighbor(dx: number, dy: number): boolean {
-        return this.getNeighbor(dx, dy) !== undefined;
-    }
-
     private setSolidMode(isSolid: boolean) {
         if (isSolid) {
             this.setVisible(false);

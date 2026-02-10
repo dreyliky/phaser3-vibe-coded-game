@@ -10,7 +10,9 @@ export class LightingSystem {
     private treeHitboxesGroup?: Phaser.GameObjects.Group;
     
     private darknessTexture!: Phaser.GameObjects.RenderTexture;
+    private lightRT!: Phaser.GameObjects.RenderTexture; // Intermediate texture for soft lighting
     private flashlight!: Phaser.GameObjects.Graphics;
+    private lightSprite!: Phaser.GameObjects.Image; // The gradient sprite
     private isFlashlightOn: boolean = false;
     
     private readonly DARK_COLOR = 0x000005; // Very dark blue/black
@@ -25,12 +27,41 @@ export class LightingSystem {
         this.wallsGroup = wallsGroup;
         this.treeHitboxesGroup = treeHitboxesGroup;
         
+        this.createFlashlightTexture();
         this.createOverlays();
         this.setupInput();
     }
     
     public get playerEntity(): Player {
         return this.player;
+    }
+
+    private createFlashlightTexture() {
+        if (this.scene.textures.exists('flashlight_cone')) return;
+        
+        const size = 512;
+        
+        // Using CanvasTexture for better gradient control
+        const texture = this.scene.textures.createCanvas('flashlight_cone', size, size);
+        if (texture) {
+            const context = texture.getContext();
+            // Create radial gradient
+            // x0, y0, r0, x1, y1, r1
+            const gradient = context.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+            
+            // Core is bright (Gold/Yellow)
+            // Alpha is HIGH (1.0) for effective erasing of darkness.
+            // We will control visual intensity via lightRT.setAlpha().
+            gradient.addColorStop(0, 'rgba(255, 220, 100, 1.0)'); 
+            gradient.addColorStop(0.3, 'rgba(255, 200, 50, 0.7)');
+            gradient.addColorStop(0.7, 'rgba(255, 180, 0, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 180, 0, 0)');
+            
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, size, size);
+            
+            texture.refresh();
+        }
     }
 
     private createOverlays() {
@@ -43,10 +74,25 @@ export class LightingSystem {
         this.darknessTexture.setDepth(9000);
         this.darknessTexture.setScrollFactor(0);
         
-        // Flashlight Graphics (for the beam color)
-        this.flashlight = this.scene.add.graphics({ x: 0, y: 0 });
-        this.flashlight.setDepth(9001);
-        this.flashlight.setScrollFactor(0);
+        // Intermediate RT for masking light and displaying the beam
+        this.lightRT = this.scene.add.renderTexture(0, 0, width, height);
+        this.lightRT.setOrigin(0, 0);
+        this.lightRT.setVisible(true); // Visible overlay
+        this.lightRT.setDepth(9002); // Above darkness
+        this.lightRT.setScrollFactor(0);
+        this.lightRT.setBlendMode(Phaser.BlendModes.ADD); // Additive blending for glow
+        this.lightRT.setAlpha(0.3); // Soften the visual overlay so it's not opaque gold
+        
+        // Flashlight Sprite (Gradient)
+        this.lightSprite = this.scene.add.image(0, 0, 'flashlight_cone');
+        this.lightSprite.setVisible(false); // Used for drawing to RT
+        this.lightSprite.setOrigin(0.5, 0.5); // Center pivot
+
+        // Graphics for Raycasting Visualization (The "Hard" Mask)
+        this.flashlight = this.scene.add.graphics();
+        this.flashlight.setDepth(9001); // Above darkness (for the beam color)
+        this.flashlight.setBlendMode(Phaser.BlendModes.ADD); // Additive blending for light
+        this.flashlight.setVisible(false); // We'll manage visibility manually
         
         // Handle resize
         this.scene.scale.on('resize', this.handleResize, this);
@@ -55,6 +101,9 @@ export class LightingSystem {
     private handleResize(gameSize: Phaser.Structs.Size) {
         if (this.darknessTexture) {
             this.darknessTexture.resize(gameSize.width, gameSize.height);
+        }
+        if (this.lightRT) {
+            this.lightRT.resize(gameSize.width, gameSize.height);
         }
     }
 
@@ -96,6 +145,8 @@ export class LightingSystem {
         // Always draw flashlight if on (even during day for visual feedback)
         if (this.isFlashlightOn) {
             this.drawFlashlight(targetAlpha > 0.05);
+        } else {
+            this.lightRT.clear(); // Ensure previous frames are cleared
         }
     }
 
@@ -124,34 +175,54 @@ export class LightingSystem {
 
         if (localPoints.length < 3) return;
 
-        // 1. Erase from Darkness (Cut the hole) - Only if dark
-        if (isDark) {
-            const holeGraphics = this.scene.make.graphics({ x: 0, y: 0 });
-            holeGraphics.fillStyle(0xffffff, 1);
-            holeGraphics.beginPath();
-            holeGraphics.moveTo(localPoints[0].x, localPoints[0].y);
-            for (let i = 1; i < localPoints.length; i++) {
-                holeGraphics.lineTo(localPoints[i].x, localPoints[i].y);
-            }
-            holeGraphics.closePath();
-            holeGraphics.fillPath();
-            
-            // Use erase method for cleaner hole cutting
-            this.darknessTexture.erase(holeGraphics);
-            holeGraphics.destroy();
-        }
-
-        // 2. Draw Yellow Beam on Flashlight Layer (Additive)
-        this.flashlight.fillStyle(0xFFD700, 0.2); // Faint yellow
-        this.flashlight.setBlendMode(Phaser.BlendModes.ADD);
-        
-        this.flashlight.beginPath();
-        this.flashlight.moveTo(localPoints[0].x, localPoints[0].y);
+        // Prepare the hard polygon mask (White for Masking)
+        // We use WHITE here so that when we multiply with the gradient, the gradient's color is preserved.
+        const holeGraphics = this.scene.make.graphics({ x: 0, y: 0 }, false);
+        holeGraphics.fillStyle(0xFFFFFF, 1); // White for mask
+        holeGraphics.beginPath();
+        holeGraphics.moveTo(localPoints[0].x, localPoints[0].y);
         for (let i = 1; i < localPoints.length; i++) {
-            this.flashlight.lineTo(localPoints[i].x, localPoints[i].y);
+            holeGraphics.lineTo(localPoints[i].x, localPoints[i].y);
         }
-        this.flashlight.closePath();
-        this.flashlight.fillPath();
+        holeGraphics.closePath();
+        holeGraphics.fillPath();
+        
+        // Prepare the Light Sprite (Soft Gradient)
+        // Texture is 512x512. Radius is 300.
+        // We want the center of texture to be at player.
+        // Scale to cover the beam.
+        const scale = (radius * 2.5) / 512; 
+        
+        this.lightSprite.setPosition(localPoints[0].x, localPoints[0].y);
+        this.lightSprite.setScale(scale);
+        
+        // Compositing:
+        // 1. Clear LightRT
+        this.lightRT.clear();
+        
+        // 2. Draw the Hard Polygon (Gold)
+        this.lightRT.draw(holeGraphics, 0, 0);
+        
+        // 3. Draw the Soft Gradient (Gold/Yellow) with MULTIPLY
+        // This masks the hard polygon with the gradient, creating a soft lighted area
+        this.lightSprite.setBlendMode(Phaser.BlendModes.MULTIPLY);
+        // Important: Draw at the sprite's position! passing 0,0 draws at RT origin.
+        this.lightRT.draw(this.lightSprite, this.lightSprite.x, this.lightSprite.y, 1, 0xffffff);
+        
+        // 4. Erase Darkness with the Result (Soft Cut)
+        if (isDark) {
+            // Temporarily set alpha to 1.0 for maximum erasing power
+            // The texture content has the gradient alpha (1.0 -> 0.0), which provides the soft edge.
+            this.lightRT.setAlpha(1.0);
+            this.darknessTexture.erase(this.lightRT);
+            // Restore low alpha for the visual overlay (so it looks like a beam of light, not a solid wall)
+            this.lightRT.setAlpha(0.3);
+        }
+        
+        // 5. No need to draw back into darknessTexture. 
+        // lightRT is now a visible overlay with ADD blend mode.
+        
+        holeGraphics.destroy();
     }
 
     private castRays(originX: number, originY: number, angle: number, coneWidth: number, radius: number): { x: number, y: number }[] {

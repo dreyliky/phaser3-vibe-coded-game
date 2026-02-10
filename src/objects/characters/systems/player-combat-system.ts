@@ -667,7 +667,6 @@ export class PlayerCombatSystem {
         // Let's assume if weapon is melee, it might be hands.
         // I'll check the item ID or name.
         
-        let canDamageStructures = false;
         if (this.equippedItem && this.equippedItem.item) {
              // If it's not hands (id 'weapon_hands' maybe?), allow damage.
              // But we don't have other melee weapons yet.

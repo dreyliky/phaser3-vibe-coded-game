@@ -2,15 +2,11 @@ import Phaser from 'phaser';
 import { GAME_CONFIG } from '../config/constants';
 
 export class TimeSystem {
-    private scene: Phaser.Scene;
     private totalGameSeconds: number = 0; // Total accumulated "game seconds"
-    private accumulatedRealSeconds: number = 0; // Buffer for real time
     
-    // Day starts at 6:00 (sunrise), Ends at 20:00 (sunset) for simplicity initially
-    // Or just 0-24 cycle. Let's use 0-24.
+    // Config
     
-    constructor(scene: Phaser.Scene) {
-        this.scene = scene;
+    constructor(_scene: Phaser.Scene) {
         // Start at 12:00 PM
         this.totalGameSeconds = 12 * 3600;
     }
@@ -83,7 +79,7 @@ export class TimeSystem {
         // Slope = -2PI.
         // Angle = (Progress - 0.25) * -2PI.
         
-        const angle = (dayProgress - 0.25) * -Math.PI * 2;
+        const angle = (dayProgress - 0.25) * Math.PI * 2;
         
         // Intensity: 1 at Noon, 0 at Sunrise/Sunset.
         // Noon = 0.5. Sunrise = 0.25. Sunset = 0.75.

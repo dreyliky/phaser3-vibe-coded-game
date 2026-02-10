@@ -154,7 +154,7 @@ export class Game extends Phaser.Scene {
         this.registerShadows();
     }
     
-    update(time: number, delta: number) {
+    update(_time: number, delta: number) {
         this.player.update();
         this.timeSystem.update(delta);
         this.lightingSystem.update();

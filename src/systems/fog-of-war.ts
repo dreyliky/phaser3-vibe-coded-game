@@ -242,6 +242,11 @@ export class FogOfWarSystem {
             return;
         }
 
+        // SAFETY CHECK: If any mapped object is destroyed, force update to prevent raycaster crash
+        if (this.currentMappedObjects.some(obj => !obj || !obj.scene || !obj.active)) {
+            this.updateMappedObjects(true);
+        }
+
         const pointer = this.scene.input.activePointer;
         const camera = this.scene.cameras.main;
         
