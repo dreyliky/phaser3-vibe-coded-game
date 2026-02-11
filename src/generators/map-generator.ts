@@ -2,13 +2,36 @@ import Phaser from 'phaser';
 import { VegetationGenerator } from './vegetation-generator';
 import { StructureGenerator } from './structure-generator';
 import { CaveGenerator } from './cave-generator';
+import { BiomeGenerator, BiomeType } from './biome-generator';
 import { TerrainSystem, TerrainType } from '../systems/terrain-system';
+import { pickWeighted } from '../utils/random';
+
+const BIOME_TERRAIN_DEFINITIONS: Record<BiomeType, { item: TerrainType, weight: number }[]> = {
+    [BiomeType.FOREST]: [
+        { item: TerrainType.SOIL, weight: 80 },
+        { item: TerrainType.SOIL_RICH, weight: 20 }
+    ],
+    [BiomeType.DESERT]: [
+        { item: TerrainType.SAND, weight: 90 },
+        { item: TerrainType.SOIL, weight: 10 }
+    ],
+    [BiomeType.SWAMP]: [
+        { item: TerrainType.MUD, weight: 70 },
+        { item: TerrainType.SOIL_RICH, weight: 20 },
+        { item: TerrainType.SOIL, weight: 10 }
+    ],
+    [BiomeType.CAVE]: [
+        { item: TerrainType.ROCK, weight: 85 },
+        { item: TerrainType.SOIL, weight: 15 }
+    ]
+};
 
 export class MapGenerator {
     private scene: Phaser.Scene;
     private vegetationGenerator: VegetationGenerator;
     private structureGenerator: StructureGenerator;
     private caveGenerator: CaveGenerator | null = null;
+    private biomeGenerator: BiomeGenerator | null = null;
     private terrainSystem: TerrainSystem | null = null;
 
     constructor(scene: Phaser.Scene) {
@@ -22,6 +45,10 @@ export class MapGenerator {
         const gridWidth = Math.ceil(width / tileSize);
         const gridHeight = Math.ceil(height / tileSize);
         const margin = 15; // 15 blocks margin as requested
+
+        // Initialize Biome Generator
+        this.biomeGenerator = new BiomeGenerator(gridWidth, gridHeight, margin);
+        const biomeGrid = this.biomeGenerator.generate();
 
         // Initialize Cave Generator
         this.caveGenerator = new CaveGenerator(gridWidth, gridHeight, margin);
@@ -41,19 +68,18 @@ export class MapGenerator {
         // Generate Rock Patches (Cellular Automata) - Less frequent than soil
         const rockGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.25, 3);
 
-        // Populate Terrain Grid based on Cave Generator and Soil/Rock Grids
+        // Populate Terrain Grid based on Biomes, Cave Generator and Soil/Rock Grids
         for (let x = 0; x < gridWidth; x++) {
             for (let y = 0; y < gridHeight; y++) {
-                // Default is SAND
-                let type = TerrainType.SAND;
+                const biome = biomeGrid[x][y];
+                
+                // Set Base Terrain by Biome with Weighted Random
+                const definitions = BIOME_TERRAIN_DEFINITIONS[biome];
+                let type = pickWeighted(definitions) || TerrainType.SOIL;
 
-                // If soil patch exists, set SOIL
-                if (soilGrid[x][y] === 1) {
-                    type = TerrainType.SOIL;
-                }
-
-                // If rock patch exists, set ROCK (overrides Soil)
-                if (rockGrid[x][y] === 1) {
+                // Add details/patches (optional, maybe specific to biome)
+                // For now, let's allow Rock patches everywhere except Swamp?
+                if (rockGrid[x][y] === 1 && biome !== BiomeType.SWAMP) {
                     type = TerrainType.ROCK;
                 }
 
@@ -84,17 +110,12 @@ export class MapGenerator {
         this.terrainSystem.render();
 
         // Generate Vegetation
-        // Constraints:
-        // 1. Not on walls (handled by existing logic if we pass wall check)
-        // 2. Not INSIDE the cave (cave floor)
-        // 3. Not in the void? Wait, vegetation is for the "outside".
         
         // Define "Inside Cave" area: The rectangular region defined by margin.
         // Actually, the user said "Inside the cave should not spawn trees".
         // The cave is the area [margin, width-margin] x [margin, height-margin].
         // The "walls" are also in this area.
         // So effectively, trees only spawn in the margin (outer ring).
-        
         const isInsideCaveArea = (x: number, y: number) => {
             const tileX = Math.floor(x / tileSize);
             const tileY = Math.floor(y / tileSize);
@@ -132,8 +153,18 @@ export class MapGenerator {
         this.vegetationGenerator.generateVegetation({
             mapWidth: width,
             mapHeight: height,
-            count: 800,
-            collisionCheck: checkCollision
+            count: 2500,
+            collisionCheck: checkCollision,
+            getBiome: (gridX, gridY) => {
+                 // Convert pixel x,y to grid x,y if needed, but getBiome logic in VegetationGenerator
+                 // currently calls this callback with whatever it calculated.
+                 // In my updated VegetationGenerator, I changed it to pass gridX/gridY to getBiome.
+                 // So we just return directly.
+                 return this.biomeGenerator ? this.biomeGenerator.getBiomeAt(gridX, gridY) : BiomeType.FOREST;
+            },
+            getTerrain: (gridX, gridY) => {
+                return this.terrainSystem ? this.terrainSystem.getTerrainAt(gridX, gridY) : TerrainType.NONE;
+            }
         });
     }
 

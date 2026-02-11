@@ -47,6 +47,12 @@ export class Tree extends BasePlant implements Damageable {
         // Trunk collider is at bottom.
         
         this.bulletHitbox.setPosition(this.x, this.y + (height / 2) - (hitboxHeight / 2) - 20); // Tweaking position
+        
+        // Apply scale to hitbox if tree is scaled
+        if (options.scale !== undefined) {
+            this.bulletHitbox.setScale(options.scale);
+        }
+        
         this.bulletHitbox.setImmovable(true);
         
         // Store reference to parent tree in the hitbox for collision handling

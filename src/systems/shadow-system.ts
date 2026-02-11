@@ -53,6 +53,11 @@ export class ShadowSystem {
     public registerObject(obj: Phaser.GameObjects.GameObject, type: 'Wall' | 'Tree' | 'Player' | 'Bush' | 'Item') {
         if (this.shadowMap.has(obj)) return;
         
+        // Grass has no shadow
+        if (obj.constructor.name === 'Grass') {
+            return;
+        }
+
         // Added TileSprite support
         const isSprite = obj instanceof Phaser.GameObjects.Sprite || obj instanceof Phaser.GameObjects.Image;
         const isTileSprite = obj instanceof Phaser.GameObjects.TileSprite;

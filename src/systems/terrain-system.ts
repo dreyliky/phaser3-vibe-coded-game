@@ -133,6 +133,10 @@ export class TerrainSystem {
         return null;
     }
 
+    public getTerrainAt(x: number, y: number): TerrainType {
+        return this.grid[x]?.[y] ?? TerrainType.NONE;
+    }
+
     public render() {
         // Clear previous render
         this.activeTiles.forEach(tile => tile.destroy());
