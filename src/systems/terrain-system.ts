@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { DEPTHS } from '../config/constants';
 
 export enum TerrainType {
     NONE = 'NONE',
@@ -94,7 +95,7 @@ export class TerrainSystem {
         this.height = options.height;
         this.tileSize = options.tileSize;
         this.tileContainer = this.scene.add.container(0, 0);
-        this.tileContainer.setDepth(-1000); // Ensure terrain is behind everything (Shadows are at -70)
+        this.tileContainer.setDepth(DEPTHS.TERRAIN); // Ensure terrain is behind everything (Shadows are at -70)
         this.grid = [];
 
         // Initialize grid with NONE (Void/Black)

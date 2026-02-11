@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 
 export enum BiomeType {
     FOREST = 'FOREST',
@@ -10,14 +9,12 @@ export enum BiomeType {
 export class BiomeGenerator {
     private width: number;
     private height: number;
-    private margin: number;
     private biomeGrid: BiomeType[][];
     private caveRadius: number;
 
-    constructor(width: number, height: number, margin: number) {
+    constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
-        this.margin = margin;
         this.biomeGrid = [];
         // Cave radius is roughly 15% of the smaller dimension
         this.caveRadius = Math.min(width, height) * 0.15;

@@ -80,7 +80,10 @@ export class ItemInteractionSystem {
             scaleY: 1,
             angle: worldItem.angle + randomSpin, // Spin
             duration: 300,
-            ease: 'Power2'
+            ease: 'Power2',
+            onComplete: () => {
+                worldItem.setDepth(worldItem.y); // Update depth after movement
+            }
         });
     }
 

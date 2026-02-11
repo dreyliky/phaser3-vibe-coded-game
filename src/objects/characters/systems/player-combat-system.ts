@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { InventoryItem, inventorySystem } from '../../../systems';
 import { BaseRangeWeapon, BaseMeleeWeapon, Shotgun, AssaultRifle } from '../../items';
 import { Damageable } from '../../../types/damageable';
+import { DEPTHS } from '../../../config/constants';
 
 export class PlayerCombatSystem {
     private scene: Phaser.Scene;
@@ -614,6 +615,7 @@ export class PlayerCombatSystem {
 
             const bullet = this.bulletsGroup.create(startX, startY, texture) as Phaser.Physics.Arcade.Sprite;
             bullet.setTint(0xffff93);
+            bullet.setDepth(DEPTHS.LIGHTING - 100); // Ensure bullets are above world objects but below lighting
             // this.scene.physics.add.existing(bullet); // Group.create adds physics body if group is physics enabled
             const body = bullet.body as Phaser.Physics.Arcade.Body;
             

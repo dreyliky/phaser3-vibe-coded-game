@@ -47,7 +47,7 @@ export class MapGenerator {
         const margin = 15; // 15 blocks margin as requested
 
         // Initialize Biome Generator
-        this.biomeGenerator = new BiomeGenerator(gridWidth, gridHeight, margin);
+        this.biomeGenerator = new BiomeGenerator(gridWidth, gridHeight);
         const biomeGrid = this.biomeGenerator.generate();
 
         // Initialize Cave Generator
@@ -63,7 +63,7 @@ export class MapGenerator {
         });
 
         // Generate Soil Patches (Cellular Automata)
-        const soilGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.4, 3);
+        // const soilGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.4, 3);
         
         // Generate Rock Patches (Cellular Automata) - Less frequent than soil
         const rockGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.25, 3);

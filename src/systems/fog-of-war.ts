@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from '../objects';
-import { GAME_CONFIG } from '../config/constants';
+import { GAME_CONFIG, DEPTHS } from '../config/constants';
 // @ts-ignore
 import PhaserRaycaster from 'phaser-raycaster';
 
@@ -10,7 +10,7 @@ const FOW_CONFIG = {
     MIN_VIEW_RADIUS: 120, // Always visible radius around player
     FOG_COLOR: 0x000000,
     MASK_RESOLUTION_SCALE: 0.05, // Low resolution for soft blurred edges
-    DEPTH: 10000, // High depth to cover all game objects including vegetation
+    DEPTH: DEPTHS.FOG_OF_WAR, // High depth to cover all game objects including vegetation
     TILE_SIZE: GAME_CONFIG.TILE_SIZE
 };
 
@@ -28,7 +28,8 @@ export class FogOfWarSystem {
     private ray!: any;
 
     // Rendering Components
-    private memoryTexture!: Phaser.GameObjects.RenderTexture;
+    private fogChunks: Map<string, Phaser.GameObjects.RenderTexture> = new Map();
+    private readonly CHUNK_SIZE = 1280; // 16 * 80 (matches ChunkSystem roughly)
     private shadowRT!: Phaser.GameObjects.RenderTexture; // New layer for visited areas (50% opacity)
     
     // Soft Mask Components
@@ -70,9 +71,22 @@ export class FogOfWarSystem {
         this.initializeRaycaster();
         this.createVisionGraphics();
         this.createSoftMaskSystem();
-        this.createMemoryTexture();
+        // Memory texture is now managed dynamically via chunks
         this.createShadowLayer();
         this.setupResizeHandler();
+        this.setupChunkUpdates();
+    }
+
+    private setupChunkUpdates() {
+        // Listen for chunk updates to force-refresh obstacles
+        this.scene.events.on('chunks-updated', () => {
+            this.updateMappedObjects(true);
+        });
+        
+        // Cleanup listener when scene shuts down
+        this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.scene.events.off('chunks-updated');
+        });
     }
 
     private initializeRaycaster() {
@@ -241,15 +255,17 @@ export class FogOfWarSystem {
             .setScrollFactor(0);
     }
 
-    private createMemoryTexture() {
-        const { width, height } = this.scene.physics.world.bounds;
+    private createFogChunk(x: number, y: number) {
+        const chunkX = x * this.CHUNK_SIZE;
+        const chunkY = y * this.CHUNK_SIZE;
         
-        this.memoryTexture = this.scene.add.renderTexture(0, 0, width, height)
+        const rt = this.scene.add.renderTexture(chunkX, chunkY, this.CHUNK_SIZE, this.CHUNK_SIZE)
             .setOrigin(0, 0)
             .setDepth(FOW_CONFIG.DEPTH)
             .setScrollFactor(1);
             
-        this.memoryTexture.fill(FOW_CONFIG.FOG_COLOR, 1);
+        rt.fill(FOW_CONFIG.FOG_COLOR, 1);
+        this.fogChunks.set(`${x},${y}`, rt);
     }
 
     private createShadowLayer() {
@@ -279,9 +295,6 @@ export class FogOfWarSystem {
             
             // Resize Shadow RT
             this.shadowRT.resize(width, height);
-            
-            // Resize memory texture (if world bounds change, but here we handle screen resize)
-            // Note: Memory texture usually matches world bounds, not screen.
         });
     }
 
@@ -388,19 +401,42 @@ export class FogOfWarSystem {
 
     private updateMemoryTexture() {
         const camera = this.scene.cameras.main;
+        const { width, height } = this.scene.scale;
         
-        // Adjust mask image for World Space drawing
+        // Calculate visible chunks range
+        // Using floor for correct negative coordinate handling
+        // Expand by 1 chunk to ensure coverage
+        const startX = Math.floor(camera.scrollX / this.CHUNK_SIZE) - 1;
+        const startY = Math.floor(camera.scrollY / this.CHUNK_SIZE) - 1;
+        const endX = Math.floor((camera.scrollX + width) / this.CHUNK_SIZE) + 1;
+        const endY = Math.floor((camera.scrollY + height) / this.CHUNK_SIZE) + 1;
+
+        // Adjust mask image for World Space drawing ONCE
         const originalScale = this.maskImage.scaleX;
-        
-        // Scale mask to match World Coordinates relative to Camera Zoom
         this.maskImage.setScale(originalScale / camera.zoom);
-        
-        // Erase the visible area from the Memory Texture
-        this.memoryTexture.erase(
-            this.maskImage, 
-            camera.scrollX, 
-            camera.scrollY
-        );
+
+        for (let x = startX; x <= endX; x++) {
+            for (let y = startY; y <= endY; y++) {
+                const key = `${x},${y}`;
+                
+                if (!this.fogChunks.has(key)) {
+                    this.createFogChunk(x, y);
+                }
+                
+                const chunk = this.fogChunks.get(key)!;
+                
+                // Erase the visible area from this chunk
+                // Chunk is at chunk.x, chunk.y
+                // MaskImage represents view at camera.scrollX, camera.scrollY
+                // Draw offset = camera.scrollX - chunk.x
+                
+                chunk.erase(
+                    this.maskImage, 
+                    camera.scrollX - chunk.x, 
+                    camera.scrollY - chunk.y
+                );
+            }
+        }
         
         // Restore original scale
         this.maskImage.setScale(originalScale);

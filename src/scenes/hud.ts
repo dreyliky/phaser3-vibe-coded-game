@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { InventoryWindow, QuickBar, PauseMenu, Tooltip, InventorySlot } from '../objects/ui';
 import { inventorySystem } from '../systems';
 import { DEBUG_SETTINGS } from '../config/constants';
-import { Game as GameScene } from './game';
+import { Game as GameScene } from './Game';
 
 export class HUD extends Phaser.Scene {
     public inventoryWindow!: InventoryWindow;

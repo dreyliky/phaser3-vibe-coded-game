@@ -73,6 +73,7 @@ export class BaseLinkedWall extends BaseWall implements Damageable {
     }
 
 
+
     public getHealth(): number {
         return this.currentHealth;
     }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { TimeSystem } from './time-system';
 import { LightingSystem } from './lighting-system';
+import { DEPTHS } from '../config/constants';
 
 export class ShadowSystem {
     private scene: Phaser.Scene;
@@ -28,7 +29,7 @@ export class ShadowSystem {
         this.lightingSystem = lightingSystem;
         this.worldItemsGroup = worldItemsGroup;
         this.shadowGroup = this.scene.add.group();
-        this.shadowGroup.setDepth(1); // Shadows are low depth (on ground)
+        // this.shadowGroup.setDepth(1); // Removed: Shadows set their own depth relative to parents
         
         this.createShadowTexture();
     }
@@ -74,7 +75,7 @@ export class ShadowSystem {
             shadow = this.scene.add.image(sprite.x, sprite.y, sprite.texture.key, sprite.frame ? sprite.frame.name : undefined);
             shadow.setTint(0x000000);
             shadow.setAlpha(0.5);
-            shadow.setDepth((sprite.depth || 0) - 1); 
+            shadow.setDepth((sprite.depth || 0) + DEPTHS.SHADOW_OFFSET); 
             shadow.setOrigin(0.5, 1); // Pivot at bottom center
         } else {
             // Container OR TileSprite -> Use generic blob
@@ -86,7 +87,7 @@ export class ShadowSystem {
             shadow = this.scene.add.image(obj.x, obj.y, 'shadow_blob');
             shadow.setTint(0x000000);
             shadow.setAlpha(0.5);
-            shadow.setDepth((obj.depth || 0) - 1);
+            shadow.setDepth((obj.depth || 0) + DEPTHS.SHADOW_OFFSET);
             shadow.setOrigin(0.5, 1); // Pivot at bottom center
         }
 

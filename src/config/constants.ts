@@ -30,5 +30,13 @@ export const DEBUG_SETTINGS = {
 
 export const GAME_CONFIG = {
     TILE_SIZE: 80,
-    REAL_SECONDS_PER_GAME_HOUR: 10
+    REAL_SECONDS_PER_GAME_HOUR: 60
+};
+
+export const DEPTHS = {
+    TERRAIN: -3000000, // Below min world Y (-2,000,000)
+    SHADOW_OFFSET: -1, // Relative to object
+    LIGHTING: 4000000, // Above max world Y (+2,000,000)
+    FOG_OF_WAR: 5000000,
+    UI: 10000000
 };

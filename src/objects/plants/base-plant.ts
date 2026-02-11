@@ -20,7 +20,7 @@ export class BasePlant extends Phaser.Physics.Arcade.Sprite {
             this.setScale(options.scale);
         }
         
-        // Default depth sorting based on the bottom of the sprite
-        this.setDepth(this.y + (this.height * 0.5));
+        // Default depth sorting based on the bottom of the sprite (using displayHeight for scaled objects)
+        this.setDepth(this.y + (this.displayHeight * 0.5));
     }
 }

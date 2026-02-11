@@ -83,6 +83,8 @@ export class WorldItem extends Phaser.GameObjects.Container {
         this.sprite.setScale(scale); 
         this.add(this.sprite);
 
+        this.setDepth(this.y); // Set initial depth based on Y
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
 

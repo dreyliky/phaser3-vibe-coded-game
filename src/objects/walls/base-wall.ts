@@ -17,5 +17,8 @@ export class BaseWall extends Phaser.Physics.Arcade.Sprite {
         
         // Walls are solid
         this.setImmovable(true);
+
+        // Set depth based on Y position (bottom of the wall)
+        this.setDepth(this.y + (this.displayHeight * 0.5));
     }
 }

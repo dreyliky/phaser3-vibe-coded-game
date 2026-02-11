@@ -4,7 +4,7 @@ import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../ty
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { AssaultRifle, Pistol, Shotgun, LightAmmo, StandardAmmo, HeavyAmmo, BuckshotAmmo } from '../objects/items';
 import { inventorySystem, InventoryItem, ItemInteractionSystem, TimeSystem, LightingSystem, ShadowSystem } from '../systems';
-import { MapGenerator } from '../generators';
+import { ChunkSystem } from '../systems/chunk-system';
 import { DEBUG_SETTINGS } from '../config/constants';
 import { HUD } from './hud';
 import { MapService } from '../services/map-service';
@@ -18,15 +18,15 @@ export class Game extends Phaser.Scene {
     public player!: Player;
     private characterDefinition!: CharacterDefinition;
     public itemInteractionSystem!: ItemInteractionSystem;
-    private mapGenerator!: MapGenerator;
+    private chunkSystem!: ChunkSystem;
     private fogOfWarSystem!: FogOfWarSystem;
     private timeSystem!: TimeSystem;
     private lightingSystem!: LightingSystem;
     private shadowSystem!: ShadowSystem;
     private mapId?: string;
     
-    private wallsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
-    private plantsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
+    public wallsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
+    public plantsGroup!: Phaser.GameObjects.Group | Phaser.Physics.Arcade.StaticGroup;
     
     private bulletsGroup!: Phaser.GameObjects.Group;
     private treeHitboxesGroup!: Phaser.GameObjects.Group;
@@ -63,6 +63,9 @@ export class Game extends Phaser.Scene {
             immovable: true
         });
 
+        this.wallsGroup = this.physics.add.staticGroup();
+        this.plantsGroup = this.physics.add.staticGroup();
+
         // Launch HUD
         this.scene.launch('HUD');
 
@@ -81,12 +84,14 @@ export class Game extends Phaser.Scene {
         if (this.mapId) {
             this.loadCustomMap(this.mapId);
         } else {
-            this.generateProceduralMap();
+            // Infinite map bounds
+            // Set a very large world bound to allow exploration in all directions (including negative)
+            const worldSize = 4000000; // 4 million pixels should be enough for a while
+            const halfSize = worldSize / 2;
+            this.physics.world.setBounds(-halfSize, -halfSize, worldSize, worldSize);
+            // We don't set camera bounds to allow infinite scrolling
         }
 
-        // Initialize Tree Hitboxes
-        this.initializeTreeHitboxes();
-        
         // Camera setup
         this.cameras.main.startFollow(this.player, true); 
         this.cameras.main.setZoom(1);
@@ -151,6 +156,27 @@ export class Game extends Phaser.Scene {
         // Pass item interaction system group to shadow system
         this.shadowSystem = new ShadowSystem(this, this.timeSystem, this.lightingSystem, this.itemInteractionSystem.worldItemsGroup);
 
+        // Initialize Chunk System if no custom map
+        if (!this.mapId) {
+             this.chunkSystem = new ChunkSystem(
+                this,
+                Date.now(), // Random seed
+                this.wallsGroup,
+                this.plantsGroup,
+                this.treeHitboxesGroup,
+                this.shadowSystem
+            );
+            
+            // Spawn test items
+            this.itemInteractionSystem.spawnItem({ item: new AssaultRifle(), x: 300, y: 300 });
+            this.itemInteractionSystem.spawnItem({ item: new Pistol(), x: 400, y: 300 });
+            this.itemInteractionSystem.spawnItem({ item: new Shotgun(), x: 500, y: 300 });
+            
+            this.itemInteractionSystem.spawnItem({ item: new StandardAmmo(), x: 350, y: 400, quantity: 60 });
+            this.itemInteractionSystem.spawnItem({ item: new LightAmmo(), x: 450, y: 400, quantity: 100 });
+            this.itemInteractionSystem.spawnItem({ item: new BuckshotAmmo(), x: 550, y: 400, quantity: 40 });
+        }
+
         // Register initial shadows
         this.registerShadows();
     }
@@ -161,6 +187,9 @@ export class Game extends Phaser.Scene {
         this.lightingSystem.update();
         this.shadowSystem.update();
         this.itemInteractionSystem.update();
+        if (this.chunkSystem) {
+            this.chunkSystem.update(this.player);
+        }
         if (this.fogOfWarSystem) {
             this.fogOfWarSystem.update();
         }
@@ -194,19 +223,6 @@ export class Game extends Phaser.Scene {
                 this.shadowSystem.registerObject(item, 'Item');
             });
         }
-    }
-
-    private initializeTreeHitboxes() {
-        if (!this.plantsGroup) return;
-
-        this.plantsGroup.getChildren().forEach((plant: Phaser.GameObjects.GameObject) => {
-            if (plant instanceof Tree) {
-                const hitbox = plant.getBulletHitbox();
-                if (hitbox) {
-                    this.treeHitboxesGroup.add(hitbox);
-                }
-            }
-        });
     }
 
     private handleBulletWallCollision(obj1: any, obj2: any) {
@@ -257,42 +273,15 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private generateProceduralMap() {
-        const mapWidth = 4000;
-        const mapHeight = 4000;
-        this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
-        this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
-
-        this.mapGenerator = new MapGenerator(this);
-        this.mapGenerator.generateMap(mapWidth, mapHeight);
-        
-        this.wallsGroup = this.mapGenerator.getWalls();
-        this.plantsGroup = this.mapGenerator.getVegetation();
-
-        // Spawn test items
-        this.itemInteractionSystem.spawnItem({ item: new AssaultRifle(), x: 300, y: 300 });
-        this.itemInteractionSystem.spawnItem({ item: new Pistol(), x: 400, y: 300 });
-        this.itemInteractionSystem.spawnItem({ item: new Shotgun(), x: 500, y: 300 });
-        
-        this.itemInteractionSystem.spawnItem({ item: new StandardAmmo(), x: 350, y: 400, quantity: 60 });
-        this.itemInteractionSystem.spawnItem({ item: new LightAmmo(), x: 450, y: 400, quantity: 100 });
-        this.itemInteractionSystem.spawnItem({ item: new BuckshotAmmo(), x: 550, y: 400, quantity: 40 });
-    }
-
     private loadCustomMap(id: string) {
         const map = MapService.getMap(id);
         if (!map) {
-            console.error('Map not found, falling back to procedural');
-            this.generateProceduralMap();
+            console.error('Map not found');
             return;
         }
 
         this.physics.world.setBounds(0, 0, map.width, map.height);
         this.cameras.main.setBounds(0, 0, map.width, map.height);
-
-        // Groups
-        this.wallsGroup = this.physics.add.staticGroup();
-        this.plantsGroup = this.physics.add.staticGroup();
 
         // Terrain
         const tileSize = 80;
