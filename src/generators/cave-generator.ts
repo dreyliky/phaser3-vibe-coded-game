@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { WORLD_GEN_CONFIG } from '../config/world-generation-config';
 
 export class CaveGenerator {
     private width: number;
@@ -7,10 +8,10 @@ export class CaveGenerator {
     private grid: number[][]; // 0: Empty, 1: Wall
     private caveMask: boolean[][]; // true: Inside cave area, false: Outside void
 
-    constructor(width: number, height: number, margin: number) {
+    constructor(width: number, height: number, margin?: number) {
         this.width = width;
         this.height = height;
-        this.margin = margin;
+        this.margin = margin ?? WORLD_GEN_CONFIG.cave.margin;
         this.grid = [];
         this.caveMask = [];
     }
@@ -20,12 +21,12 @@ export class CaveGenerator {
         this.initializeGrid();
         
         // Run Cellular Automata iterations
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < WORLD_GEN_CONFIG.cave.smoothingIterations; i++) {
             this.smoothMap();
         }
 
         // Create entrances
-        this.createOrganicEntrances(Phaser.Math.Between(1, 3)); 
+        this.createOrganicEntrances(Phaser.Math.Between(WORLD_GEN_CONFIG.cave.entranceCountMin, WORLD_GEN_CONFIG.cave.entranceCountMax)); 
 
         return this.grid;
     }
@@ -68,7 +69,7 @@ export class CaveGenerator {
                 let radiusLimit = baseRadius;
                 radiusLimit += Math.sin(angle * spikes + noiseOffset) * spikeAmplitude;
                 radiusLimit += Math.cos(angle * (spikes + 3) - noiseOffset) * (spikeAmplitude * 0.5);
-
+                
                 // If point is within the noisy radius, it's inside the cave area
                 this.caveMask[x][y] = distance < radiusLimit;
             }
@@ -87,7 +88,7 @@ export class CaveGenerator {
                         this.grid[x][y] = 1;
                     } else {
                         // Interior is random
-                        this.grid[x][y] = Math.random() < 0.46 ? 1 : 0;
+                        this.grid[x][y] = Math.random() < WORLD_GEN_CONFIG.cave.initialChance ? 1 : 0;
                     }
                 } else {
                     // Outside mask is void

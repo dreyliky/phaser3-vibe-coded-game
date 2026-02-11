@@ -5,26 +5,7 @@ import { CaveGenerator } from './cave-generator';
 import { BiomeGenerator, BiomeType } from './biome-generator';
 import { TerrainSystem, TerrainType } from '../systems/terrain-system';
 import { pickWeighted } from '../utils/random';
-
-const BIOME_TERRAIN_DEFINITIONS: Record<BiomeType, { item: TerrainType, weight: number }[]> = {
-    [BiomeType.FOREST]: [
-        { item: TerrainType.SOIL, weight: 80 },
-        { item: TerrainType.SOIL_RICH, weight: 20 }
-    ],
-    [BiomeType.DESERT]: [
-        { item: TerrainType.SAND, weight: 90 },
-        { item: TerrainType.SOIL, weight: 10 }
-    ],
-    [BiomeType.SWAMP]: [
-        { item: TerrainType.MUD, weight: 70 },
-        { item: TerrainType.SOIL_RICH, weight: 20 },
-        { item: TerrainType.SOIL, weight: 10 }
-    ],
-    [BiomeType.CAVE]: [
-        { item: TerrainType.ROCK, weight: 85 },
-        { item: TerrainType.SOIL, weight: 15 }
-    ]
-};
+import { WORLD_GEN_CONFIG } from '../config/world-generation-config';
 
 export class MapGenerator {
     private scene: Phaser.Scene;
@@ -41,10 +22,10 @@ export class MapGenerator {
     }
 
     public generateMap(width: number, height: number) {
-        const tileSize = 80;
+        const tileSize = WORLD_GEN_CONFIG.tileSize;
         const gridWidth = Math.ceil(width / tileSize);
         const gridHeight = Math.ceil(height / tileSize);
-        const margin = 15; // 15 blocks margin as requested
+        const margin = WORLD_GEN_CONFIG.cave.margin;
 
         // Initialize Biome Generator
         this.biomeGenerator = new BiomeGenerator(gridWidth, gridHeight);
@@ -66,7 +47,7 @@ export class MapGenerator {
         // const soilGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.4, 3);
         
         // Generate Rock Patches (Cellular Automata) - Less frequent than soil
-        const rockGrid = this.generateAutomataGrid(gridWidth, gridHeight, 0.25, 3);
+        const rockGrid = this.generateAutomataGrid(gridWidth, gridHeight, WORLD_GEN_CONFIG.general.rockPatchChance, WORLD_GEN_CONFIG.general.rockPatchIterations);
 
         // Populate Terrain Grid based on Biomes, Cave Generator and Soil/Rock Grids
         for (let x = 0; x < gridWidth; x++) {
@@ -74,7 +55,7 @@ export class MapGenerator {
                 const biome = biomeGrid[x][y];
                 
                 // Set Base Terrain by Biome with Weighted Random
-                const definitions = BIOME_TERRAIN_DEFINITIONS[biome];
+                const definitions = WORLD_GEN_CONFIG.biomes[biome].terrainWeights;
                 let type = pickWeighted(definitions) || TerrainType.SOIL;
 
                 // Add details/patches (optional, maybe specific to biome)
@@ -86,14 +67,8 @@ export class MapGenerator {
                 // If inside cave, overwrite with ROCK (Highest priority for cave coherence)
                 if (this.caveGenerator.isInsideCave(x, y)) {
                     // Diverse cave floor
-                    const rand = Math.random();
-                    if (rand > 0.96) {
-                        type = TerrainType.SOIL;
-                    } else if (rand < 0.3) {
-                        type = TerrainType.SMOOTH_STONE;
-                    } else {
-                        type = TerrainType.ROCK;
-                    }
+                    const caveFloor = pickWeighted(WORLD_GEN_CONFIG.cave.floorTerrains);
+                    type = caveFloor || TerrainType.ROCK;
                 }
 
                 this.terrainSystem.setTerrain(x, y, type);

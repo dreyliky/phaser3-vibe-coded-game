@@ -1,112 +1,9 @@
 import Phaser from 'phaser';
 import { Bush, Tree, Grass } from '../objects/plants';
-import { BiomeType } from './biome-generator';
+import { BiomeType } from '../types/map';
 import { pickWeighted } from '../utils/random';
-
 import { TerrainType } from '../systems/terrain-system';
-
-// Define structure for plant definitions
-type PlantDefinition = {
-    key: string;
-    type: 'tree' | 'bush' | 'grass';
-    weight: number;
-    minScale?: number;
-    maxScale?: number;
-    allowedTerrains?: TerrainType[];
-};
-
-// Configuration per biome
-// Includes list of plants with weights, AND a global "spawn chance" for this biome.
-// spawnChance: 0.0 to 1.0 (probability that a chosen spot actually spawns a plant)
-const BIOME_PLANT_CONFIG: Record<BiomeType, { spawnChance: number, plants: PlantDefinition[] }> = {
-    [BiomeType.FOREST]: {
-        spawnChance: 0.8,
-        plants: [
-            {
-                key: 'plant_tree_oak_immature', type: 'tree', weight: 30, minScale: 0.8, maxScale: 1.2,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_tree_birch_a', type: 'tree', weight: 25, minScale: 0.8, maxScale: 1.3,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_tree_cecropia', type: 'tree', weight: 20, minScale: 0.9, maxScale: 1.5,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH, TerrainType.MUD]
-            },
-            {
-                key: 'plant_bush_a', type: 'bush', weight: 15, minScale: 0.8, maxScale: 1.2,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_berry_bush_a', type: 'bush', weight: 10, minScale: 0.8, maxScale: 1.1,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_grass_a', type: 'grass', weight: 75, minScale: 0.8, maxScale: 1.2,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_grass_b', type: 'grass', weight: 75, minScale: 0.8, maxScale: 1.2,
-                allowedTerrains: [TerrainType.SOIL, TerrainType.SOIL_RICH]
-            }
-        ]
-    },
-    [BiomeType.DESERT]: {
-        spawnChance: 0.1, // Sparse vegetation
-        plants: [
-            {
-                key: 'plant_tree_palm', type: 'tree', weight: 20, minScale: 0.8, maxScale: 1.4,
-                allowedTerrains: [TerrainType.SAND, TerrainType.SOIL]
-            },
-            {
-                key: 'plant_saguaro_cactus', type: 'bush', weight: 30, minScale: 0.7, maxScale: 1.3,
-                allowedTerrains: [TerrainType.SAND]
-            },
-            {
-                key: 'plant_saguaro_cactus_leafless', type: 'bush', weight: 20, minScale: 0.7, maxScale: 1.3,
-                allowedTerrains: [TerrainType.SAND]
-            },
-            {
-                key: 'plant_pincushion_cactus', type: 'bush', weight: 15, minScale: 0.5, maxScale: 1.0,
-                allowedTerrains: [TerrainType.SAND, TerrainType.ROCK]
-            },
-            {
-                key: 'plant_agave', type: 'bush', weight: 15, minScale: 0.6, maxScale: 1.1,
-                allowedTerrains: [TerrainType.SAND, TerrainType.SOIL]
-            }
-        ]
-    },
-    [BiomeType.SWAMP]: {
-        spawnChance: 0.2,
-        plants: [
-            {
-                key: 'plant_tree_willow', type: 'tree', weight: 40, minScale: 0.9, maxScale: 1.4,
-                allowedTerrains: [TerrainType.MUD, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_tree_teak', type: 'tree', weight: 20, minScale: 0.8, maxScale: 1.3,
-                allowedTerrains: [TerrainType.MUD, TerrainType.SOIL_RICH, TerrainType.SOIL]
-            },
-            {
-                key: 'plant_tree_bamboo', type: 'tree', weight: 10, minScale: 0.8, maxScale: 1.2,
-                allowedTerrains: [TerrainType.MUD, TerrainType.SOIL_RICH, TerrainType.SOIL]
-            },
-            {
-                key: 'plant_alocasia_a', type: 'bush', weight: 20, minScale: 0.7, maxScale: 1.2,
-                allowedTerrains: [TerrainType.MUD, TerrainType.SOIL_RICH]
-            },
-            {
-                key: 'plant_grass_b', type: 'grass', weight: 10, minScale: 0.8, maxScale: 1.5,
-                allowedTerrains: [TerrainType.MUD, TerrainType.SOIL_RICH, TerrainType.SOIL]
-            }
-        ]
-    },
-    [BiomeType.CAVE]: {
-        spawnChance: 0.05, // Very rare mushrooms or something? For now almost nothing.
-        plants: []
-    }
-};
+import { WORLD_GEN_CONFIG } from '../config/world-generation-config';
 
 export class VegetationGenerator {
     private scene: Phaser.Scene;
@@ -123,15 +20,16 @@ export class VegetationGenerator {
     public generateVegetation(options: {
         mapWidth: number;
         mapHeight: number;
-        count: number;
+        count?: number;
         collisionCheck?: (x: number, y: number) => boolean;
         getBiome?: (x: number, y: number) => BiomeType;
         getTerrain?: (x: number, y: number) => TerrainType;
     }) {
-        const { mapWidth, mapHeight, count, collisionCheck, getBiome, getTerrain } = options;
+        const { mapWidth, mapHeight, collisionCheck, getBiome, getTerrain } = options;
+        const count = options.count ?? WORLD_GEN_CONFIG.vegetation.totalCount;
 
         const placedPositions: {x: number, y: number}[] = [];
-        const minDistance = 64;
+        const minDistance = WORLD_GEN_CONFIG.vegetation.minDistance;
 
         for (let i = 0; i < count; i++) {
             let x = 0;
@@ -141,7 +39,7 @@ export class VegetationGenerator {
             let biome = BiomeType.FOREST;
 
             // Try to find a valid position
-            while (attempts < 20 && !validPosition) {
+            while (attempts < WORLD_GEN_CONFIG.vegetation.maxAttempts && !validPosition) {
                 x = Phaser.Math.Between(0, mapWidth);
                 y = Phaser.Math.Between(0, mapHeight);
                 
@@ -149,7 +47,7 @@ export class VegetationGenerator {
                 
                 // Check Biome
                 if (getBiome) {
-                    const tileSize = 80; // Hardcoded in MapGenerator, should be constant.
+                    const tileSize = WORLD_GEN_CONFIG.tileSize;
                     const gridX = Math.floor(x / tileSize);
                     const gridY = Math.floor(y / tileSize);
                     biome = getBiome(gridX, gridY);
@@ -182,7 +80,7 @@ export class VegetationGenerator {
             if (validPosition) {
                 placedPositions.push({x, y});
                 
-                const biomeConfig = BIOME_PLANT_CONFIG[biome];
+                const biomeConfig = WORLD_GEN_CONFIG.biomes[biome];
                 if (!biomeConfig || biomeConfig.plants.length === 0) continue;
 
                 // Check spawn chance
@@ -191,7 +89,7 @@ export class VegetationGenerator {
                 // Check Terrain Restrictions
                 let validPlants = biomeConfig.plants;
                 if (getTerrain) {
-                    const tileSize = 80;
+                    const tileSize = WORLD_GEN_CONFIG.tileSize;
                     const gridX = Math.floor(x / tileSize);
                     const gridY = Math.floor(y / tileSize);
                     const terrain = getTerrain(gridX, gridY);

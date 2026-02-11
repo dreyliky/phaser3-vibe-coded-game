@@ -1,3 +1,10 @@
+export enum BiomeType {
+    FOREST = 'FOREST',
+    DESERT = 'DESERT',
+    SWAMP = 'SWAMP',
+    CAVE = 'CAVE'
+}
+
 export type MapObjectType = 'object' | 'wall' | 'plant' | 'tile';
 
 export interface MapObject {

@@ -1,10 +1,8 @@
 
-export enum BiomeType {
-    FOREST = 'FOREST',
-    DESERT = 'DESERT',
-    SWAMP = 'SWAMP',
-    CAVE = 'CAVE'
-}
+import { BiomeType } from '../types/map';
+import { WORLD_GEN_CONFIG } from '../config/world-generation-config';
+
+export { BiomeType };
 
 export class BiomeGenerator {
     private width: number;
@@ -17,7 +15,7 @@ export class BiomeGenerator {
         this.height = height;
         this.biomeGrid = [];
         // Cave radius is roughly 15% of the smaller dimension
-        this.caveRadius = Math.min(width, height) * 0.15;
+        this.caveRadius = Math.min(width, height) * WORLD_GEN_CONFIG.cave.radiusRatio;
     }
 
     public generate(): BiomeType[][] {
