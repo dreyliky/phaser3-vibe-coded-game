@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { StructureGenerator } from '../systems/structure-generator';
+import { StructureGenerator } from '../generators';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseBrickWall } from '../objects/walls/wall-types';
 import { GAME_CONFIG } from '../config/constants';

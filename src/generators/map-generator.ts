@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { VegetationGenerator } from './vegetation-generator';
 import { StructureGenerator } from './structure-generator';
 import { CaveGenerator } from './cave-generator';
-import { TerrainSystem, TerrainType } from './terrain-system';
+import { TerrainSystem, TerrainType } from '../systems/terrain-system';
 
 export class MapGenerator {
     private scene: Phaser.Scene;
