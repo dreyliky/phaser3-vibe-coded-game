@@ -84,9 +84,18 @@ export class FogOfWarSystem {
             return;
         }
 
-        // Create Raycaster
+        // Get world bounds
+        const bounds = this.scene.physics.world.bounds;
+
+        // Create Raycaster with world bounds
         this.raycaster = raycasterPlugin.createRaycaster({
-            debug: false
+            debug: false,
+            boundingBox: {
+                x: bounds.x,
+                y: bounds.y,
+                width: bounds.width,
+                height: bounds.height
+            }
         });
 
         // Create Ray
@@ -112,6 +121,15 @@ export class FogOfWarSystem {
 
         if (!force && dist < this.MAP_UPDATE_DISTANCE) {
             return;
+        }
+
+        // Check if any currently mapped object is destroyed/inactive
+        const hasDestroyedObjects = this.currentMappedObjects.some(obj => !obj || !obj.scene || !obj.active);
+
+        // If we have destroyed objects, we MUST reset the raycaster because passing destroyed objects 
+        // to removeMappedObjects() causes a crash, but NOT removing them leaves ghost obstacles.
+        if (hasDestroyedObjects) {
+            this.rebuildRaycaster();
         }
 
         // Update last pos
@@ -149,17 +167,10 @@ export class FogOfWarSystem {
         if (this.wallsGroup) checkAndAdd(this.wallsGroup);
         if (this.treeHitboxesGroup) checkAndAdd(this.treeHitboxesGroup);
 
-        // Update Raycaster
-        if (this.currentMappedObjects.length > 0) {
-            // Filter out destroyed objects before passing to raycaster to avoid crash
-            // We assume the raycaster handles destroyed objects internally or ignores them
-            const objectsToRemove = this.currentMappedObjects.filter(obj => 
-                obj && obj.scene && obj.active
-            );
-            
-            if (objectsToRemove.length > 0) {
-                this.raycaster.removeMappedObjects(objectsToRemove);
-            }
+        // If we just rebuilt the raycaster, it's empty, so we don't need to remove anything.
+        // If we didn't rebuild, we need to remove objects that are no longer relevant.
+        if (!hasDestroyedObjects && this.currentMappedObjects.length > 0) {
+            this.raycaster.removeMappedObjects(this.currentMappedObjects);
         }
 
         if (nearbyObjects.length > 0) {
@@ -168,6 +179,39 @@ export class FogOfWarSystem {
         }
 
         this.currentMappedObjects = nearbyObjects;
+    }
+
+    private rebuildRaycaster() {
+        if (this.ray) {
+            this.ray.destroy();
+        }
+        if (this.raycaster) {
+            this.raycaster.destroy();
+        }
+
+        // Re-initialize
+        // @ts-ignore
+        const raycasterPlugin = this.scene.raycasterPlugin;
+        const bounds = this.scene.physics.world.bounds;
+
+        this.raycaster = raycasterPlugin.createRaycaster({
+            debug: false,
+            boundingBox: {
+                x: bounds.x,
+                y: bounds.y,
+                width: bounds.width,
+                height: bounds.height
+            }
+        });
+
+        this.ray = this.raycaster.createRay({
+            origin: { x: this.player.x, y: this.player.y }
+        });
+        
+        this.ray.setRayRange(FOW_CONFIG.VISION_RADIUS);
+        
+        // Clear current mapped objects list as raycaster is fresh
+        this.currentMappedObjects = [];
     }
 
     private createVisionGraphics() {
@@ -366,13 +410,13 @@ export class FogOfWarSystem {
         // Update Ray Origin
         this.ray.setOrigin(this.player.x, this.player.y);
 
-        // 1. Calculate Mouse Angle and Cone (Screen Space)
         const pointer = this.scene.input.activePointer;
         const camera = this.scene.cameras.main;
         
         const playerScreenX = (this.player.x - camera.scrollX) * camera.zoom;
         const playerScreenY = (this.player.y - camera.scrollY) * camera.zoom;
         
+        // Calculate central angle
         const mouseAngle = Phaser.Math.Angle.Between(
             playerScreenX, 
             playerScreenY, 
@@ -380,14 +424,39 @@ export class FogOfWarSystem {
             pointer.y
         );
 
-        // Set Ray Cone
-        this.ray.setAngle(mouseAngle);
-        this.ray.setCone(FOW_CONFIG.VIEW_CONE_ANGLE);
+        // MANUAL CASTING LOOP
+        // We cast N rays uniformly to ensure a smooth cone arc and consistent visibility
+        // even when there are no obstacles (which causes castCone to fail/glitch).
+        // Using the plugin's cast() is efficient as it uses the spatial hash.
         
-        // Cast Cone
-        // castCone() returns an array of intersection points
-        const intersections = this.ray.castCone();
+        const numRays = 40; // Sufficient for a smooth arc
+        const coneAngle = FOW_CONFIG.VIEW_CONE_ANGLE;
+        const startAngle = mouseAngle - coneAngle / 2;
+        const angleStep = coneAngle / (numRays - 1);
         
-        return intersections;
+        const points: VisibilityPoint[] = [];
+        
+        // Ensure the ray has the correct range
+        this.ray.setRayRange(FOW_CONFIG.VISION_RADIUS);
+
+        for (let i = 0; i < numRays; i++) {
+            const angle = startAngle + (i * angleStep);
+            this.ray.setAngle(angle);
+            
+            // cast() returns the intersection point or FALSE if nothing hit
+            let intersection = this.ray.cast();
+            
+            // If no obstacle hit, project to max range
+            if (!intersection) {
+                intersection = {
+                    x: this.player.x + Math.cos(angle) * FOW_CONFIG.VISION_RADIUS,
+                    y: this.player.y + Math.sin(angle) * FOW_CONFIG.VISION_RADIUS
+                };
+            }
+            
+            points.push({ x: intersection.x, y: intersection.y });
+        }
+        
+        return points;
     }
 }
