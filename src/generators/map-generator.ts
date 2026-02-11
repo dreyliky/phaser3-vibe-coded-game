@@ -85,7 +85,15 @@ export class MapGenerator {
 
                 // If inside cave, overwrite with ROCK (Highest priority for cave coherence)
                 if (this.caveGenerator.isInsideCave(x, y)) {
-                    type = TerrainType.ROCK;
+                    // Diverse cave floor
+                    const rand = Math.random();
+                    if (rand > 0.96) {
+                        type = TerrainType.SOIL;
+                    } else if (rand < 0.3) {
+                        type = TerrainType.SMOOTH_STONE;
+                    } else {
+                        type = TerrainType.ROCK;
+                    }
                 }
 
                 this.terrainSystem.setTerrain(x, y, type);

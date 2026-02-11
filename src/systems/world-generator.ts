@@ -47,6 +47,18 @@ export class WorldGenerator {
     public getTerrain(x: number, y: number): TerrainType {
         // First check cave
         if (this.isCave(x, y)) {
+             const caveDetail = this.terrainNoise.noise2D(x * 0.1, y * 0.1);
+             
+             // Small chance for soil (dirt patches in cave)
+             if (caveDetail > 0.75) {
+                 return TerrainType.SOIL;
+             }
+             
+             // Mix of Rock and Smooth Stone for variety
+             if (caveDetail < -0.2) {
+                 return TerrainType.SMOOTH_STONE;
+             }
+
              return TerrainType.ROCK;
         }
 
