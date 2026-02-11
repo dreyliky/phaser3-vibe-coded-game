@@ -96,6 +96,21 @@ export class WorldGenerator {
         // Don't place objects in caves or walls
         if (this.isCave(x, y) || this.isWall(x, y)) return null;
 
+        // Check terrain type restrictions
+        const terrain = this.getTerrain(x, y);
+        const forbiddenTerrains = [
+            TerrainType.ROCK,
+            TerrainType.SMOOTH_STONE,
+            TerrainType.ANCIENT_CONCRETE,
+            TerrainType.BROKEN_ASPHALT,
+            TerrainType.TILE_STONE,
+            TerrainType.WOOD_FLOOR
+        ];
+
+        if (forbiddenTerrains.includes(terrain)) {
+            return null;
+        }
+
         const biome = this.getBiome(x, y);
         // Use a high frequency noise for object placement or just random
         // Since we need it to be deterministic, use noise or hashed random
