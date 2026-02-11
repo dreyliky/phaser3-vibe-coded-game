@@ -151,7 +151,15 @@ export class FogOfWarSystem {
 
         // Update Raycaster
         if (this.currentMappedObjects.length > 0) {
-            this.raycaster.removeMappedObjects(this.currentMappedObjects);
+            // Filter out destroyed objects before passing to raycaster to avoid crash
+            // We assume the raycaster handles destroyed objects internally or ignores them
+            const objectsToRemove = this.currentMappedObjects.filter(obj => 
+                obj && obj.scene && obj.active
+            );
+            
+            if (objectsToRemove.length > 0) {
+                this.raycaster.removeMappedObjects(objectsToRemove);
+            }
         }
 
         if (nearbyObjects.length > 0) {
