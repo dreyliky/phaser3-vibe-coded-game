@@ -22,12 +22,15 @@ export class VegetationGenerator {
         const { mapWidth, mapHeight, count, collisionCheck } = options;
         const treeTypes = [
             'plant_tree_bamboo', 'plant_tree_cecropia', 'plant_tree_palm', 
-            'plant_tree_teak', 'plant_tree_willow'
+            'plant_tree_teak', 'plant_tree_willow',
+            'plant_tree_birch_a', 'plant_tree_oak_immature'
         ];
         
         const bushTypes = [
             'plant_agave', 'plant_pincushion_cactus', 'plant_saguaro_cactus', 
-            'plant_saguaro_cactus_leafless'
+            'plant_saguaro_cactus_leafless',
+            'plant_alocasia_a', 'plant_berry_bush_a', 'plant_bush_a',
+            'plant_grass_a', 'plant_grass_b'
         ];
 
         const placedPositions: {x: number, y: number}[] = [];
