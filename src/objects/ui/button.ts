@@ -143,4 +143,8 @@ export class Button extends Phaser.GameObjects.Container {
         this.options.backgroundColor = color;
         this.background.setFillStyle(color, this.options.backgroundAlpha ?? 1);
     }
+
+    public setBorder(width: number, color: number, alpha: number = 1) {
+        this.background.setStrokeStyle(width, color, alpha);
+    }
 }

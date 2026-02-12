@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { TimeSystem } from './time-system';
 import { LightingSystem } from './lighting-system';
-import { DEPTHS } from '../config/constants';
+import { DEPTHS, SPRITE_KEYS } from '../config/constants';
 
 export class ShadowSystem {
     private scene: Phaser.Scene;
@@ -35,10 +35,10 @@ export class ShadowSystem {
     }
 
     private createShadowTexture() {
-        if (this.scene.textures.exists('shadow_blob')) return;
+        if (this.scene.textures.exists(SPRITE_KEYS.EFFECTS.SHADOW_BLOB)) return;
         
         const size = 64;
-        const texture = this.scene.textures.createCanvas('shadow_blob', size, size);
+        const texture = this.scene.textures.createCanvas(SPRITE_KEYS.EFFECTS.SHADOW_BLOB, size, size);
         if (texture) {
             const context = texture.getContext();
             const gradient = context.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
@@ -81,10 +81,10 @@ export class ShadowSystem {
             // Container OR TileSprite -> Use generic blob
             // For TileSprite, using the texture key would result in the full texture, not the tiled area.
             // So we use the blob and will scale it to match dimensions.
-            if (!this.scene.textures.exists('shadow_blob')) {
+            if (!this.scene.textures.exists(SPRITE_KEYS.EFFECTS.SHADOW_BLOB)) {
                 this.createShadowTexture();
             }
-            shadow = this.scene.add.image(obj.x, obj.y, 'shadow_blob');
+            shadow = this.scene.add.image(obj.x, obj.y, SPRITE_KEYS.EFFECTS.SHADOW_BLOB);
             shadow.setTint(0x000000);
             shadow.setAlpha(0.5);
             shadow.setDepth((obj.depth || 0) + DEPTHS.SHADOW.OFFSET);

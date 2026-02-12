@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BaseLinkedWall } from './base-linked-wall';
 import { WallMaterial } from '../../config/wall-data';
+import { SPRITE_KEYS } from '../../config/constants';
 
 // --- Base Styles (Texture-based) ---
 
@@ -17,7 +18,7 @@ export class BaseRockWall extends BaseLinkedWall {
             scene: options.scene,
             x: options.x,
             y: options.y,
-            texture: 'wall_rock',
+            texture: SPRITE_KEYS.WALLS.ROCK,
             material: options.material
         });
     }
@@ -29,7 +30,7 @@ export class BaseBrickWall extends BaseLinkedWall {
             scene: options.scene,
             x: options.x,
             y: options.y,
-            texture: 'wall_bricks',
+            texture: SPRITE_KEYS.WALLS.BRICKS,
             material: options.material
         });
     }
@@ -41,7 +42,7 @@ export class BasePlankWall extends BaseLinkedWall {
             scene: options.scene,
             x: options.x,
             y: options.y,
-            texture: 'wall_planks',
+            texture: SPRITE_KEYS.WALLS.PLANKS,
             material: options.material
         });
     }
@@ -53,7 +54,7 @@ export class BaseSmoothWall extends BaseLinkedWall {
             scene: options.scene,
             x: options.x,
             y: options.y,
-            texture: 'wall_smooth',
+            texture: SPRITE_KEYS.WALLS.SMOOTH,
             material: options.material
         });
     }

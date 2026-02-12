@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { BodyType, FaceType, Gender, HairType } from '../types/character';
-import { ASSETS } from '../config/constants';
+import { ASSETS, SPRITE_KEYS } from '../config/constants';
 import { TextureGenerator } from '../utils/texture-generator';
 
 export class Boot extends Phaser.Scene {
@@ -10,13 +10,16 @@ export class Boot extends Phaser.Scene {
 
     preload() {
         // Generate Ammo Textures
-        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_light', color: 0x00ff00, size: 16 });
-        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_standard', color: 0xffff00, size: 16 });
-        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_heavy', color: 0xff0000, size: 16 });
-        TextureGenerator.createSquareTexture({ scene: this, key: 'ammo_buckshot', color: 0xffaa00, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: SPRITE_KEYS.AMMO.LIGHT, color: 0x00ff00, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: SPRITE_KEYS.AMMO.STANDARD, color: 0xffff00, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: SPRITE_KEYS.AMMO.HEAVY, color: 0xff0000, size: 16 });
+        TextureGenerator.createSquareTexture({ scene: this, key: SPRITE_KEYS.AMMO.BUCKSHOT, color: 0xffaa00, size: 16 });
 
         // Generate Weapon Textures
-        TextureGenerator.createCircleTexture({ scene: this, key: 'weapon_hands', color: 0xffffff, radius: 8 }); // White circle for hands
+        TextureGenerator.createCircleTexture({ scene: this, key: SPRITE_KEYS.WEAPONS.HANDS, color: 0xffffff, radius: 8 }); // White circle for hands
+
+        // Generate Pixel Texture
+        TextureGenerator.createSquareTexture({ scene: this, key: SPRITE_KEYS.UI.PIXEL, color: 0xffffff, size: 1 });
 
 
         const basePath = ASSETS.SPRITES.HUMANLIKE_BASE_PATH;
@@ -58,59 +61,59 @@ export class Boot extends Phaser.Scene {
         });
 
         // Load Weapons
-        this.load.image('weapon_assault_rifle', ASSETS.SPRITES.WEAPONS.ASSAULT_RIFLE);
-        this.load.image('weapon_pistol', ASSETS.SPRITES.WEAPONS.AUTOPISTOL);
-        this.load.image('weapon_shotgun', ASSETS.SPRITES.WEAPONS.SHOTGUN);
+        this.load.image(SPRITE_KEYS.WEAPONS.ASSAULT_RIFLE, ASSETS.SPRITES.WEAPONS.ASSAULT_RIFLE);
+        this.load.image(SPRITE_KEYS.WEAPONS.AUTOPISTOL, ASSETS.SPRITES.WEAPONS.AUTOPISTOL);
+        this.load.image(SPRITE_KEYS.WEAPONS.SHOTGUN, ASSETS.SPRITES.WEAPONS.SHOTGUN);
 
         // Load Projectiles
-        this.load.image('projectile_heavy', ASSETS.SPRITES.PROJECTILES.HEAVY);
-        this.load.image('projectile_standard', ASSETS.SPRITES.PROJECTILES.STANDARD);
-        this.load.image('projectile_buckshot', ASSETS.SPRITES.PROJECTILES.BUCKSHOT);
-        this.load.image('projectile_light', ASSETS.SPRITES.PROJECTILES.LIGHT);
+        this.load.image(SPRITE_KEYS.PROJECTILES.HEAVY, ASSETS.SPRITES.PROJECTILES.HEAVY);
+        this.load.image(SPRITE_KEYS.PROJECTILES.STANDARD, ASSETS.SPRITES.PROJECTILES.STANDARD);
+        this.load.image(SPRITE_KEYS.PROJECTILES.BUCKSHOT, ASSETS.SPRITES.PROJECTILES.BUCKSHOT);
+        this.load.image(SPRITE_KEYS.PROJECTILES.LIGHT, ASSETS.SPRITES.PROJECTILES.LIGHT);
 
         // Load Cursors
-        this.load.image('cursor_none', ASSETS.SPRITES.UI.CURSOR.NONE);
-        this.load.image('cursor_hand', ASSETS.SPRITES.UI.CURSOR.HAND);
-        this.load.image('cursor_sword', ASSETS.SPRITES.UI.CURSOR.SWORD);
-        this.load.image('cursor_target', ASSETS.SPRITES.UI.CURSOR.TARGET);
+        this.load.image(SPRITE_KEYS.UI.CURSOR.NONE, ASSETS.SPRITES.UI.CURSOR.NONE);
+        this.load.image(SPRITE_KEYS.UI.CURSOR.HAND, ASSETS.SPRITES.UI.CURSOR.HAND);
+        this.load.image(SPRITE_KEYS.UI.CURSOR.SWORD, ASSETS.SPRITES.UI.CURSOR.SWORD);
+        this.load.image(SPRITE_KEYS.UI.CURSOR.TARGET, ASSETS.SPRITES.UI.CURSOR.TARGET);
         
         // Load Environment
-        this.load.image('background_sand', ASSETS.SPRITES.TERRAIN.SURFACES.SAND);
-        this.load.image('floor_cave', ASSETS.SPRITES.TERRAIN.SURFACES.ROUGH_HEWN_ROCK);
-        this.load.image('floor_soil', ASSETS.SPRITES.TERRAIN.SURFACES.SOIL);
-        this.load.image('floor_ancient_concrete', ASSETS.SPRITES.TERRAIN.SURFACES.ANCIENT_CONCRETE);
-        this.load.image('floor_broken_asphalt', ASSETS.SPRITES.TERRAIN.SURFACES.BROKEN_ASPHALT);
-        this.load.image('floor_mud', ASSETS.SPRITES.TERRAIN.SURFACES.MUD);
-        this.load.image('floor_smooth_stone', ASSETS.SPRITES.TERRAIN.SURFACES.SMOOTH_STONE);
-        this.load.image('floor_soil_rich', ASSETS.SPRITES.TERRAIN.SURFACES.SOIL_RICH);
-        this.load.image('floor_tile_stone', ASSETS.SPRITES.TERRAIN.SURFACES.TILE_STONE);
-        this.load.image('floor_wood', ASSETS.SPRITES.TERRAIN.SURFACES.WOOD_FLOOR);
+        this.load.image(SPRITE_KEYS.TERRAIN.SAND, ASSETS.SPRITES.TERRAIN.SURFACES.SAND);
+        this.load.image(SPRITE_KEYS.TERRAIN.CAVE, ASSETS.SPRITES.TERRAIN.SURFACES.ROUGH_HEWN_ROCK);
+        this.load.image(SPRITE_KEYS.TERRAIN.SOIL, ASSETS.SPRITES.TERRAIN.SURFACES.SOIL);
+        this.load.image(SPRITE_KEYS.TERRAIN.ANCIENT_CONCRETE, ASSETS.SPRITES.TERRAIN.SURFACES.ANCIENT_CONCRETE);
+        this.load.image(SPRITE_KEYS.TERRAIN.BROKEN_ASPHALT, ASSETS.SPRITES.TERRAIN.SURFACES.BROKEN_ASPHALT);
+        this.load.image(SPRITE_KEYS.TERRAIN.MUD, ASSETS.SPRITES.TERRAIN.SURFACES.MUD);
+        this.load.image(SPRITE_KEYS.TERRAIN.SMOOTH_STONE, ASSETS.SPRITES.TERRAIN.SURFACES.SMOOTH_STONE);
+        this.load.image(SPRITE_KEYS.TERRAIN.SOIL_RICH, ASSETS.SPRITES.TERRAIN.SURFACES.SOIL_RICH);
+        this.load.image(SPRITE_KEYS.TERRAIN.TILE_STONE, ASSETS.SPRITES.TERRAIN.SURFACES.TILE_STONE);
+        this.load.image(SPRITE_KEYS.TERRAIN.WOOD, ASSETS.SPRITES.TERRAIN.SURFACES.WOOD_FLOOR);
 
         // Load Plants - Bushes/Cacti
-        this.load.image('plant_agave', ASSETS.SPRITES.PLANTS.AGAVE);
-        this.load.image('plant_pincushion_cactus', ASSETS.SPRITES.PLANTS.PINCUSHION_CACTUS);
-        this.load.image('plant_saguaro_cactus', ASSETS.SPRITES.PLANTS.SAGUARO_CACTUS);
-        this.load.image('plant_saguaro_cactus_leafless', ASSETS.SPRITES.PLANTS.SAGUARO_CACTUS_LEAFLESS);
-        this.load.image('plant_alocasia_a', ASSETS.SPRITES.PLANTS.ALOCASIA_A);
-        this.load.image('plant_berry_bush_a', ASSETS.SPRITES.PLANTS.BERRY_BUSH_A);
-        this.load.image('plant_bush_a', ASSETS.SPRITES.PLANTS.BUSH_A);
-        this.load.image('plant_grass_a', ASSETS.SPRITES.PLANTS.GRASS_A);
-        this.load.image('plant_grass_b', ASSETS.SPRITES.PLANTS.GRASS_B);
+        this.load.image(SPRITE_KEYS.PLANTS.AGAVE, ASSETS.SPRITES.PLANTS.AGAVE);
+        this.load.image(SPRITE_KEYS.PLANTS.PINCUSHION_CACTUS, ASSETS.SPRITES.PLANTS.PINCUSHION_CACTUS);
+        this.load.image(SPRITE_KEYS.PLANTS.SAGUARO_CACTUS, ASSETS.SPRITES.PLANTS.SAGUARO_CACTUS);
+        this.load.image(SPRITE_KEYS.PLANTS.SAGUARO_CACTUS_LEAFLESS, ASSETS.SPRITES.PLANTS.SAGUARO_CACTUS_LEAFLESS);
+        this.load.image(SPRITE_KEYS.PLANTS.ALOCASIA_A, ASSETS.SPRITES.PLANTS.ALOCASIA_A);
+        this.load.image(SPRITE_KEYS.PLANTS.BERRY_BUSH_A, ASSETS.SPRITES.PLANTS.BERRY_BUSH_A);
+        this.load.image(SPRITE_KEYS.PLANTS.BUSH_A, ASSETS.SPRITES.PLANTS.BUSH_A);
+        this.load.image(SPRITE_KEYS.PLANTS.GRASS_A, ASSETS.SPRITES.PLANTS.GRASS_A);
+        this.load.image(SPRITE_KEYS.PLANTS.GRASS_B, ASSETS.SPRITES.PLANTS.GRASS_B);
 
         // Load Plants - Trees
-        this.load.image('plant_tree_bamboo', ASSETS.SPRITES.PLANTS.TREE_BAMBOO);
-        this.load.image('plant_tree_cecropia', ASSETS.SPRITES.PLANTS.TREE_CECROPIA);
-        this.load.image('plant_tree_palm', ASSETS.SPRITES.PLANTS.TREE_PALM);
-        this.load.image('plant_tree_teak', ASSETS.SPRITES.PLANTS.TREE_TEAK);
-        this.load.image('plant_tree_willow', ASSETS.SPRITES.PLANTS.TREE_WILLOW);
-        this.load.image('plant_tree_birch_a', ASSETS.SPRITES.PLANTS.TREE_BIRCH_A);
-        this.load.image('plant_tree_oak_immature', ASSETS.SPRITES.PLANTS.TREE_OAK_IMMATURE);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_BAMBOO, ASSETS.SPRITES.PLANTS.TREE_BAMBOO);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_CECROPIA, ASSETS.SPRITES.PLANTS.TREE_CECROPIA);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_PALM, ASSETS.SPRITES.PLANTS.TREE_PALM);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_TEAK, ASSETS.SPRITES.PLANTS.TREE_TEAK);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_WILLOW, ASSETS.SPRITES.PLANTS.TREE_WILLOW);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_BIRCH_A, ASSETS.SPRITES.PLANTS.TREE_BIRCH_A);
+        this.load.image(SPRITE_KEYS.PLANTS.TREE_OAK_IMMATURE, ASSETS.SPRITES.PLANTS.TREE_OAK_IMMATURE);
 
         // Load Walls
-        this.load.spritesheet('wall_rock', ASSETS.SPRITES.BUILDINGS.LINKED.ROCK_ATLAS, { frameWidth: 80, frameHeight: 80 });
-        this.load.spritesheet('wall_bricks', ASSETS.SPRITES.BUILDINGS.LINKED.BRICKS_ATLAS, { frameWidth: 80, frameHeight: 80 });
-        this.load.spritesheet('wall_planks', ASSETS.SPRITES.BUILDINGS.LINKED.PLANKS_ATLAS, { frameWidth: 80, frameHeight: 80 });
-        this.load.spritesheet('wall_smooth', ASSETS.SPRITES.BUILDINGS.LINKED.SMOOTH_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet(SPRITE_KEYS.WALLS.ROCK, ASSETS.SPRITES.BUILDINGS.LINKED.ROCK_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet(SPRITE_KEYS.WALLS.BRICKS, ASSETS.SPRITES.BUILDINGS.LINKED.BRICKS_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet(SPRITE_KEYS.WALLS.PLANKS, ASSETS.SPRITES.BUILDINGS.LINKED.PLANKS_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet(SPRITE_KEYS.WALLS.SMOOTH, ASSETS.SPRITES.BUILDINGS.LINKED.SMOOTH_ATLAS, { frameWidth: 80, frameHeight: 80 });
     }
 
     create() {

@@ -16,6 +16,78 @@ export const HAIR_COLORS = [
     '#0000ff'  // Blue
 ];
 
+export const SPRITE_KEYS = {
+    WEAPONS: {
+        ASSAULT_RIFLE: 'weapon_assault_rifle',
+        AUTOPISTOL: 'weapon_pistol',
+        SHOTGUN: 'weapon_shotgun',
+        HANDS: 'weapon_hands'
+    },
+    AMMO: {
+        LIGHT: 'ammo_light',
+        STANDARD: 'ammo_standard',
+        HEAVY: 'ammo_heavy',
+        BUCKSHOT: 'ammo_buckshot'
+    },
+    PROJECTILES: {
+        HEAVY: 'projectile_heavy',
+        STANDARD: 'projectile_standard',
+        BUCKSHOT: 'projectile_buckshot',
+        LIGHT: 'projectile_light'
+    },
+    UI: {
+        CURSOR: {
+            NONE: 'cursor_none',
+            HAND: 'cursor_hand',
+            SWORD: 'cursor_sword',
+            TARGET: 'cursor_target'
+        },
+        PIXEL: 'pixel'
+    },
+    ICONS: {
+        PLAYER_SPAWN: 'head_Male_Average_Normal_south'
+    },
+    EFFECTS: {
+        SHADOW_BLOB: 'shadow_blob'
+    },
+    TERRAIN: {
+        SAND: 'background_sand',
+        CAVE: 'floor_cave',
+        SOIL: 'floor_soil',
+        ANCIENT_CONCRETE: 'floor_ancient_concrete',
+        BROKEN_ASPHALT: 'floor_broken_asphalt',
+        MUD: 'floor_mud',
+        SMOOTH_STONE: 'floor_smooth_stone',
+        SOIL_RICH: 'floor_soil_rich',
+        TILE_STONE: 'floor_tile_stone',
+        WOOD: 'floor_wood'
+    },
+    PLANTS: {
+        AGAVE: 'plant_agave',
+        PINCUSHION_CACTUS: 'plant_pincushion_cactus',
+        SAGUARO_CACTUS: 'plant_saguaro_cactus',
+        SAGUARO_CACTUS_LEAFLESS: 'plant_saguaro_cactus_leafless',
+        ALOCASIA_A: 'plant_alocasia_a',
+        BERRY_BUSH_A: 'plant_berry_bush_a',
+        BUSH_A: 'plant_bush_a',
+        GRASS_A: 'plant_grass_a',
+        GRASS_B: 'plant_grass_b',
+        TREE_BAMBOO: 'plant_tree_bamboo',
+        TREE_CECROPIA: 'plant_tree_cecropia',
+        TREE_PALM: 'plant_tree_palm',
+        TREE_TEAK: 'plant_tree_teak',
+        TREE_WILLOW: 'plant_tree_willow',
+        TREE_BIRCH_A: 'plant_tree_birch_a',
+        TREE_OAK_IMMATURE: 'plant_tree_oak_immature'
+    },
+    WALLS: {
+        ROCK: 'wall_rock',
+        BRICKS: 'wall_bricks',
+        PLANKS: 'wall_planks',
+        SMOOTH: 'wall_smooth'
+    }
+} as const;
+
 export const ASSETS = {
     SPRITES: {
         HUMANLIKE_BASE_PATH: 'assets/sprites/things/pawn/Humanlike',

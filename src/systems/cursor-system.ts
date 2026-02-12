@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SPRITE_KEYS } from '../config/constants';
 
 export type WeaponCursorType = 'melee' | 'ranged' | 'none';
 
@@ -40,23 +41,23 @@ export class CursorSystem extends Phaser.Events.EventEmitter {
     }
 
     public getCurrentCursorKey(): string {
-        let cursorKey = 'cursor_none';
+        let cursorKey: string = SPRITE_KEYS.UI.CURSOR.NONE;
 
         if (this.isHoveringButton) {
-            cursorKey = 'cursor_hand';
+            cursorKey = SPRITE_KEYS.UI.CURSOR.HAND;
         } else if (this.isUIWindowOpen) {
-            cursorKey = 'cursor_none';
+            cursorKey = SPRITE_KEYS.UI.CURSOR.NONE;
         } else {
             switch (this.currentWeaponType) {
                 case 'melee':
-                    cursorKey = 'cursor_sword';
+                    cursorKey = SPRITE_KEYS.UI.CURSOR.SWORD;
                     break;
                 case 'ranged':
-                    cursorKey = 'cursor_target';
+                    cursorKey = SPRITE_KEYS.UI.CURSOR.TARGET;
                     break;
                 case 'none':
                 default:
-                    cursorKey = 'cursor_none';
+                    cursorKey = SPRITE_KEYS.UI.CURSOR.NONE;
                     break;
             }
         }

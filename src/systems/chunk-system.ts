@@ -4,7 +4,7 @@ import { TerrainType } from './terrain-system';
 import { BaseRockWall } from '../objects/walls/wall-types';
 import { Tree } from '../objects/plants/tree';
 import { Bush } from '../objects/plants/bush';
-import { GAME_CONFIG, DEPTHS } from '../config/constants';
+import { GAME_CONFIG, DEPTHS, SPRITE_KEYS } from '../config/constants';
 import { ShadowSystem } from './shadow-system';
 
 export const CHUNK_SIZE = 16; // 16x16 tiles per chunk
@@ -18,20 +18,20 @@ interface TerrainConfig {
 
 // Copied from terrain-system.ts
 export const TERRAIN_DATA: Record<string, TerrainConfig> = {
-    [TerrainType.SAND]: { asset: 'background_sand', layer: 1, z: DEPTHS.TERRAIN.SAND },
-    [TerrainType.SOIL]: { asset: 'floor_soil', layer: 2, z: DEPTHS.TERRAIN.SOIL },
-    [TerrainType.SOIL_RICH]: { asset: 'floor_soil_rich', layer: 2, z: DEPTHS.TERRAIN.SOIL_RICH },
-    [TerrainType.MUD]: { asset: 'floor_mud', layer: 2, z: DEPTHS.TERRAIN.MUD },
-    [TerrainType.ROCK]: { asset: 'floor_cave', layer: 3, z: DEPTHS.TERRAIN.ROCK },
-    [TerrainType.SMOOTH_STONE]: { asset: 'floor_smooth_stone', layer: 3, z: DEPTHS.TERRAIN.SMOOTH_STONE },
-    [TerrainType.ANCIENT_CONCRETE]: { asset: 'floor_ancient_concrete', layer: 4, z: DEPTHS.TERRAIN.ANCIENT_CONCRETE },
-    [TerrainType.BROKEN_ASPHALT]: { asset: 'floor_broken_asphalt', layer: 4, z: DEPTHS.TERRAIN.BROKEN_ASPHALT },
-    [TerrainType.TILE_STONE]: { asset: 'floor_tile_stone', layer: 4, z: DEPTHS.TERRAIN.TILE_STONE },
-    [TerrainType.WOOD_FLOOR]: { asset: 'floor_wood', layer: 4, z: DEPTHS.TERRAIN.WOOD_FLOOR }
+    [TerrainType.SAND]: { asset: SPRITE_KEYS.TERRAIN.SAND, layer: 1, z: DEPTHS.TERRAIN.SAND },
+    [TerrainType.SOIL]: { asset: SPRITE_KEYS.TERRAIN.SOIL, layer: 2, z: DEPTHS.TERRAIN.SOIL },
+    [TerrainType.SOIL_RICH]: { asset: SPRITE_KEYS.TERRAIN.SOIL_RICH, layer: 2, z: DEPTHS.TERRAIN.SOIL_RICH },
+    [TerrainType.MUD]: { asset: SPRITE_KEYS.TERRAIN.MUD, layer: 2, z: DEPTHS.TERRAIN.MUD },
+    [TerrainType.ROCK]: { asset: SPRITE_KEYS.TERRAIN.CAVE, layer: 3, z: DEPTHS.TERRAIN.ROCK },
+    [TerrainType.SMOOTH_STONE]: { asset: SPRITE_KEYS.TERRAIN.SMOOTH_STONE, layer: 3, z: DEPTHS.TERRAIN.SMOOTH_STONE },
+    [TerrainType.ANCIENT_CONCRETE]: { asset: SPRITE_KEYS.TERRAIN.ANCIENT_CONCRETE, layer: 4, z: DEPTHS.TERRAIN.ANCIENT_CONCRETE },
+    [TerrainType.BROKEN_ASPHALT]: { asset: SPRITE_KEYS.TERRAIN.BROKEN_ASPHALT, layer: 4, z: DEPTHS.TERRAIN.BROKEN_ASPHALT },
+    [TerrainType.TILE_STONE]: { asset: SPRITE_KEYS.TERRAIN.TILE_STONE, layer: 4, z: DEPTHS.TERRAIN.TILE_STONE },
+    [TerrainType.WOOD_FLOOR]: { asset: SPRITE_KEYS.TERRAIN.WOOD, layer: 4, z: DEPTHS.TERRAIN.WOOD_FLOOR }
 };
 
-const TREE_VARIANTS = ['plant_tree_teak', 'plant_tree_willow', 'plant_tree_palm', 'plant_tree_cecropia'];
-const BUSH_VARIANTS = ['plant_bush_a', 'plant_berry_bush_a', 'plant_agave', 'plant_alocasia_a'];
+const TREE_VARIANTS = [SPRITE_KEYS.PLANTS.TREE_TEAK, SPRITE_KEYS.PLANTS.TREE_WILLOW, SPRITE_KEYS.PLANTS.TREE_PALM, SPRITE_KEYS.PLANTS.TREE_CECROPIA];
+const BUSH_VARIANTS = [SPRITE_KEYS.PLANTS.BUSH_A, SPRITE_KEYS.PLANTS.BERRY_BUSH_A, SPRITE_KEYS.PLANTS.AGAVE, SPRITE_KEYS.PLANTS.ALOCASIA_A];
 
 class Chunk {
     public x: number;

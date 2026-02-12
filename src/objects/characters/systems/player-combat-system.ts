@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { InventoryItem, inventorySystem } from '../../../systems';
 import { BaseRangeWeapon, BaseMeleeWeapon, Shotgun, AssaultRifle } from '../../items';
 import { Damageable } from '../../../types/damageable';
-import { DEPTHS } from '../../../config/constants';
+import { DEPTHS, SPRITE_KEYS } from '../../../config/constants';
 
 export class PlayerCombatSystem {
     private scene: Phaser.Scene;
@@ -62,14 +62,14 @@ export class PlayerCombatSystem {
         this.player.add(this.weaponOutline);
         
         // Holding Hand (for range weapons)
-        this.holdingHand = scene.add.sprite(0, 0, 'weapon_hands');
+        this.holdingHand = scene.add.sprite(0, 0, SPRITE_KEYS.WEAPONS.HANDS);
         this.holdingHand.setTint(skinColorInt);
         this.holdingHand.setVisible(false);
         this.holdingHand.setScale(0.8);
         this.player.add(this.holdingHand);
 
         // Holding Hand Outline
-        this.holdingHandOutline = scene.add.sprite(0, 0, 'weapon_hands');
+        this.holdingHandOutline = scene.add.sprite(0, 0, SPRITE_KEYS.WEAPONS.HANDS);
         this.holdingHandOutline.setVisible(false);
         this.holdingHandOutline.setAlpha(0.4);
         this.holdingHandOutline.setTint(skinColorInt);
@@ -77,24 +77,24 @@ export class PlayerCombatSystem {
         this.player.add(this.holdingHandOutline);
 
         // Hands Visuals (Melee)
-        this.leftHand = scene.add.sprite(10, -12, 'weapon_hands');
+        this.leftHand = scene.add.sprite(10, -12, SPRITE_KEYS.WEAPONS.HANDS);
         this.leftHand.setTint(skinColorInt);
         this.leftHand.setVisible(false);
         this.leftHand.setScale(0.8);
         
-        this.rightHand = scene.add.sprite(10, 12, 'weapon_hands');
+        this.rightHand = scene.add.sprite(10, 12, SPRITE_KEYS.WEAPONS.HANDS);
         this.rightHand.setTint(skinColorInt);
         this.rightHand.setVisible(false);
         this.rightHand.setScale(0.8);
 
         // Melee Outlines
-        this.leftHandOutline = scene.add.sprite(10, -12, 'weapon_hands');
+        this.leftHandOutline = scene.add.sprite(10, -12, SPRITE_KEYS.WEAPONS.HANDS);
         this.leftHandOutline.setTint(skinColorInt);
         this.leftHandOutline.setVisible(false);
         this.leftHandOutline.setAlpha(0.4);
         this.leftHandOutline.setScale(0.8);
 
-        this.rightHandOutline = scene.add.sprite(10, 12, 'weapon_hands');
+        this.rightHandOutline = scene.add.sprite(10, 12, SPRITE_KEYS.WEAPONS.HANDS);
         this.rightHandOutline.setTint(skinColorInt);
         this.rightHandOutline.setVisible(false);
         this.rightHandOutline.setAlpha(0.4);

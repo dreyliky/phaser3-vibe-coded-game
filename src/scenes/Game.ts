@@ -3,6 +3,7 @@ import { Player } from '../objects';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { AssaultRifle, Pistol, Shotgun, LightAmmo, StandardAmmo, HeavyAmmo, BuckshotAmmo } from '../objects/items';
+import { EDITOR_OBJECTS } from '../config/editor-objects';
 import { Hands } from '../objects/items/weapons/hands';
 import { BaseRangeWeapon } from '../objects/items/weapons/base-range-weapon';
 import { BaseMeleeWeapon } from '../objects/items/weapons/base-melee-weapon';
@@ -17,6 +18,7 @@ import { Tree, Bush } from '../objects/plants';
 import { TerrainSystem, TerrainType } from '../systems/terrain-system';
 import { Damageable } from '../types/damageable';
 import { FogOfWarSystem } from '../systems/fog-of-war';
+import { MapObjectKey } from '../types/map';
 
 export class Game extends Phaser.Scene {
     public player!: Player;
@@ -340,19 +342,34 @@ export class Game extends Phaser.Scene {
                 const PlantClass = this.getPlantClass(obj.key);
                 if (PlantClass) {
                     // Tree/Bush constructors accept BasePlantOptions { scene, x, y, texture }
-                    const plant = new PlantClass({ scene: this, x: obj.x, y: obj.y, texture: obj.key });
+                    // Note: We need to pass the texture key, but our obj.key is now an Enum.
+                    // We need to map Enum back to texture string if the class needs it.
+                    // However, Tree/Bush classes might handle texture internally or we might need a mapper.
+                    // Let's check Tree/Bush implementation. Assuming they use the key for texture.
+                    // Since they extend Sprite/Image, they need a texture string.
+                    // We need a helper to get texture from MapObjectKey for Plants if the class doesn't handle it.
+                    
+                    // Actually, let's look at how we were passing texture before: "texture: obj.key".
+                    // Now obj.key is a number. We need the string texture key.
+                    // I should probably add a helper to get texture from MapObjectKey or update Plant classes to accept MapObjectKey.
+                    // For now, I'll use a simple mapping here or rely on the class to handle it?
+                    // No, `new PlantClass({ ... texture: ... })` expects a string usually.
+                    
+                    // Let's create a helper method to get texture from key.
+                    const texture = this.getTextureFromKey(obj.key);
+                    const plant = new PlantClass({ scene: this, x: obj.x, y: obj.y, texture: texture });
                     this.plantsGroup.add(plant);
                 }
             }
-            // Items (new 'object' with subtype 'weapon'/'ammo')
-            else if (obj.type === 'object' && (obj.key.startsWith('weapon_') || obj.key.startsWith('ammo_'))) {
+            // Items (Weapons/Ammo)
+            else if (obj.type === 'object' && (obj.key >= 300 && obj.key < 500)) {
                 const ItemClass = this.getItemClass(obj.key);
                 if (ItemClass) {
                     this.itemInteractionSystem.spawnItem({ item: new ItemClass(), x: obj.x, y: obj.y });
                 }
             }
-            // Spawn Point (new 'object' with subtype 'misc')
-            else if (obj.type === 'object' && obj.key === 'spawn_point') {
+            // Spawn Point
+            else if (obj.type === 'object' && obj.key === MapObjectKey.SPAWN_POINT) {
                 this.player.setPosition(obj.x, obj.y);
             }
         });
@@ -360,56 +377,59 @@ export class Game extends Phaser.Scene {
         terrainSystem.render();
     }
 
-    private getTerrainType(key: string): TerrainType | null {
+    private getTerrainType(key: MapObjectKey): TerrainType | null {
         switch (key) {
-            case 'terrain_soil': return TerrainType.SOIL;
-            case 'terrain_soil_rich': return TerrainType.SOIL_RICH;
-            case 'terrain_mud': return TerrainType.MUD;
-            case 'terrain_rock': return TerrainType.ROCK;
-            case 'terrain_smooth_stone': return TerrainType.SMOOTH_STONE;
-            case 'terrain_ancient_concrete': return TerrainType.ANCIENT_CONCRETE;
-            case 'terrain_broken_asphalt': return TerrainType.BROKEN_ASPHALT;
-            case 'terrain_tile_stone': return TerrainType.TILE_STONE;
-            case 'terrain_wood_floor': return TerrainType.WOOD_FLOOR;
-            case 'terrain_sand': return TerrainType.SAND;
+            case MapObjectKey.TERRAIN_SOIL: return TerrainType.SOIL;
+            case MapObjectKey.TERRAIN_SOIL_RICH: return TerrainType.SOIL_RICH;
+            case MapObjectKey.TERRAIN_MUD: return TerrainType.MUD;
+            case MapObjectKey.TERRAIN_ROCK: return TerrainType.ROCK;
+            case MapObjectKey.TERRAIN_SMOOTH_STONE: return TerrainType.SMOOTH_STONE;
+            case MapObjectKey.TERRAIN_ANCIENT_CONCRETE: return TerrainType.ANCIENT_CONCRETE;
+            case MapObjectKey.TERRAIN_BROKEN_ASPHALT: return TerrainType.BROKEN_ASPHALT;
+            case MapObjectKey.TERRAIN_TILE_STONE: return TerrainType.TILE_STONE;
+            case MapObjectKey.TERRAIN_WOOD_FLOOR: return TerrainType.WOOD_FLOOR;
+            case MapObjectKey.TERRAIN_SAND: return TerrainType.SAND;
             default: return null;
         }
     }
 
-    private getWallClass(key: string): any {
+    private getWallClass(key: MapObjectKey): any {
         switch (key) {
-            case 'wall_rock': return BaseRockWall;
-            case 'wall_bricks': return BaseBrickWall;
-            case 'wall_planks': return BasePlankWall;
-            case 'wall_smooth': return BaseSmoothWall;
+            case MapObjectKey.WALL_ROCK: return BaseRockWall;
+            case MapObjectKey.WALL_BRICKS: return BaseBrickWall;
+            case MapObjectKey.WALL_PLANKS: return BasePlankWall;
+            case MapObjectKey.WALL_SMOOTH: return BaseSmoothWall;
             default: return null;
         }
     }
 
-    private getPlantClass(key: string): any {
-        if (key.startsWith('plant_tree_')) return Tree;
-        if (key.startsWith('plant_')) return Bush;
-        
+    private getPlantClass(key: MapObjectKey): any {
+        if (key >= MapObjectKey.PLANT_TREE_BAMBOO && key <= MapObjectKey.PLANT_TREE_OAK_IMMATURE) {
+            return Tree;
+        }
+        if (key >= MapObjectKey.PLANT_ALOCASIA_A && key <= MapObjectKey.PLANT_SAGUARO_CACTUS_LEAFLESS) {
+            return Bush;
+        }
+        return null;
+    }
+
+    private getItemClass(key: MapObjectKey): any {
         switch (key) {
-            case 'tree': return Tree;
-            case 'bush': return Bush;
+            case MapObjectKey.WEAPON_ASSAULT_RIFLE: return AssaultRifle;
+            case MapObjectKey.WEAPON_AUTOPISTOL: return Pistol;
+            case MapObjectKey.WEAPON_SHOTGUN: return Shotgun;
+            case MapObjectKey.AMMO_LIGHT: return LightAmmo;
+            case MapObjectKey.AMMO_STANDARD: return StandardAmmo;
+            case MapObjectKey.AMMO_HEAVY: return HeavyAmmo;
+            case MapObjectKey.AMMO_BUCKSHOT: return BuckshotAmmo;
             default: return null;
         }
     }
 
-    private getItemClass(key: string): any {
-        switch (key) {
-            case 'weapon_assault_rifle': return AssaultRifle;
-            case 'weapon_pistol': return Pistol;
-            case 'weapon_shotgun': return Shotgun;
-            case 'ammo_light': return LightAmmo;
-            case 'ammo_standard': return StandardAmmo;
-            case 'ammo_heavy': return HeavyAmmo;
-            case 'ammo_buckshot': return BuckshotAmmo;
-            default: return null;
-        }
+    private getTextureFromKey(key: MapObjectKey): string {
+        const config = EDITOR_OBJECTS.find(obj => obj.key === key);
+        return config ? config.texture : '';
     }
-
 
     handleResize(_gameSize: Phaser.Structs.Size) {
         // No-op

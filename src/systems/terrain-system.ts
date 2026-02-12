@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { DEPTHS } from '../config/constants';
+import { DEPTHS, SPRITE_KEYS } from '../config/constants';
 
 export enum TerrainType {
     NONE = 'NONE',
@@ -23,52 +23,52 @@ interface TerrainConfig {
 
 const TERRAIN_DATA: Record<string, TerrainConfig> = { // Changed key type to string to allow skipping NONE
     [TerrainType.SAND]: { 
-        asset: 'background_sand', 
+        asset: SPRITE_KEYS.TERRAIN.SAND, 
         layer: 1, // Changed to 1
         z: DEPTHS.TERRAIN.SAND
     },
     [TerrainType.SOIL]: { 
-        asset: 'floor_soil', 
+        asset: SPRITE_KEYS.TERRAIN.SOIL, 
         layer: 2,
         z: DEPTHS.TERRAIN.SOIL
     },
     [TerrainType.SOIL_RICH]: {
-        asset: 'floor_soil_rich',
+        asset: SPRITE_KEYS.TERRAIN.SOIL_RICH,
         layer: 2,
         z: DEPTHS.TERRAIN.SOIL_RICH
     },
     [TerrainType.MUD]: {
-        asset: 'floor_mud',
+        asset: SPRITE_KEYS.TERRAIN.MUD,
         layer: 2,
         z: DEPTHS.TERRAIN.MUD
     },
     [TerrainType.ROCK]: { 
-        asset: 'floor_cave', 
+        asset: SPRITE_KEYS.TERRAIN.CAVE, 
         layer: 3,
         z: DEPTHS.TERRAIN.ROCK
     },
     [TerrainType.SMOOTH_STONE]: {
-        asset: 'floor_smooth_stone',
+        asset: SPRITE_KEYS.TERRAIN.SMOOTH_STONE,
         layer: 3,
         z: DEPTHS.TERRAIN.SMOOTH_STONE
     },
     [TerrainType.ANCIENT_CONCRETE]: {
-        asset: 'floor_ancient_concrete',
+        asset: SPRITE_KEYS.TERRAIN.ANCIENT_CONCRETE,
         layer: 4,
         z: DEPTHS.TERRAIN.ANCIENT_CONCRETE
     },
     [TerrainType.BROKEN_ASPHALT]: {
-        asset: 'floor_broken_asphalt',
+        asset: SPRITE_KEYS.TERRAIN.BROKEN_ASPHALT,
         layer: 4,
         z: DEPTHS.TERRAIN.BROKEN_ASPHALT
     },
     [TerrainType.TILE_STONE]: {
-        asset: 'floor_tile_stone',
+        asset: SPRITE_KEYS.TERRAIN.TILE_STONE,
         layer: 4,
         z: DEPTHS.TERRAIN.TILE_STONE
     },
     [TerrainType.WOOD_FLOOR]: {
-        asset: 'floor_wood',
+        asset: SPRITE_KEYS.TERRAIN.WOOD,
         layer: 4,
         z: DEPTHS.TERRAIN.WOOD_FLOOR
     }
@@ -80,7 +80,7 @@ export class TerrainSystem {
     private width: number;
     private height: number;
     private tileSize: number;
-    private tileContainer: Phaser.GameObjects.Container;
+    public tileContainer: Phaser.GameObjects.Container;
     private activeTiles: Phaser.GameObjects.Image[] = [];
     private isDirty: boolean = false;
 

@@ -1,12 +1,13 @@
 import { BaseAmmo } from './base-ammo';
+import { SPRITE_KEYS } from '../../../config/constants';
 
 export class LightAmmo extends BaseAmmo {
     constructor() {
         super({
-            id: 'ammo_light',
+            id: SPRITE_KEYS.AMMO.LIGHT,
             name: 'Light Ammo',
             description: 'Small caliber ammunition for light weapons.',
-            texture: 'ammo_light',
+            texture: SPRITE_KEYS.AMMO.LIGHT,
             maxStack: 100,
             damage: 10,
             caliber: 'light'
@@ -17,10 +18,10 @@ export class LightAmmo extends BaseAmmo {
 export class StandardAmmo extends BaseAmmo {
     constructor() {
         super({
-            id: 'ammo_standard',
+            id: SPRITE_KEYS.AMMO.STANDARD,
             name: 'Standard Ammo',
             description: 'Standard caliber ammunition for assault rifles.',
-            texture: 'ammo_standard',
+            texture: SPRITE_KEYS.AMMO.STANDARD,
             maxStack: 60,
             damage: 20,
             caliber: 'standard'
@@ -31,10 +32,10 @@ export class StandardAmmo extends BaseAmmo {
 export class HeavyAmmo extends BaseAmmo {
     constructor() {
         super({
-            id: 'ammo_heavy',
+            id: SPRITE_KEYS.AMMO.HEAVY,
             name: 'Heavy Ammo',
             description: 'Large caliber ammunition for sniper rifles and heavy weapons.',
-            texture: 'ammo_heavy',
+            texture: SPRITE_KEYS.AMMO.HEAVY,
             maxStack: 20,
             damage: 40,
             caliber: 'heavy'
@@ -45,10 +46,10 @@ export class HeavyAmmo extends BaseAmmo {
 export class BuckshotAmmo extends BaseAmmo {
     constructor() {
         super({
-            id: 'ammo_buckshot',
+            id: SPRITE_KEYS.AMMO.BUCKSHOT,
             name: 'Buckshot',
             description: 'Shells for shotguns.',
-            texture: 'ammo_buckshot',
+            texture: SPRITE_KEYS.AMMO.BUCKSHOT,
             maxStack: 40,
             damage: 8, // Per pellet
             caliber: 'buckshot'

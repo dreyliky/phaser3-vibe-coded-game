@@ -1,5 +1,8 @@
+import { SPRITE_KEYS } from './constants';
+import { MapObjectKey } from '../types/map';
+
 export interface EditorObjectConfig {
-    key: string;
+    key: MapObjectKey;
     type: 'object' | 'wall' | 'plant' | 'tile'; // Changed types
     subtype?: 'weapon' | 'ammo' | 'misc'; // For 'object' type
     name: string;
@@ -10,54 +13,54 @@ export interface EditorObjectConfig {
 
 export const EDITOR_OBJECTS: EditorObjectConfig[] = [
     // --- TILES (Surfaces) ---
-    { key: 'terrain_none', type: 'tile', name: 'Nothing (Eraser)', texture: 'pixel', color: 0x000000 },
-    { key: 'terrain_soil', type: 'tile', name: 'Soil', texture: 'floor_soil', color: 0x8b4513 }, 
-    { key: 'terrain_soil_rich', type: 'tile', name: 'Rich Soil', texture: 'floor_soil_rich', color: 0x5d4037 },
-    { key: 'terrain_mud', type: 'tile', name: 'Mud', texture: 'floor_mud', color: 0x3e2723 },
-    { key: 'terrain_rock', type: 'tile', name: 'Rock Floor', texture: 'floor_cave', color: 0x808080 },
-    { key: 'terrain_smooth_stone', type: 'tile', name: 'Smooth Stone', texture: 'floor_smooth_stone', color: 0x757575 },
-    { key: 'terrain_ancient_concrete', type: 'tile', name: 'Ancient Concrete', texture: 'floor_ancient_concrete', color: 0x616161 },
-    { key: 'terrain_broken_asphalt', type: 'tile', name: 'Broken Asphalt', texture: 'floor_broken_asphalt', color: 0x424242 },
-    { key: 'terrain_tile_stone', type: 'tile', name: 'Tile Stone', texture: 'floor_tile_stone', color: 0x9e9e9e },
-    { key: 'terrain_wood_floor', type: 'tile', name: 'Wood Floor', texture: 'floor_wood', color: 0x8d6e63 },
-    { key: 'terrain_sand', type: 'tile', name: 'Sand', texture: 'background_sand', color: 0xc2b280 },
+    { key: MapObjectKey.TERRAIN_NONE, type: 'tile', name: 'Nothing (Eraser)', texture: SPRITE_KEYS.UI.PIXEL, color: 0x000000 },
+    { key: MapObjectKey.TERRAIN_SOIL, type: 'tile', name: 'Soil', texture: SPRITE_KEYS.TERRAIN.SOIL, color: 0x8b4513 }, 
+    { key: MapObjectKey.TERRAIN_SOIL_RICH, type: 'tile', name: 'Rich Soil', texture: SPRITE_KEYS.TERRAIN.SOIL_RICH, color: 0x5d4037 },
+    { key: MapObjectKey.TERRAIN_MUD, type: 'tile', name: 'Mud', texture: SPRITE_KEYS.TERRAIN.MUD, color: 0x3e2723 },
+    { key: MapObjectKey.TERRAIN_ROCK, type: 'tile', name: 'Rock Floor', texture: SPRITE_KEYS.TERRAIN.CAVE, color: 0x808080 },
+    { key: MapObjectKey.TERRAIN_SMOOTH_STONE, type: 'tile', name: 'Smooth Stone', texture: SPRITE_KEYS.TERRAIN.SMOOTH_STONE, color: 0x757575 },
+    { key: MapObjectKey.TERRAIN_ANCIENT_CONCRETE, type: 'tile', name: 'Ancient Concrete', texture: SPRITE_KEYS.TERRAIN.ANCIENT_CONCRETE, color: 0x616161 },
+    { key: MapObjectKey.TERRAIN_BROKEN_ASPHALT, type: 'tile', name: 'Broken Asphalt', texture: SPRITE_KEYS.TERRAIN.BROKEN_ASPHALT, color: 0x424242 },
+    { key: MapObjectKey.TERRAIN_TILE_STONE, type: 'tile', name: 'Tile Stone', texture: SPRITE_KEYS.TERRAIN.TILE_STONE, color: 0x9e9e9e },
+    { key: MapObjectKey.TERRAIN_WOOD_FLOOR, type: 'tile', name: 'Wood Floor', texture: SPRITE_KEYS.TERRAIN.WOOD, color: 0x8d6e63 },
+    { key: MapObjectKey.TERRAIN_SAND, type: 'tile', name: 'Sand', texture: SPRITE_KEYS.TERRAIN.SAND, color: 0xc2b280 },
 
     // --- WALLS ---
-    { key: 'wall_none', type: 'wall', name: 'Nothing (Eraser)', texture: 'pixel', color: 0x000000 },
-    { key: 'wall_rock', type: 'wall', name: 'Limestone Rock Wall', texture: 'wall_rock', frame: 12 },
-    { key: 'wall_bricks', type: 'wall', name: 'Limestone Brick Wall', texture: 'wall_bricks', frame: 12 },
-    { key: 'wall_smooth', type: 'wall', name: 'Limestone Smooth Wall', texture: 'wall_smooth', frame: 12 },
-    { key: 'wall_planks', type: 'wall', name: 'Wood Plank Wall', texture: 'wall_planks', frame: 12 },
+    { key: MapObjectKey.WALL_NONE, type: 'wall', name: 'Nothing (Eraser)', texture: SPRITE_KEYS.UI.PIXEL, color: 0x000000 },
+    { key: MapObjectKey.WALL_ROCK, type: 'wall', name: 'Limestone Rock Wall', texture: SPRITE_KEYS.WALLS.ROCK, frame: 12 },
+    { key: MapObjectKey.WALL_BRICKS, type: 'wall', name: 'Limestone Brick Wall', texture: SPRITE_KEYS.WALLS.BRICKS, frame: 12 },
+    { key: MapObjectKey.WALL_SMOOTH, type: 'wall', name: 'Limestone Smooth Wall', texture: SPRITE_KEYS.WALLS.SMOOTH, frame: 12 },
+    { key: MapObjectKey.WALL_PLANKS, type: 'wall', name: 'Wood Plank Wall', texture: SPRITE_KEYS.WALLS.PLANKS, frame: 12 },
 
     // --- PLANTS ---
-    { key: 'plant_tree_bamboo', type: 'plant', name: 'Bamboo', texture: 'plant_tree_bamboo' },
-    { key: 'plant_tree_cecropia', type: 'plant', name: 'Cecropia', texture: 'plant_tree_cecropia' },
-    { key: 'plant_tree_palm', type: 'plant', name: 'Palm', texture: 'plant_tree_palm' },
-    { key: 'plant_tree_teak', type: 'plant', name: 'Teak', texture: 'plant_tree_teak' },
-    { key: 'plant_tree_willow', type: 'plant', name: 'Willow', texture: 'plant_tree_willow' },
-    { key: 'plant_tree_birch_a', type: 'plant', name: 'Birch', texture: 'plant_tree_birch_a' },
-    { key: 'plant_tree_oak_immature', type: 'plant', name: 'Oak (Immature)', texture: 'plant_tree_oak_immature' },
-    { key: 'plant_alocasia_a', type: 'plant', name: 'Alocasia', texture: 'plant_alocasia_a' },
-    { key: 'plant_berry_bush_a', type: 'plant', name: 'Berry Bush', texture: 'plant_berry_bush_a' },
-    { key: 'plant_bush_a', type: 'plant', name: 'Bush', texture: 'plant_bush_a' },
-    { key: 'plant_grass_a', type: 'plant', name: 'Grass A', texture: 'plant_grass_a' },
-    { key: 'plant_grass_b', type: 'plant', name: 'Grass B', texture: 'plant_grass_b' },
-    { key: 'plant_agave', type: 'plant', name: 'Agave', texture: 'plant_agave' },
-    { key: 'plant_pincushion_cactus', type: 'plant', name: 'Pincushion', texture: 'plant_pincushion_cactus' },
-    { key: 'plant_saguaro_cactus', type: 'plant', name: 'Saguaro', texture: 'plant_saguaro_cactus' },
-    { key: 'plant_saguaro_cactus_leafless', type: 'plant', name: 'Saguaro (Dry)', texture: 'plant_saguaro_cactus_leafless' },
+    { key: MapObjectKey.PLANT_TREE_BAMBOO, type: 'plant', name: 'Bamboo', texture: SPRITE_KEYS.PLANTS.TREE_BAMBOO },
+    { key: MapObjectKey.PLANT_TREE_CECROPIA, type: 'plant', name: 'Cecropia', texture: SPRITE_KEYS.PLANTS.TREE_CECROPIA },
+    { key: MapObjectKey.PLANT_TREE_PALM, type: 'plant', name: 'Palm', texture: SPRITE_KEYS.PLANTS.TREE_PALM },
+    { key: MapObjectKey.PLANT_TREE_TEAK, type: 'plant', name: 'Teak', texture: SPRITE_KEYS.PLANTS.TREE_TEAK },
+    { key: MapObjectKey.PLANT_TREE_WILLOW, type: 'plant', name: 'Willow', texture: SPRITE_KEYS.PLANTS.TREE_WILLOW },
+    { key: MapObjectKey.PLANT_TREE_BIRCH_A, type: 'plant', name: 'Birch', texture: SPRITE_KEYS.PLANTS.TREE_BIRCH_A },
+    { key: MapObjectKey.PLANT_TREE_OAK_IMMATURE, type: 'plant', name: 'Oak (Immature)', texture: SPRITE_KEYS.PLANTS.TREE_OAK_IMMATURE },
+    { key: MapObjectKey.PLANT_ALOCASIA_A, type: 'plant', name: 'Alocasia', texture: SPRITE_KEYS.PLANTS.ALOCASIA_A },
+    { key: MapObjectKey.PLANT_BERRY_BUSH_A, type: 'plant', name: 'Berry Bush', texture: SPRITE_KEYS.PLANTS.BERRY_BUSH_A },
+    { key: MapObjectKey.PLANT_BUSH_A, type: 'plant', name: 'Bush', texture: SPRITE_KEYS.PLANTS.BUSH_A },
+    { key: MapObjectKey.PLANT_GRASS_A, type: 'plant', name: 'Grass A', texture: SPRITE_KEYS.PLANTS.GRASS_A },
+    { key: MapObjectKey.PLANT_GRASS_B, type: 'plant', name: 'Grass B', texture: SPRITE_KEYS.PLANTS.GRASS_B },
+    { key: MapObjectKey.PLANT_AGAVE, type: 'plant', name: 'Agave', texture: SPRITE_KEYS.PLANTS.AGAVE },
+    { key: MapObjectKey.PLANT_PINCUSHION_CACTUS, type: 'plant', name: 'Pincushion', texture: SPRITE_KEYS.PLANTS.PINCUSHION_CACTUS },
+    { key: MapObjectKey.PLANT_SAGUARO_CACTUS, type: 'plant', name: 'Saguaro', texture: SPRITE_KEYS.PLANTS.SAGUARO_CACTUS },
+    { key: MapObjectKey.PLANT_SAGUARO_CACTUS_LEAFLESS, type: 'plant', name: 'Saguaro (Dry)', texture: SPRITE_KEYS.PLANTS.SAGUARO_CACTUS_LEAFLESS },
 
     // --- OBJECTS (Weapons) ---
-    { key: 'weapon_assault_rifle', type: 'object', subtype: 'weapon', name: 'Assault Rifle', texture: 'weapon_assault_rifle' },
-    { key: 'weapon_pistol', type: 'object', subtype: 'weapon', name: 'Pistol', texture: 'weapon_pistol' },
-    { key: 'weapon_shotgun', type: 'object', subtype: 'weapon', name: 'Shotgun', texture: 'weapon_shotgun' },
+    { key: MapObjectKey.WEAPON_ASSAULT_RIFLE, type: 'object', subtype: 'weapon', name: 'Assault Rifle', texture: SPRITE_KEYS.WEAPONS.ASSAULT_RIFLE },
+    { key: MapObjectKey.WEAPON_AUTOPISTOL, type: 'object', subtype: 'weapon', name: 'Pistol', texture: SPRITE_KEYS.WEAPONS.AUTOPISTOL },
+    { key: MapObjectKey.WEAPON_SHOTGUN, type: 'object', subtype: 'weapon', name: 'Shotgun', texture: SPRITE_KEYS.WEAPONS.SHOTGUN },
     
     // --- OBJECTS (Ammo) ---
-    { key: 'ammo_light', type: 'object', subtype: 'ammo', name: 'Light Ammo', texture: 'ammo_light' },
-    { key: 'ammo_standard', type: 'object', subtype: 'ammo', name: 'Standard Ammo', texture: 'ammo_standard' },
-    { key: 'ammo_heavy', type: 'object', subtype: 'ammo', name: 'Heavy Ammo', texture: 'ammo_heavy' },
-    { key: 'ammo_buckshot', type: 'object', subtype: 'ammo', name: 'Buckshot', texture: 'ammo_buckshot' },
+    { key: MapObjectKey.AMMO_LIGHT, type: 'object', subtype: 'ammo', name: 'Light Ammo', texture: SPRITE_KEYS.AMMO.LIGHT },
+    { key: MapObjectKey.AMMO_STANDARD, type: 'object', subtype: 'ammo', name: 'Standard Ammo', texture: SPRITE_KEYS.AMMO.STANDARD },
+    { key: MapObjectKey.AMMO_HEAVY, type: 'object', subtype: 'ammo', name: 'Heavy Ammo', texture: SPRITE_KEYS.AMMO.HEAVY },
+    { key: MapObjectKey.AMMO_BUCKSHOT, type: 'object', subtype: 'ammo', name: 'Buckshot', texture: SPRITE_KEYS.AMMO.BUCKSHOT },
 
     // --- OBJECTS (Misc) ---
-    { key: 'spawn_point', type: 'object', subtype: 'misc', name: 'Player Spawn', texture: 'head_Male_Average_Normal_south' } 
+    { key: MapObjectKey.SPAWN_POINT, type: 'object', subtype: 'misc', name: 'Player Spawn', texture: SPRITE_KEYS.ICONS.PLAYER_SPAWN } 
 ];

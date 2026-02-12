@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Button } from '../objects/ui/button';
 import { cursorSystem } from '../systems/cursor-system';
-import { DEPTHS } from '../config/constants';
+import { DEPTHS, SPRITE_KEYS } from '../config/constants';
 
 export class MainMenu extends Phaser.Scene {
     private titleText!: Phaser.GameObjects.Text;
@@ -19,7 +19,7 @@ export class MainMenu extends Phaser.Scene {
         
         // Initialize Cursor
         this.input.setDefaultCursor('none');
-        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+        this.cursor = this.add.sprite(0, 0, SPRITE_KEYS.UI.CURSOR.NONE)
             .setDepth(DEPTHS.UI.CURSOR) // Always on top
             .setScale(0.5)
             .setOrigin(0, 0);
@@ -29,7 +29,7 @@ export class MainMenu extends Phaser.Scene {
             this.cursor.setTexture(key);
             // In menu we mostly use pointer or hand, so origin 0,0 is fine usually, 
             // but if we reuse target cursor logic:
-            if (key === 'cursor_target') {
+            if (key === SPRITE_KEYS.UI.CURSOR.TARGET) {
                 this.cursor.setOrigin(0.5, 0.5);
                 this.cursorOffset = { x: 0, y: 0 };
             } else {

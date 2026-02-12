@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Button } from '../objects/ui/button';
-import { GameMap, MapObjectType } from '../types/map';
+import { GameMap, MapObjectType, MapObjectKey } from '../types/map';
 import { MapService } from '../services/map-service';
 import { EDITOR_OBJECTS, EditorObjectConfig } from '../config/editor-objects';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
@@ -260,19 +260,24 @@ export class MapEditor extends Phaser.Scene {
         this.uiContainer.add(mapName);
 
         // Actions
+        const actionBtnWidth = 60;
+        const actionBtnGap = 10;
+        const actionBtnTotalWidth = actionBtnWidth * 3 + actionBtnGap * 2;
+        const actionBtnStartX = (this.SIDEBAR_WIDTH - actionBtnTotalWidth) / 2;
+
         this.uiContainer.add(new Button({
-            scene: this, x: 40, y: 70, text: 'Save',
-            style: { width: 60, height: 30, fontSize: '14px', backgroundColor: 0x228822 },
+            scene: this, x: actionBtnStartX + actionBtnWidth/2, y: 70, text: 'Save',
+            style: { width: actionBtnWidth, height: 30, fontSize: '14px', backgroundColor: 0x228822 },
             onClick: () => this.saveMap()
         }));
         this.uiContainer.add(new Button({
-            scene: this, x: 110, y: 70, text: 'Load',
-            style: { width: 60, height: 30, fontSize: '14px', backgroundColor: 0x888822 },
+            scene: this, x: actionBtnStartX + actionBtnWidth + actionBtnGap + actionBtnWidth/2, y: 70, text: 'Load',
+            style: { width: actionBtnWidth, height: 30, fontSize: '14px', backgroundColor: 0x888822 },
             onClick: () => this.openLoadDialog()
         }));
         this.uiContainer.add(new Button({
-            scene: this, x: 180, y: 70, text: 'Exit',
-            style: { width: 60, height: 30, fontSize: '14px', backgroundColor: 0x882222 },
+            scene: this, x: actionBtnStartX + (actionBtnWidth + actionBtnGap) * 2 + actionBtnWidth/2, y: 70, text: 'Exit',
+            style: { width: actionBtnWidth, height: 30, fontSize: '14px', backgroundColor: 0x882222 },
             onClick: () => this.scene.start('MainMenu')
         }));
 
@@ -283,10 +288,15 @@ export class MapEditor extends Phaser.Scene {
             { id: 'fill', label: 'Fill' }
         ];
 
+        const toolBtnWidth = 70;
+        const toolBtnGap = 10;
+        const toolBtnTotalWidth = toolBtnWidth * 3 + toolBtnGap * 2;
+        const toolBtnStartX = (this.SIDEBAR_WIDTH - toolBtnTotalWidth) / 2;
+
         tools.forEach((tool, index) => {
             const btn = new Button({
-                scene: this, x: 45 + index * 80, y: 120, text: tool.label,
-                style: { width: 70, height: 30, fontSize: '14px' },
+                scene: this, x: toolBtnStartX + index * (toolBtnWidth + toolBtnGap) + toolBtnWidth/2, y: 120, text: tool.label,
+                style: { width: toolBtnWidth, height: 30, fontSize: '14px' },
                 onClick: () => this.selectTool(tool.id)
             });
             btn.setData('toolId', tool.id);
@@ -572,12 +582,12 @@ export class MapEditor extends Phaser.Scene {
         if (x < 0 || x > this.currentMap.width || y < 0 || y > this.currentMap.height) return;
 
         // Eraser Handling
-        if (this.selectedObject.key === 'terrain_none') {
+        if (this.selectedObject.key === MapObjectKey.TERRAIN_NONE) {
             this.eraseTile(gx, gy);
             return;
         }
         
-        if (this.selectedObject.key === 'wall_none') {
+        if (this.selectedObject.key === MapObjectKey.WALL_NONE) {
             this.eraseWall(gx, gy, x, y);
             return;
         }
@@ -723,12 +733,12 @@ export class MapEditor extends Phaser.Scene {
         this.renderMapObjects();
     }
 
-    private getTargetKeyAt(gx: number, gy: number, isSurfaceMode: boolean): string | null {
+    private getTargetKeyAt(gx: number, gy: number, isSurfaceMode: boolean): MapObjectKey | null {
         if (isSurfaceMode) {
             const existing = this.currentMap.objects.find(o => 
                 o.type === 'tile' && Math.floor(o.x / this.TILE_SIZE) === gx && Math.floor(o.y / this.TILE_SIZE) === gy
             );
-            return existing ? existing.key : 'terrain_none'; 
+            return existing ? existing.key : MapObjectKey.TERRAIN_NONE; 
         } else {
              const existing = this.currentMap.objects.find(o => 
                 o.type !== 'tile' && Math.floor(o.x / this.TILE_SIZE) === gx && Math.floor(o.y / this.TILE_SIZE) === gy
@@ -737,7 +747,7 @@ export class MapEditor extends Phaser.Scene {
         }
     }
 
-    private buildObjectGrid(w: number, h: number, isSurfaceMode: boolean): (string | null)[][] {
+    private buildObjectGrid(w: number, h: number, isSurfaceMode: boolean): (MapObjectKey | null)[][] {
         const grid = new Array(w).fill(null).map(() => new Array(h).fill(null));
 
         this.currentMap.objects.forEach(obj => {
@@ -754,7 +764,7 @@ export class MapEditor extends Phaser.Scene {
         return grid;
     }
 
-    private performBFS(startX: number, startY: number, targetKey: string | null, grid: (string | null)[][], w: number, h: number, isSurfaceMode: boolean) {
+    private performBFS(startX: number, startY: number, targetKey: MapObjectKey | null, grid: (MapObjectKey | null)[][], w: number, h: number, isSurfaceMode: boolean) {
         const queue: { x: number, y: number }[] = [{ x: startX, y: startY }];
         const visited = new Set<string>();
         const result: { x: number, y: number, gx: number, gy: number }[] = [];
@@ -762,7 +772,7 @@ export class MapEditor extends Phaser.Scene {
         const getKey = (x: number, y: number) => {
              if (x < 0 || x >= w || y < 0 || y >= h) return undefined;
              const val = grid[x][y];
-             return val === null ? (isSurfaceMode ? 'terrain_none' : null) : val;
+             return val === null ? (isSurfaceMode ? MapObjectKey.TERRAIN_NONE : null) : val;
         };
 
         while (queue.length > 0) {
@@ -810,7 +820,7 @@ export class MapEditor extends Phaser.Scene {
         });
 
         // Add new objects (if not erasing)
-        const isEraser = this.selectedObject!.key === 'terrain_none' || this.selectedObject!.key === 'wall_none';
+        const isEraser = this.selectedObject!.key === MapObjectKey.TERRAIN_NONE || this.selectedObject!.key === MapObjectKey.WALL_NONE;
         
         if (!isEraser) {
              pixels.forEach(p => {
@@ -831,12 +841,12 @@ export class MapEditor extends Phaser.Scene {
         }
     }
 
-    private createVisualWall(key: string, x: number, y: number) {
-        const wallClasses: Record<string, new (options: { scene: Phaser.Scene, x: number, y: number }) => BaseLinkedWall> = {
-            'wall_rock': BaseRockWall,
-            'wall_bricks': BaseBrickWall,
-            'wall_planks': BasePlankWall,
-            'wall_smooth': BaseSmoothWall
+    private createVisualWall(key: MapObjectKey, x: number, y: number) {
+        const wallClasses: Record<number, new (options: { scene: Phaser.Scene, x: number, y: number }) => BaseLinkedWall> = {
+            [MapObjectKey.WALL_ROCK]: BaseRockWall,
+            [MapObjectKey.WALL_BRICKS]: BaseBrickWall,
+            [MapObjectKey.WALL_PLANKS]: BasePlankWall,
+            [MapObjectKey.WALL_SMOOTH]: BaseSmoothWall
         };
 
         const WallClass = wallClasses[key];
@@ -898,18 +908,18 @@ export class MapEditor extends Phaser.Scene {
         });
     }
 
-    private getTerrainType(key: string): TerrainType | null {
+    private getTerrainType(key: MapObjectKey): TerrainType | null {
         switch (key) {
-            case 'terrain_soil': return TerrainType.SOIL;
-            case 'terrain_soil_rich': return TerrainType.SOIL_RICH;
-            case 'terrain_mud': return TerrainType.MUD;
-            case 'terrain_rock': return TerrainType.ROCK;
-            case 'terrain_smooth_stone': return TerrainType.SMOOTH_STONE;
-            case 'terrain_ancient_concrete': return TerrainType.ANCIENT_CONCRETE;
-            case 'terrain_broken_asphalt': return TerrainType.BROKEN_ASPHALT;
-            case 'terrain_tile_stone': return TerrainType.TILE_STONE;
-            case 'terrain_wood_floor': return TerrainType.WOOD_FLOOR;
-            case 'terrain_sand': return TerrainType.SAND;
+            case MapObjectKey.TERRAIN_SOIL: return TerrainType.SOIL;
+            case MapObjectKey.TERRAIN_SOIL_RICH: return TerrainType.SOIL_RICH;
+            case MapObjectKey.TERRAIN_MUD: return TerrainType.MUD;
+            case MapObjectKey.TERRAIN_ROCK: return TerrainType.ROCK;
+            case MapObjectKey.TERRAIN_SMOOTH_STONE: return TerrainType.SMOOTH_STONE;
+            case MapObjectKey.TERRAIN_ANCIENT_CONCRETE: return TerrainType.ANCIENT_CONCRETE;
+            case MapObjectKey.TERRAIN_BROKEN_ASPHALT: return TerrainType.BROKEN_ASPHALT;
+            case MapObjectKey.TERRAIN_TILE_STONE: return TerrainType.TILE_STONE;
+            case MapObjectKey.TERRAIN_WOOD_FLOOR: return TerrainType.WOOD_FLOOR;
+            case MapObjectKey.TERRAIN_SAND: return TerrainType.SAND;
             default: return null;
         }
     }

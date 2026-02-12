@@ -1,12 +1,13 @@
 import { BaseRangeWeapon } from './base-range-weapon';
+import { SPRITE_KEYS } from '../../../config/constants';
 
 export class AssaultRifle extends BaseRangeWeapon {
     constructor() {
         super({
-            id: 'weapon_assault_rifle',
+            id: SPRITE_KEYS.WEAPONS.ASSAULT_RIFLE,
             name: 'Assault Rifle',
             description: 'Automatic rifle.',
-            texture: 'weapon_assault_rifle',
+            texture: SPRITE_KEYS.WEAPONS.ASSAULT_RIFLE,
             maxStack: 1,
             damage: 15,
             caliber: 'standard',
@@ -20,10 +21,10 @@ export class AssaultRifle extends BaseRangeWeapon {
 export class Pistol extends BaseRangeWeapon {
     constructor() {
         super({
-            id: 'weapon_pistol',
+            id: SPRITE_KEYS.WEAPONS.AUTOPISTOL,
             name: 'Pistol',
             description: 'Semi-automatic pistol.',
-            texture: 'weapon_pistol',
+            texture: SPRITE_KEYS.WEAPONS.AUTOPISTOL,
             maxStack: 1,
             damage: 10,
             caliber: 'light',
@@ -37,10 +38,10 @@ export class Pistol extends BaseRangeWeapon {
 export class Shotgun extends BaseRangeWeapon {
     constructor() {
         super({
-            id: 'weapon_shotgun',
+            id: SPRITE_KEYS.WEAPONS.SHOTGUN,
             name: 'Pump Shotgun',
             description: 'Pump-action shotgun.',
-            texture: 'weapon_shotgun',
+            texture: SPRITE_KEYS.WEAPONS.SHOTGUN,
             maxStack: 1,
             damage: 8, // Per pellet
             caliber: 'buckshot',

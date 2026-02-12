@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
-import { HAIR_COLORS, SKIN_COLORS, DEPTHS } from '../config/constants';
+import { HAIR_COLORS, SKIN_COLORS, DEPTHS, SPRITE_KEYS } from '../config/constants';
 import { TextSelector, ColorSelector, CharacterVisual } from '../objects';
 import { Button } from '../objects/ui/button';
 import { cursorSystem } from '../systems/cursor-system';
@@ -37,7 +37,7 @@ export class CharacterCreator extends Phaser.Scene {
 
         // Initialize Cursor
         this.input.setDefaultCursor('none');
-        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+        this.cursor = this.add.sprite(0, 0, SPRITE_KEYS.UI.CURSOR.NONE)
             .setDepth(DEPTHS.UI.CURSOR)
             .setScale(0.5)
             .setOrigin(0, 0);
@@ -45,7 +45,7 @@ export class CharacterCreator extends Phaser.Scene {
         this.onCursorChanged = (key: string) => {
              if (!this.cursor || !this.cursor.scene) return;
             this.cursor.setTexture(key);
-            if (key === 'cursor_target') {
+            if (key === SPRITE_KEYS.UI.CURSOR.TARGET) {
                 this.cursor.setOrigin(0.5, 0.5);
                 this.cursorOffset = { x: 0, y: 0 };
             } else {

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { StructureGenerator } from '../generators';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseBrickWall } from '../objects/walls/wall-types';
-import { GAME_CONFIG, DEPTHS } from '../config/constants';
+import { GAME_CONFIG, DEPTHS, SPRITE_KEYS } from '../config/constants';
 import { Button } from '../objects/ui/button';
 import { cursorSystem } from '../systems/cursor-system';
 
@@ -20,7 +20,7 @@ export class WallTestScene extends Phaser.Scene {
     create() {
         // Initialize Cursor
         this.input.setDefaultCursor('none');
-        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+        this.cursor = this.add.sprite(0, 0, SPRITE_KEYS.UI.CURSOR.NONE)
             .setDepth(DEPTHS.UI.CURSOR)
             .setScale(0.5)
             .setOrigin(0, 0)
@@ -29,7 +29,7 @@ export class WallTestScene extends Phaser.Scene {
         this.onCursorChanged = (key: string) => {
              if (!this.cursor || !this.cursor.scene) return;
             this.cursor.setTexture(key);
-            if (key === 'cursor_target') {
+            if (key === SPRITE_KEYS.UI.CURSOR.TARGET) {
                 this.cursor.setOrigin(0.5, 0.5);
                 this.cursorOffset = { x: 0, y: 0 };
             } else {

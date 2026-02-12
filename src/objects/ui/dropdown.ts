@@ -40,15 +40,15 @@ export class Dropdown<T> extends Phaser.GameObjects.Container {
         // Main Button (Header)
         this.mainButton = new Button({
             scene: config.scene,
-            x: 0,
-            y: 0,
+            x: config.width / 2,
+            y: 15,
             text: '',
             style: { width: config.width, height: 30, backgroundColor: 0x444444 },
             onClick: () => this.toggle()
         });
         this.add(this.mainButton);
 
-        this.labelText = config.scene.add.text(0, 0, `Filter: ${this.options[0]?.label || 'Select'}`, { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5);
+        this.labelText = config.scene.add.text(config.width / 2, 15, `Filter: ${this.options[0]?.label || 'Select'}`, { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5);
         this.add(this.labelText);
 
         // Options Container (Overlay)
@@ -62,7 +62,7 @@ export class Dropdown<T> extends Phaser.GameObjects.Container {
         this.options.forEach(opt => {
             const btn = new Button({
                 scene: config.scene,
-                x: 0,
+                x: config.width / 2,
                 y: optY + optHeight / 2, // Center Y relative to option slot
                 text: opt.label,
                 style: { width: config.width, height: optHeight, backgroundColor: 0x333333 },
