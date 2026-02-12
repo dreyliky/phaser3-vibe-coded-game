@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { cursorSystem } from '../../systems';
 
 export interface ButtonOptions {
     width?: number;
@@ -29,6 +30,7 @@ export class Button extends Phaser.GameObjects.Container {
     private textObj: Phaser.GameObjects.Text;
     private onClick: () => void;
     private options: ButtonOptions;
+    private isHovered: boolean = false;
 
     private get defaultStyle() {
         return {
@@ -85,7 +87,7 @@ export class Button extends Phaser.GameObjects.Container {
 
         // Interaction
         this.setSize(width, height);
-        this.setInteractive({ useHandCursor: true });
+        this.setInteractive();
 
         this.on('pointerover', this.onPointerOver, this);
         this.on('pointerout', this.onPointerOut, this);
@@ -96,6 +98,8 @@ export class Button extends Phaser.GameObjects.Container {
     }
 
     private onPointerOver(pointer: Phaser.Input.Pointer) {
+        this.isHovered = true;
+        cursorSystem.setHoverButton(true);
         const { bgColorOver, bgAlpha, textColorOver } = this.defaultStyle;
         
         this.background.setFillStyle(bgColorOver, bgAlpha);
@@ -107,6 +111,8 @@ export class Button extends Phaser.GameObjects.Container {
     }
 
     private onPointerOut() {
+        this.isHovered = false;
+        cursorSystem.setHoverButton(false);
         const { bgColor, bgAlpha, textColor } = this.defaultStyle;
 
         this.background.setFillStyle(bgColor, bgAlpha);
@@ -118,6 +124,10 @@ export class Button extends Phaser.GameObjects.Container {
     }
 
     public destroy(fromScene?: boolean) {
+        if (this.isHovered) {
+            cursorSystem.setHoverButton(false);
+            this.scene.events.emit('tooltip-hide');
+        }
         super.destroy(fromScene);
     }
 

@@ -4,16 +4,51 @@ import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseBrickWall } from '../objects/walls/wall-types';
 import { GAME_CONFIG } from '../config/constants';
 import { Button } from '../objects/ui/button';
+import { cursorSystem } from '../systems/cursor-system';
 
 export class WallTestScene extends Phaser.Scene {
     private structureGenerator!: StructureGenerator;
     private controls!: Phaser.Cameras.Controls.FixedKeyControl;
+    private cursor!: Phaser.GameObjects.Sprite;
+    private onCursorChanged!: (key: string) => void;
+    private cursorOffset = { x: 0, y: 0 };
 
     constructor() {
         super('WallTestScene');
     }
 
     create() {
+        // Initialize Cursor
+        this.input.setDefaultCursor('none');
+        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+            .setDepth(100000)
+            .setScale(0.5)
+            .setOrigin(0, 0)
+            .setScrollFactor(0);
+
+        this.onCursorChanged = (key: string) => {
+             if (!this.cursor || !this.cursor.scene) return;
+            this.cursor.setTexture(key);
+            if (key === 'cursor_target') {
+                this.cursor.setOrigin(0.5, 0.5);
+                this.cursorOffset = { x: 0, y: 0 };
+            } else {
+                this.cursor.setOrigin(0, 0);
+                this.cursorOffset = { x: -9, y: -6 };
+            }
+        };
+
+        cursorSystem.on('cursor-changed', this.onCursorChanged);
+        cursorSystem.setUIWindowOpen(false); 
+        cursorSystem.setWeaponType('none');
+        this.onCursorChanged(cursorSystem.getCurrentCursorKey());
+
+        this.events.on('shutdown', () => {
+             if (this.onCursorChanged) {
+                 cursorSystem.off('cursor-changed', this.onCursorChanged);
+             }
+        });
+
         // Set background to white
         this.cameras.main.setBackgroundColor('#ffffff');
 
@@ -126,9 +161,14 @@ export class WallTestScene extends Phaser.Scene {
         });
     }
 
-    update(_time: number, delta: number) {
+    update(time: number, delta: number) {
         if (this.controls) {
             this.controls.update(delta);
+        }
+
+        if (this.cursor) {
+            const pointer = this.input.activePointer;
+            this.cursor.setPosition(pointer.x + this.cursorOffset.x, pointer.y + this.cursorOffset.y);
         }
     }
 }

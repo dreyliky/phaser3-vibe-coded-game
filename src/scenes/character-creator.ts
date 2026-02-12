@@ -3,12 +3,18 @@ import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../ty
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { TextSelector, ColorSelector, CharacterVisual } from '../objects';
 import { Button } from '../objects/ui/button';
+import { cursorSystem } from '../systems/cursor-system';
 
 export class CharacterCreator extends Phaser.Scene {
     private character: CharacterDefinition;
     
     // Visual
     private characterVisual!: CharacterVisual;
+
+    // Cursor
+    private cursor!: Phaser.GameObjects.Sprite;
+    private onCursorChanged!: (key: string) => void;
+    private cursorOffset = { x: 0, y: 0 };
 
     // UI
     private genderSelector!: TextSelector;
@@ -28,6 +34,36 @@ export class CharacterCreator extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        // Initialize Cursor
+        this.input.setDefaultCursor('none');
+        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+            .setDepth(100000)
+            .setScale(0.5)
+            .setOrigin(0, 0);
+
+        this.onCursorChanged = (key: string) => {
+             if (!this.cursor || !this.cursor.scene) return;
+            this.cursor.setTexture(key);
+            if (key === 'cursor_target') {
+                this.cursor.setOrigin(0.5, 0.5);
+                this.cursorOffset = { x: 0, y: 0 };
+            } else {
+                this.cursor.setOrigin(0, 0);
+                this.cursorOffset = { x: -9, y: -6 };
+            }
+        };
+
+        cursorSystem.on('cursor-changed', this.onCursorChanged);
+        cursorSystem.setUIWindowOpen(false); 
+        cursorSystem.setWeaponType('none');
+        this.onCursorChanged(cursorSystem.getCurrentCursorKey());
+
+        this.events.on('shutdown', () => {
+             if (this.onCursorChanged) {
+                 cursorSystem.off('cursor-changed', this.onCursorChanged);
+             }
+        });
 
         // Background
         this.add.rectangle(0, 0, width, height, 0x222222).setOrigin(0);
@@ -196,5 +232,12 @@ export class CharacterCreator extends Phaser.Scene {
 
     private startGame() {
         this.scene.start('GameScene', { character: this.character });
+    }
+
+    update() {
+        if (this.cursor) {
+            const pointer = this.input.activePointer;
+            this.cursor.setPosition(pointer.x + this.cursorOffset.x, pointer.y + this.cursorOffset.y);
+        }
     }
 }

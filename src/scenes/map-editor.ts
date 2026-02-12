@@ -8,6 +8,7 @@ import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../o
 import { TerrainSystem, TerrainType } from '../systems/terrain-system';
 import { Tooltip } from '../objects/ui/tooltip';
 import { Dropdown } from '../objects/ui/dropdown';
+import { cursorSystem } from '../systems/cursor-system';
 
 type EditorTool = 'brush' | 'rectangle' | 'fill';
 type ObjectSubtype = 'all' | 'weapon' | 'ammo' | 'misc';
@@ -15,6 +16,12 @@ type ObjectSubtype = 'all' | 'weapon' | 'ammo' | 'misc';
 export class MapEditor extends Phaser.Scene {
     private currentMap!: GameMap;
     private selectedObject: EditorObjectConfig | null = null;
+
+    // Cursor
+    // private cursor!: Phaser.GameObjects.Sprite;
+    // private onCursorChanged!: (key: string) => void;
+    // private cursorOffset = { x: 0, y: 0 };
+
     private uiContainer!: Phaser.GameObjects.Container;
     private mapObjectsGroup!: Phaser.GameObjects.Group;
     private previewImage: Phaser.GameObjects.Image | null = null;
@@ -70,6 +77,20 @@ export class MapEditor extends Phaser.Scene {
     }
 
     create() {
+        // Initialize Cursor
+        this.input.setDefaultCursor('none');
+        // Launch overlay for cursor to avoid multi-camera issues
+        this.scene.launch('MapEditorOverlay');
+        this.scene.bringToTop('MapEditorOverlay');
+
+        cursorSystem.setUIWindowOpen(false); 
+        cursorSystem.setWeaponType('none');
+        // Cursor sync handled by overlay
+
+        this.events.on('shutdown', () => {
+             this.scene.stop('MapEditorOverlay');
+        });
+
         this.setupCamera();
         this.setupTerrain();
         this.setupGrid();
@@ -174,9 +195,11 @@ export class MapEditor extends Phaser.Scene {
         this.selectTab('tile');
     }
 
-    update(_time: number, delta: number) {
+    update(time: number, delta: number) {
         this.handleCameraMovement(delta);
         this.terrainSystem.update();
+        
+        // Cursor handled by MapEditorOverlay
         
         // Highlight active cell continuously
         const pointer = this.input.activePointer;

@@ -1,9 +1,13 @@
 import Phaser from 'phaser';
 import { Button } from '../objects/ui/button';
+import { cursorSystem } from '../systems/cursor-system';
 
 export class MainMenu extends Phaser.Scene {
     private titleText!: Phaser.GameObjects.Text;
     private menuButtons: Button[] = [];
+    private cursor!: Phaser.GameObjects.Sprite;
+    private onCursorChanged!: (key: string) => void;
+    private cursorOffset = { x: 0, y: 0 };
 
     constructor() {
         super('MainMenu');
@@ -11,6 +15,34 @@ export class MainMenu extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+        
+        // Initialize Cursor
+        this.input.setDefaultCursor('none');
+        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+            .setDepth(100000) // Always on top
+            .setScale(0.5)
+            .setOrigin(0, 0);
+
+        this.onCursorChanged = (key: string) => {
+             if (!this.cursor || !this.cursor.scene) return;
+            this.cursor.setTexture(key);
+            // In menu we mostly use pointer or hand, so origin 0,0 is fine usually, 
+            // but if we reuse target cursor logic:
+            if (key === 'cursor_target') {
+                this.cursor.setOrigin(0.5, 0.5);
+                this.cursorOffset = { x: 0, y: 0 };
+            } else {
+                this.cursor.setOrigin(0, 0);
+                this.cursorOffset = { x: -9, y: -6 };
+            }
+        };
+
+        cursorSystem.on('cursor-changed', this.onCursorChanged);
+        
+        // Ensure we start with none/default in menu
+        cursorSystem.setUIWindowOpen(false); 
+        cursorSystem.setWeaponType('none');
+        this.onCursorChanged(cursorSystem.getCurrentCursorKey());
         
         this.scale.on('resize', this.handleResize, this);
 
@@ -67,6 +99,13 @@ export class MainMenu extends Phaser.Scene {
         return btn;
     }
 
+    update() {
+        if (this.cursor) {
+            const pointer = this.input.activePointer;
+            this.cursor.setPosition(pointer.x + this.cursorOffset.x, pointer.y + this.cursorOffset.y);
+        }
+    }
+
     handleResize(gameSize: Phaser.Structs.Size) {
         const { width, height } = gameSize;
         
@@ -80,5 +119,11 @@ export class MainMenu extends Phaser.Scene {
                 btn.setPosition(width * 0.5, height * ratio);
             }
         });
+    }
+
+    shutdown() {
+        if (this.onCursorChanged) {
+            cursorSystem.off('cursor-changed', this.onCursorChanged);
+        }
     }
 }

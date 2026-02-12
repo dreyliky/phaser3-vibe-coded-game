@@ -67,6 +67,12 @@ export class Boot extends Phaser.Scene {
         this.load.image('projectile_standard', 'assets/sprites/things/projectile/Bullet_Medium.png');
         this.load.image('projectile_buckshot', 'assets/sprites/things/projectile/Bullet_Shotgun.png');
         this.load.image('projectile_light', 'assets/sprites/things/projectile/Bullet_Small.png');
+
+        // Load Cursors
+        this.load.image('cursor_none', 'assets/sprites/ui/cursor/cursor_none.png');
+        this.load.image('cursor_hand', 'assets/sprites/ui/cursor/hand_small_point.png');
+        this.load.image('cursor_sword', 'assets/sprites/ui/cursor/tool_sword_a.png');
+        this.load.image('cursor_target', 'assets/sprites/ui/cursor/target_a.png');
         
         // Load Environment
         this.load.image('background_sand', 'assets/sprites/terrain/surfaces/Sand.png');
@@ -110,6 +116,7 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
+        this.input.setDefaultCursor('none');
         // Go to Main Menu
         this.scene.start('MainMenu');
     }

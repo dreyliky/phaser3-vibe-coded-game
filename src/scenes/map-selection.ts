@@ -2,11 +2,17 @@ import Phaser from 'phaser';
 import { Button } from '../objects/ui/button';
 import { MapService } from '../services/map-service';
 import { GameMap } from '../types/map';
+import { cursorSystem } from '../systems/cursor-system';
 
 export class MapSelectionScene extends Phaser.Scene {
     private mode: 'play' | 'edit' = 'play';
     private readonly LIST_START_Y = 120;
     private readonly ITEM_HEIGHT = 60;
+
+    // Cursor
+    private cursor!: Phaser.GameObjects.Sprite;
+    private onCursorChanged!: (key: string) => void;
+    private cursorOffset = { x: 0, y: 0 };
 
     constructor() {
         super('MapSelectionScene');
@@ -17,6 +23,36 @@ export class MapSelectionScene extends Phaser.Scene {
     }
 
     create() {
+        // Initialize Cursor
+        this.input.setDefaultCursor('none');
+        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+            .setDepth(100000)
+            .setScale(0.5)
+            .setOrigin(0, 0);
+
+        this.onCursorChanged = (key: string) => {
+             if (!this.cursor || !this.cursor.scene) return;
+            this.cursor.setTexture(key);
+            if (key === 'cursor_target') {
+                this.cursor.setOrigin(0.5, 0.5);
+                this.cursorOffset = { x: 0, y: 0 };
+            } else {
+                this.cursor.setOrigin(0, 0);
+                this.cursorOffset = { x: -9, y: -6 };
+            }
+        };
+
+        cursorSystem.on('cursor-changed', this.onCursorChanged);
+        cursorSystem.setUIWindowOpen(false); 
+        cursorSystem.setWeaponType('none');
+        this.onCursorChanged(cursorSystem.getCurrentCursorKey());
+
+        this.events.on('shutdown', () => {
+             if (this.onCursorChanged) {
+                 cursorSystem.off('cursor-changed', this.onCursorChanged);
+             }
+        });
+
         this.cameras.main.setBackgroundColor(0x111111);
 
         this.createTitle();
@@ -108,6 +144,13 @@ export class MapSelectionScene extends Phaser.Scene {
             this.scene.start('GameScene', { mapId: id });
         } else {
             this.scene.start('MapEditor', { mapId: id });
+        }
+    }
+
+    update() {
+        if (this.cursor) {
+            const pointer = this.input.activePointer;
+            this.cursor.setPosition(pointer.x + this.cursorOffset.x, pointer.y + this.cursorOffset.y);
         }
     }
 }

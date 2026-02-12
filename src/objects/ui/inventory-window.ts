@@ -31,6 +31,7 @@ export class InventoryWindow extends Phaser.GameObjects.Container {
             text: 'X',
             onClick: () => {
                 this.setVisible(false);
+                this.scene.events.emit('inventory-window-closed');
             },
             style: {
                 fontSize: '20px',

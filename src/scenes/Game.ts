@@ -3,9 +3,13 @@ import { Player } from '../objects';
 import { BodyType, CharacterDefinition, FaceType, Gender, HairType } from '../types/character';
 import { HAIR_COLORS, SKIN_COLORS } from '../config/constants';
 import { AssaultRifle, Pistol, Shotgun, LightAmmo, StandardAmmo, HeavyAmmo, BuckshotAmmo } from '../objects/items';
+import { Hands } from '../objects/items/weapons/hands';
+import { BaseRangeWeapon } from '../objects/items/weapons/base-range-weapon';
+import { BaseMeleeWeapon } from '../objects/items/weapons/base-melee-weapon';
 import { inventorySystem, InventoryItem, ItemInteractionSystem, TimeSystem, LightingSystem, ShadowSystem } from '../systems';
+import { cursorSystem } from '../systems/cursor-system';
 import { ChunkSystem } from '../systems/chunk-system';
-import { DEBUG_SETTINGS } from '../config/constants';
+import { DEBUG_SETTINGS, DEPTHS } from '../config/constants';
 import { HUD } from './hud';
 import { MapService } from '../services/map-service';
 import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../objects/walls/wall-types';
@@ -48,6 +52,9 @@ export class Game extends Phaser.Scene {
     }
 
     create() {
+        // Reset Cursor System state to prevent stuck hover states from previous scenes
+        cursorSystem.reset();
+
         const { width, height } = this.scale;
         
         this.scale.on('resize', this.handleResize, this);
@@ -135,9 +142,21 @@ export class Game extends Phaser.Scene {
         if (hudScene) {
             hudScene.events.on('weapon-equipped', (item: InventoryItem) => {
                 this.player.equipWeapon(item);
+                // Update cursor based on weapon type
+                if (item.item instanceof Hands) {
+                    // User requested tool_sword_a for hands/melee
+                    cursorSystem.setWeaponType('melee');
+                } else if (item.item instanceof BaseMeleeWeapon) {
+                    cursorSystem.setWeaponType('melee');
+                } else if (item.item instanceof BaseRangeWeapon) {
+                    cursorSystem.setWeaponType('ranged');
+                } else {
+                    cursorSystem.setWeaponType('none');
+                }
             });
             hudScene.events.on('weapon-unequipped', () => {
                 this.player.unequipWeapon();
+                cursorSystem.setWeaponType('none');
             });
         }
 
@@ -145,6 +164,17 @@ export class Game extends Phaser.Scene {
         const initialQuickItem = inventorySystem.getItemAt('quick', 0);
         if (initialQuickItem) {
             this.player.equipWeapon(initialQuickItem);
+            
+            // Sync cursor immediately
+            if (initialQuickItem.item instanceof Hands) {
+                cursorSystem.setWeaponType('melee');
+            } else if (initialQuickItem.item instanceof BaseMeleeWeapon) {
+                cursorSystem.setWeaponType('melee');
+            } else if (initialQuickItem.item instanceof BaseRangeWeapon) {
+                cursorSystem.setWeaponType('ranged');
+            } else {
+                cursorSystem.setWeaponType('none');
+            }
         }
 
         // Initialize Fog of War

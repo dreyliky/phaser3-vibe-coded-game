@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import PhaserRaycaster from 'phaser-raycaster';
-import { Boot, CharacterCreator, Game, HUD, MainMenu, WallTestScene, MapEditor, MapSelectionScene } from '../scenes';
+import { Boot, CharacterCreator, Game, HUD, MainMenu, WallTestScene, MapEditor, MapSelectionScene, MapEditorOverlay } from '../scenes';
 
 export const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: 'app',
     backgroundColor: '#000000',
-    scene: [Boot, MainMenu, CharacterCreator, Game, HUD, WallTestScene, MapEditor, MapSelectionScene],
+    scene: [Boot, MainMenu, CharacterCreator, Game, HUD, WallTestScene, MapEditor, MapSelectionScene, MapEditorOverlay],
     plugins: {
         scene: [
             {

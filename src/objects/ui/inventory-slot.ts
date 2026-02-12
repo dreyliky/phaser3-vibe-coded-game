@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { InventoryItem } from '../../systems/inventory-system';
+import { cursorSystem } from '../../systems';
 
 export class InventorySlot extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Rectangle;
@@ -39,6 +40,13 @@ export class InventorySlot extends Phaser.GameObjects.Container {
 
         this.setSize(this.size, this.size);
         this.setInteractive({ dropZone: true });
+
+        this.on('pointerover', () => {
+            cursorSystem.setHoverButton(true);
+        });
+        this.on('pointerout', () => {
+            cursorSystem.setHoverButton(false);
+        });
     }
 
     public setItem(item: InventoryItem | null) {
@@ -61,7 +69,7 @@ export class InventorySlot extends Phaser.GameObjects.Container {
 
             // Enable drag on the icon
             if (!this.isDisabled) {
-                this.itemIcon.setInteractive({ useHandCursor: true });
+                this.itemIcon.setInteractive();
                 this.scene.input.setDraggable(this.itemIcon);
                 
                 // Store reference to slot info on the icon for drag events
@@ -71,12 +79,14 @@ export class InventorySlot extends Phaser.GameObjects.Container {
 
                 // Tooltip
                 this.itemIcon.on('pointerover', (pointer: Phaser.Input.Pointer) => {
+                    cursorSystem.setHoverButton(true);
                     const name = item.item.getName();
                     const qty = item.quantity > 1 ? ` (${item.quantity})` : '';
                     this.scene.events.emit('tooltip-show', `${name}${qty}`, pointer.x, pointer.y);
                 });
 
                 this.itemIcon.on('pointerout', () => {
+                    cursorSystem.setHoverButton(false);
                     this.scene.events.emit('tooltip-hide');
                 });
 

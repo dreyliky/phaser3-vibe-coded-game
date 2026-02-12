@@ -4,3 +4,4 @@ export * from './terrain-system';
 export * from './time-system';
 export * from './lighting-system';
 export * from './shadow-system';
+export * from './cursor-system';

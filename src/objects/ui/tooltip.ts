@@ -43,18 +43,11 @@ export class Tooltip extends Phaser.GameObjects.Container {
         this.add(this.text);
 
         this.setVisible(false);
-        this.setDepth(Number.MAX_SAFE_INTEGER); // Ensure it's on top
+        this.setDepth(3000); // High depth but below cursor (which should be MAX_SAFE_INTEGER)
         scene.add.existing(this);
     }
 
     public show(content: string, x: number, y: number) {
-        // Ensure it's on top of its parent container if it has one
-        if (this.parentContainer) {
-            this.parentContainer.bringToTop(this);
-        } else {
-            this.scene.children.bringToTop(this);
-        }
-
         this.text.setText(content);
         
         const width = this.text.width + this.config.padding * 2;

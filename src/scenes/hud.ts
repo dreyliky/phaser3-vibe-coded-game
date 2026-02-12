@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { InventoryWindow, QuickBar, PauseMenu, Tooltip, InventorySlot } from '../objects/ui';
-import { inventorySystem } from '../systems';
+import { inventorySystem, cursorSystem } from '../systems';
 import { DEBUG_SETTINGS } from '../config/constants';
 import { Game as GameScene } from './Game';
 
@@ -13,6 +13,9 @@ export class HUD extends Phaser.Scene {
     private tooltip!: Tooltip;
     private backdrop!: Phaser.GameObjects.Rectangle;
     private fpsText!: Phaser.GameObjects.Text;
+    private cursor!: Phaser.GameObjects.Sprite;
+    private onCursorChanged!: (key: string) => void;
+    private cursorOffset = { x: 0, y: 0 };
 
     constructor() {
         super('HUD');
@@ -20,6 +23,30 @@ export class HUD extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
+
+        // Initialize Cursor
+        this.input.setDefaultCursor('none');
+        this.cursor = this.add.sprite(0, 0, 'cursor_none')
+            .setDepth(100000) // Always on top
+            .setScale(0.5)
+            .setOrigin(0, 0);
+
+        this.onCursorChanged = (key: string) => {
+            if (!this.cursor || !this.cursor.scene) return;
+            this.cursor.setTexture(key);
+            if (key === 'cursor_target') {
+                this.cursor.setOrigin(0.5, 0.5);
+                this.cursorOffset = { x: 0, y: 0 };
+            } else {
+                this.cursor.setOrigin(0, 0);
+                this.cursorOffset = { x: -9, y: -6 };
+            }
+        };
+
+        cursorSystem.on('cursor-changed', this.onCursorChanged);
+        
+        // Initial sync
+        this.onCursorChanged(cursorSystem.getCurrentCursorKey());
 
         // Handle Resize
         this.scale.on('resize', this.handleResize, this);
@@ -57,6 +84,10 @@ export class HUD extends Phaser.Scene {
         this.inventoryWindow = new InventoryWindow(this, width * 0.5, height * 0.5);
         this.inventoryWindow.setDepth(100);
         this.add.existing(this.inventoryWindow);
+
+        this.events.on('inventory-window-closed', () => {
+            this.updateBackdrop();
+        });
 
         // Pause Menu (Center)
         this.pauseMenu = new PauseMenu({
@@ -262,6 +293,9 @@ export class HUD extends Phaser.Scene {
             this.events.off('tooltip-show');
             this.events.off('tooltip-hide');
             this.events.off('slot-shift-click');
+
+            // Clean up cursor listener
+            cursorSystem.off('cursor-changed', this.onCursorChanged);
             
             const gameScene = this.scene.get('GameScene');
             if (gameScene) {
@@ -276,6 +310,12 @@ export class HUD extends Phaser.Scene {
             // Use delta to calculate instantaneous FPS if actualFps is 0
             const fps = Math.round(1000 / delta);
             this.fpsText.setText(`FPS: ${fps}`);
+        }
+
+        // Update cursor position
+        if (this.cursor) {
+            const pointer = this.input.activePointer;
+            this.cursor.setPosition(pointer.x + this.cursorOffset.x, pointer.y + this.cursorOffset.y);
         }
 
         const gameScene = this.scene.get('GameScene') as GameScene;
@@ -414,6 +454,7 @@ export class HUD extends Phaser.Scene {
     private updateBackdrop() {
         const isAnyWindowOpen = this.inventoryWindow.visible || this.pauseMenu.visible;
         this.backdrop.setVisible(isAnyWindowOpen);
+        cursorSystem.setUIWindowOpen(isAnyWindowOpen);
     }
 
     handleResize(gameSize: Phaser.Structs.Size) {
