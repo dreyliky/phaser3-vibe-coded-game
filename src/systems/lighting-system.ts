@@ -72,14 +72,14 @@ export class LightingSystem {
         // RenderTexture for darkness
         this.darknessTexture = this.scene.add.renderTexture(0, 0, width, height);
         this.darknessTexture.setOrigin(0, 0); // Explicitly set origin to top-left
-        this.darknessTexture.setDepth(DEPTHS.LIGHTING);
+        this.darknessTexture.setDepth(DEPTHS.LIGHTING.BASE);
         this.darknessTexture.setScrollFactor(0);
         
         // Intermediate RT for masking light and displaying the beam
         this.lightRT = this.scene.add.renderTexture(0, 0, width, height);
         this.lightRT.setOrigin(0, 0);
         this.lightRT.setVisible(true); // Visible overlay
-        this.lightRT.setDepth(DEPTHS.LIGHTING + 2); // Above darkness
+        this.lightRT.setDepth(DEPTHS.LIGHTING.LIGHT_RT); // Above darkness
         this.lightRT.setScrollFactor(0);
         this.lightRT.setBlendMode(Phaser.BlendModes.ADD); // Additive blending for glow
         this.lightRT.setAlpha(0.4); // Stronger yellow overlay
@@ -97,7 +97,7 @@ export class LightingSystem {
 
         // Graphics for Raycasting Visualization (The "Hard" Mask)
         this.flashlight = this.scene.add.graphics();
-        this.flashlight.setDepth(DEPTHS.LIGHTING + 1); // Above darkness (for the beam color)
+        this.flashlight.setDepth(DEPTHS.LIGHTING.FLASHLIGHT); // Above darkness (for the beam color)
         this.flashlight.setBlendMode(Phaser.BlendModes.ADD); // Additive blending for light
         this.flashlight.setVisible(false); // We'll manage visibility manually
         

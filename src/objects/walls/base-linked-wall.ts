@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { BaseWall, BaseWallOptions } from './base-wall';
-import { DEBUG_SETTINGS, GAME_CONFIG } from '../../config/constants';
+import { DEBUG_SETTINGS, GAME_CONFIG, DEPTHS } from '../../config/constants';
 import { WALL_ATLAS_MAPPING, WALL_SOLID_COLOR } from './wall-constants';
 import { WallMaterial } from '../../config/wall-data';
 
@@ -211,7 +211,7 @@ export class BaseLinkedWall extends BaseWall implements Damageable {
                     fontSize: '10px', 
                     color: '#ffffff',
                     backgroundColor: '#000000'
-                }).setOrigin(0.5).setDepth(1000);
+                }).setOrigin(0.5).setDepth(DEPTHS.DEBUG.TEXT);
             }
             this.debugText.setText(`M:${mask}\nF:${frame}`);
             this.debugText.setVisible(true);

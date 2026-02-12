@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Button } from '../objects/ui/button';
 import { cursorSystem } from '../systems/cursor-system';
+import { DEPTHS } from '../config/constants';
 
 export class MainMenu extends Phaser.Scene {
     private titleText!: Phaser.GameObjects.Text;
@@ -19,7 +20,7 @@ export class MainMenu extends Phaser.Scene {
         // Initialize Cursor
         this.input.setDefaultCursor('none');
         this.cursor = this.add.sprite(0, 0, 'cursor_none')
-            .setDepth(100000) // Always on top
+            .setDepth(DEPTHS.UI.CURSOR) // Always on top
             .setScale(0.5)
             .setOrigin(0, 0);
 

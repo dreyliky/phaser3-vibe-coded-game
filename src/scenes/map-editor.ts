@@ -9,6 +9,7 @@ import { TerrainSystem, TerrainType } from '../systems/terrain-system';
 import { Tooltip } from '../objects/ui/tooltip';
 import { Dropdown } from '../objects/ui/dropdown';
 import { cursorSystem } from '../systems/cursor-system';
+import { DEPTHS } from '../config/constants';
 
 type EditorTool = 'brush' | 'rectangle' | 'fill';
 type ObjectSubtype = 'all' | 'weapon' | 'ammo' | 'misc';
@@ -123,9 +124,9 @@ export class MapEditor extends Phaser.Scene {
     }
 
     private setupGrid() {
-        this.gridGraphics = this.add.graphics().setDepth(Number.MAX_VALUE - 100); 
-        this.toolGraphics = this.add.graphics().setDepth(Number.MAX_VALUE - 90);
-        this.highlightGraphics = this.add.graphics().setDepth(Number.MAX_VALUE - 95); 
+        this.gridGraphics = this.add.graphics().setDepth(DEPTHS.DEBUG.GRID); 
+        this.toolGraphics = this.add.graphics().setDepth(DEPTHS.DEBUG.TOOL);
+        this.highlightGraphics = this.add.graphics().setDepth(DEPTHS.DEBUG.HIGHLIGHT); 
         this.drawGrid();
     }
 
@@ -243,7 +244,7 @@ export class MapEditor extends Phaser.Scene {
     }
 
     private createUI() {
-        this.uiContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(1000);
+        this.uiContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(DEPTHS.UI.BASE);
 
         const bg = this.add.rectangle(0, 0, this.SIDEBAR_WIDTH, this.cameras.main.height, 0x111111, 0.95).setOrigin(0, 0);
         this.uiContainer.add(bg);
@@ -473,7 +474,7 @@ export class MapEditor extends Phaser.Scene {
             
             this.previewImage.setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
             this.previewImage.setAlpha(0.6);
-            this.previewImage.setDepth(100);
+            this.previewImage.setDepth(DEPTHS.EDITOR.PREVIEW_IMAGE);
 
             if (this.uiCamera) {
                 this.uiCamera.ignore(this.previewImage);
@@ -854,9 +855,9 @@ export class MapEditor extends Phaser.Scene {
         }
         sprite.setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
         
-        if (config.type === 'plant') sprite.setDepth(20);
-        else if (config.type === 'object' && config.subtype === 'misc') sprite.setDepth(30);
-        else sprite.setDepth(15); 
+        if (config.type === 'plant') sprite.setDepth(DEPTHS.EDITOR.PREVIEW_PLANT);
+        else if (config.type === 'object' && config.subtype === 'misc') sprite.setDepth(DEPTHS.EDITOR.PREVIEW_OBJECT);
+        else sprite.setDepth(DEPTHS.EDITOR.PREVIEW_DEFAULT); 
 
         this.mapObjectsGroup.add(sprite);
     }

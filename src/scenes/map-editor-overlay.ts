@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { cursorSystem } from '../systems/cursor-system';
+import { DEPTHS } from '../config/constants';
 
 export class MapEditorOverlay extends Phaser.Scene {
     private cursor!: Phaser.GameObjects.Sprite;
@@ -13,7 +14,7 @@ export class MapEditorOverlay extends Phaser.Scene {
     create() {
         // Initialize Cursor
         this.cursor = this.add.sprite(0, 0, 'cursor_none')
-            .setDepth(100000)
+            .setDepth(DEPTHS.UI.CURSOR)
             .setScale(0.5)
             .setOrigin(0, 0);
 

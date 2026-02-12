@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { StructureGenerator } from '../generators';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseBrickWall } from '../objects/walls/wall-types';
-import { GAME_CONFIG } from '../config/constants';
+import { GAME_CONFIG, DEPTHS } from '../config/constants';
 import { Button } from '../objects/ui/button';
 import { cursorSystem } from '../systems/cursor-system';
 
@@ -21,7 +21,7 @@ export class WallTestScene extends Phaser.Scene {
         // Initialize Cursor
         this.input.setDefaultCursor('none');
         this.cursor = this.add.sprite(0, 0, 'cursor_none')
-            .setDepth(100000)
+            .setDepth(DEPTHS.UI.CURSOR)
             .setScale(0.5)
             .setOrigin(0, 0)
             .setScrollFactor(0);
@@ -85,7 +85,7 @@ export class WallTestScene extends Phaser.Scene {
             fontSize: '16px',
             color: '#000000',
             backgroundColor: '#ffffff'
-        }).setScrollFactor(0).setDepth(100);
+        }).setScrollFactor(0).setDepth(DEPTHS.UI.BASE);
 
         // Back to Menu Button
         const backButton = new Button({
@@ -98,11 +98,11 @@ export class WallTestScene extends Phaser.Scene {
             },
             style: {
                 fontSize: '20px',
-                backgroundColor: 0x000000,
+                backgroundColor: 0x333333,
                 padding: { x: 10, y: 5 }
             }
         });
-        backButton.setScrollFactor(0).setDepth(100);
+        backButton.setScrollFactor(0).setDepth(DEPTHS.UI.BASE);
 
         // Camera Controls
         if (this.input.keyboard) {

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Button } from './button';
+import { DEPTHS } from '../../config/constants';
 
 export type DropdownOption<T> = {
     label: string;
@@ -29,7 +30,7 @@ export class Dropdown<T> extends Phaser.GameObjects.Container {
         super(config.scene, config.x, config.y);
         this.options = config.options;
         this.onSelect = config.onSelect;
-        this.zIndex = config.zIndex || 2000;
+        this.zIndex = config.zIndex || DEPTHS.UI.POPUP; // Default high z-index for dropdowns
 
         // Ensure this container stays fixed relative to camera if needed, 
         // but typically it's added to a UI container which handles scroll factor.

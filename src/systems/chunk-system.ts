@@ -18,16 +18,16 @@ interface TerrainConfig {
 
 // Copied from terrain-system.ts
 export const TERRAIN_DATA: Record<string, TerrainConfig> = {
-    [TerrainType.SAND]: { asset: 'background_sand', layer: 1, z: -100 },
-    [TerrainType.SOIL]: { asset: 'floor_soil', layer: 2, z: -95 },
-    [TerrainType.SOIL_RICH]: { asset: 'floor_soil_rich', layer: 2, z: -94 },
-    [TerrainType.MUD]: { asset: 'floor_mud', layer: 2, z: -93 },
-    [TerrainType.ROCK]: { asset: 'floor_cave', layer: 3, z: -90 },
-    [TerrainType.SMOOTH_STONE]: { asset: 'floor_smooth_stone', layer: 3, z: -89 },
-    [TerrainType.ANCIENT_CONCRETE]: { asset: 'floor_ancient_concrete', layer: 4, z: -85 },
-    [TerrainType.BROKEN_ASPHALT]: { asset: 'floor_broken_asphalt', layer: 4, z: -84 },
-    [TerrainType.TILE_STONE]: { asset: 'floor_tile_stone', layer: 4, z: -83 },
-    [TerrainType.WOOD_FLOOR]: { asset: 'floor_wood', layer: 4, z: -82 }
+    [TerrainType.SAND]: { asset: 'background_sand', layer: 1, z: DEPTHS.TERRAIN.SAND },
+    [TerrainType.SOIL]: { asset: 'floor_soil', layer: 2, z: DEPTHS.TERRAIN.SOIL },
+    [TerrainType.SOIL_RICH]: { asset: 'floor_soil_rich', layer: 2, z: DEPTHS.TERRAIN.SOIL_RICH },
+    [TerrainType.MUD]: { asset: 'floor_mud', layer: 2, z: DEPTHS.TERRAIN.MUD },
+    [TerrainType.ROCK]: { asset: 'floor_cave', layer: 3, z: DEPTHS.TERRAIN.ROCK },
+    [TerrainType.SMOOTH_STONE]: { asset: 'floor_smooth_stone', layer: 3, z: DEPTHS.TERRAIN.SMOOTH_STONE },
+    [TerrainType.ANCIENT_CONCRETE]: { asset: 'floor_ancient_concrete', layer: 4, z: DEPTHS.TERRAIN.ANCIENT_CONCRETE },
+    [TerrainType.BROKEN_ASPHALT]: { asset: 'floor_broken_asphalt', layer: 4, z: DEPTHS.TERRAIN.BROKEN_ASPHALT },
+    [TerrainType.TILE_STONE]: { asset: 'floor_tile_stone', layer: 4, z: DEPTHS.TERRAIN.TILE_STONE },
+    [TerrainType.WOOD_FLOOR]: { asset: 'floor_wood', layer: 4, z: DEPTHS.TERRAIN.WOOD_FLOOR }
 };
 
 const TREE_VARIANTS = ['plant_tree_teak', 'plant_tree_willow', 'plant_tree_palm', 'plant_tree_cecropia'];
@@ -68,7 +68,7 @@ class Chunk {
         this.treeHitboxesGroup = treeHitboxesGroup;
         this.shadowSystem = shadowSystem;
         this.container = this.scene.add.container(0, 0);
-        this.container.setDepth(DEPTHS.TERRAIN); // Terrain depth
+        this.container.setDepth(DEPTHS.TERRAIN.BASE); // Terrain depth
     }
 
     public load() {

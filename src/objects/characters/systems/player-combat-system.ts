@@ -615,7 +615,7 @@ export class PlayerCombatSystem {
 
             const bullet = this.bulletsGroup.create(startX, startY, texture) as Phaser.Physics.Arcade.Sprite;
             bullet.setTint(0xffff93);
-            bullet.setDepth(DEPTHS.LIGHTING - 100); // Ensure bullets are above world objects but below lighting
+            bullet.setDepth(DEPTHS.LIGHTING.BASE - 100); // Ensure bullets are above world objects but below lighting
             // this.scene.physics.add.existing(bullet); // Group.create adds physics body if group is physics enabled
             const body = bullet.body as Phaser.Physics.Arcade.Body;
             
@@ -890,7 +890,7 @@ export class PlayerCombatSystem {
         this.reloadIndicator = this.scene.add.graphics();
         this.player.add(this.reloadIndicator);
         
-        this.reloadIndicator.setDepth(200);
+        this.reloadIndicator.setDepth(DEPTHS.COMBAT.RELOAD_INDICATOR);
 
         const radius = 8;
         const startAngle = -90;

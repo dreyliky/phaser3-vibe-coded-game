@@ -3,6 +3,7 @@ import { Button } from '../objects/ui/button';
 import { MapService } from '../services/map-service';
 import { GameMap } from '../types/map';
 import { cursorSystem } from '../systems/cursor-system';
+import { DEPTHS } from '../config/constants';
 
 export class MapSelectionScene extends Phaser.Scene {
     private mode: 'play' | 'edit' = 'play';
@@ -26,7 +27,7 @@ export class MapSelectionScene extends Phaser.Scene {
         // Initialize Cursor
         this.input.setDefaultCursor('none');
         this.cursor = this.add.sprite(0, 0, 'cursor_none')
-            .setDepth(100000)
+            .setDepth(DEPTHS.UI.CURSOR)
             .setScale(0.5)
             .setOrigin(0, 0);
 

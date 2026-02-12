@@ -10,7 +10,7 @@ const FOW_CONFIG = {
     MIN_VIEW_RADIUS: 120, // Always visible radius around player
     FOG_COLOR: 0x000000,
     MASK_RESOLUTION_SCALE: 0.05, // Low resolution for soft blurred edges
-    DEPTH: DEPTHS.FOG_OF_WAR, // High depth to cover all game objects including vegetation
+    DEPTH: DEPTHS.FOG_OF_WAR.BASE, // High depth to cover all game objects including vegetation
     TILE_SIZE: GAME_CONFIG.TILE_SIZE
 };
 

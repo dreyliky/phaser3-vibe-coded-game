@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { BaseLinkedWall } from '../objects/walls/base-linked-wall';
 import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../objects/walls/wall-types';
-import { GAME_CONFIG } from '../config/constants';
+import { GAME_CONFIG, DEPTHS } from '../config/constants';
 import { WALL_MATERIALS } from '../config/wall-data';
 
 export class StructureGenerator {
@@ -84,7 +84,7 @@ export class StructureGenerator {
                 fontSize: '16px', 
                 color: '#ffffff',
                 backgroundColor: '#000000' 
-            }).setOrigin(0.5).setDepth(2000);
+            }).setOrigin(0.5).setDepth(DEPTHS.DEBUG.TOOL);
 
             this.walls.add(wall);
         }

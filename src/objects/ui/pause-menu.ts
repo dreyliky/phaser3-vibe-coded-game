@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Button } from './button';
+import { DEPTHS } from '../../config/constants';
 
 export class PauseMenu extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Rectangle;
@@ -73,7 +74,7 @@ export class PauseMenu extends Phaser.GameObjects.Container {
         this.menuItems.add(exitBtn);
 
         this.setVisible(false);
-        this.setDepth(1000); // Ensure it's on top
+        this.setDepth(DEPTHS.UI.POPUP); // Ensure it's on top
     }
 
     public toggle() {

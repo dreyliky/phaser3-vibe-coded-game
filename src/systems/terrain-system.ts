@@ -25,52 +25,52 @@ const TERRAIN_DATA: Record<string, TerrainConfig> = { // Changed key type to str
     [TerrainType.SAND]: { 
         asset: 'background_sand', 
         layer: 1, // Changed to 1
-        z: -100
+        z: DEPTHS.TERRAIN.SAND
     },
     [TerrainType.SOIL]: { 
         asset: 'floor_soil', 
         layer: 2,
-        z: -95
+        z: DEPTHS.TERRAIN.SOIL
     },
     [TerrainType.SOIL_RICH]: {
         asset: 'floor_soil_rich',
         layer: 2,
-        z: -94
+        z: DEPTHS.TERRAIN.SOIL_RICH
     },
     [TerrainType.MUD]: {
         asset: 'floor_mud',
         layer: 2,
-        z: -93
+        z: DEPTHS.TERRAIN.MUD
     },
     [TerrainType.ROCK]: { 
         asset: 'floor_cave', 
         layer: 3,
-        z: -90
+        z: DEPTHS.TERRAIN.ROCK
     },
     [TerrainType.SMOOTH_STONE]: {
         asset: 'floor_smooth_stone',
         layer: 3,
-        z: -89
+        z: DEPTHS.TERRAIN.SMOOTH_STONE
     },
     [TerrainType.ANCIENT_CONCRETE]: {
         asset: 'floor_ancient_concrete',
         layer: 4,
-        z: -85
+        z: DEPTHS.TERRAIN.ANCIENT_CONCRETE
     },
     [TerrainType.BROKEN_ASPHALT]: {
         asset: 'floor_broken_asphalt',
         layer: 4,
-        z: -84
+        z: DEPTHS.TERRAIN.BROKEN_ASPHALT
     },
     [TerrainType.TILE_STONE]: {
         asset: 'floor_tile_stone',
         layer: 4,
-        z: -83
+        z: DEPTHS.TERRAIN.TILE_STONE
     },
     [TerrainType.WOOD_FLOOR]: {
         asset: 'floor_wood',
         layer: 4,
-        z: -82
+        z: DEPTHS.TERRAIN.WOOD_FLOOR
     }
 };
 
@@ -95,7 +95,7 @@ export class TerrainSystem {
         this.height = options.height;
         this.tileSize = options.tileSize;
         this.tileContainer = this.scene.add.container(0, 0);
-        this.tileContainer.setDepth(DEPTHS.TERRAIN); // Ensure terrain is behind everything (Shadows are at -70)
+        this.tileContainer.setDepth(DEPTHS.TERRAIN.BASE); // Ensure terrain is behind everything (Shadows are at -70)
         this.grid = [];
 
         // Initialize grid with NONE (Void/Black)

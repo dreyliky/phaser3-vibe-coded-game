@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { InventoryWindow, QuickBar, PauseMenu, Tooltip, InventorySlot } from '../objects/ui';
 import { inventorySystem, cursorSystem } from '../systems';
-import { DEBUG_SETTINGS } from '../config/constants';
+import { DEBUG_SETTINGS, DEPTHS } from '../config/constants';
 import { Game as GameScene } from './Game';
 
 export class HUD extends Phaser.Scene {
@@ -27,7 +27,7 @@ export class HUD extends Phaser.Scene {
         // Initialize Cursor
         this.input.setDefaultCursor('none');
         this.cursor = this.add.sprite(0, 0, 'cursor_none')
-            .setDepth(100000) // Always on top
+            .setDepth(DEPTHS.UI.CURSOR) // Always on top
             .setScale(0.5)
             .setOrigin(0, 0);
 
@@ -54,7 +54,7 @@ export class HUD extends Phaser.Scene {
         // Backdrop (Black, 20% opacity, behind windows)
         this.backdrop = this.add.rectangle(0, 0, width, height, 0x000000, 0.2)
             .setOrigin(0)
-            .setDepth(90)
+            .setDepth(DEPTHS.UI.BACKDROP)
             .setVisible(false)
             .setInteractive(); // Block clicks below
 
@@ -72,17 +72,17 @@ export class HUD extends Phaser.Scene {
             })
             .setOrigin(1, 0)
             .setScrollFactor(0)
-            .setDepth(200);
+            .setDepth(DEPTHS.UI.POPUP);
         }
 
         // Quick Bar (Bottom Center)
         this.quickBar = new QuickBar(this, width * 0.5, height - 50);
-        this.quickBar.setDepth(95);
+        this.quickBar.setDepth(DEPTHS.UI.HUD_BAR);
         this.add.existing(this.quickBar);
 
         // Inventory Window (Center)
         this.inventoryWindow = new InventoryWindow(this, width * 0.5, height * 0.5);
-        this.inventoryWindow.setDepth(100);
+        this.inventoryWindow.setDepth(DEPTHS.UI.HUD_WINDOW);
         this.add.existing(this.inventoryWindow);
 
         this.events.on('inventory-window-closed', () => {
@@ -101,11 +101,12 @@ export class HUD extends Phaser.Scene {
                 this.scene.start('MainMenu');
             },
             onResume: () => {
-                // On Resume
+                this.scene.resume('GameScene');
+                this.pauseMenu.setVisible(false);
                 this.updateBackdrop();
             }
         });
-        this.pauseMenu.setDepth(101);
+        this.pauseMenu.setDepth(DEPTHS.UI.POPUP);
         this.add.existing(this.pauseMenu);
 
         // Tooltip
@@ -191,7 +192,7 @@ export class HUD extends Phaser.Scene {
             gameObject.parentContainer.remove(gameObject);
             this.add.existing(gameObject);
             gameObject.setPosition(globalPos.x, globalPos.y);
-            gameObject.setDepth(10000); // Higher than everything (Windows are 100-101, Tooltip usually high)
+            gameObject.setDepth(DEPTHS.UI.DRAG_ITEM); // Higher than everything (Windows are 100-101, Tooltip usually high)
             
             gameObject.setAlpha(0.8);
         });

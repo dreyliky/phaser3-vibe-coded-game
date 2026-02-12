@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { DEPTHS } from '../../config/constants';
 
 export interface TooltipConfig {
     fontSize?: string;
@@ -43,7 +44,7 @@ export class Tooltip extends Phaser.GameObjects.Container {
         this.add(this.text);
 
         this.setVisible(false);
-        this.setDepth(3000); // High depth but below cursor (which should be MAX_SAFE_INTEGER)
+        this.setDepth(DEPTHS.UI.TOOLTIP); // High depth but below cursor (which should be MAX_SAFE_INTEGER)
         scene.add.existing(this);
     }
 
