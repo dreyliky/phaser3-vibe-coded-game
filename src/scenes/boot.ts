@@ -58,61 +58,59 @@ export class Boot extends Phaser.Scene {
         });
 
         // Load Weapons
-        this.load.image('weapon_assault_rifle', 'assets/sprites/things/item/equipment/WeaponRanged/AssaultRifle.png');
-        this.load.image('weapon_pistol', 'assets/sprites/things/item/equipment/WeaponRanged/Autopistol.png');
-        this.load.image('weapon_shotgun', 'assets/sprites/things/item/equipment/WeaponRanged/Shotgun.png');
+        this.load.image('weapon_assault_rifle', ASSETS.SPRITES.WEAPONS.ASSAULT_RIFLE);
+        this.load.image('weapon_pistol', ASSETS.SPRITES.WEAPONS.AUTOPISTOL);
+        this.load.image('weapon_shotgun', ASSETS.SPRITES.WEAPONS.SHOTGUN);
 
         // Load Projectiles
-        this.load.image('projectile_heavy', 'assets/sprites/things/projectile/Bullet_Big.png');
-        this.load.image('projectile_standard', 'assets/sprites/things/projectile/Bullet_Medium.png');
-        this.load.image('projectile_buckshot', 'assets/sprites/things/projectile/Bullet_Shotgun.png');
-        this.load.image('projectile_light', 'assets/sprites/things/projectile/Bullet_Small.png');
+        this.load.image('projectile_heavy', ASSETS.SPRITES.PROJECTILES.HEAVY);
+        this.load.image('projectile_standard', ASSETS.SPRITES.PROJECTILES.STANDARD);
+        this.load.image('projectile_buckshot', ASSETS.SPRITES.PROJECTILES.BUCKSHOT);
+        this.load.image('projectile_light', ASSETS.SPRITES.PROJECTILES.LIGHT);
 
         // Load Cursors
-        this.load.image('cursor_none', 'assets/sprites/ui/cursor/cursor_none.png');
-        this.load.image('cursor_hand', 'assets/sprites/ui/cursor/hand_small_point.png');
-        this.load.image('cursor_sword', 'assets/sprites/ui/cursor/tool_sword_a.png');
-        this.load.image('cursor_target', 'assets/sprites/ui/cursor/target_a.png');
+        this.load.image('cursor_none', ASSETS.SPRITES.UI.CURSOR.NONE);
+        this.load.image('cursor_hand', ASSETS.SPRITES.UI.CURSOR.HAND);
+        this.load.image('cursor_sword', ASSETS.SPRITES.UI.CURSOR.SWORD);
+        this.load.image('cursor_target', ASSETS.SPRITES.UI.CURSOR.TARGET);
         
         // Load Environment
-        this.load.image('background_sand', 'assets/sprites/terrain/surfaces/Sand.png');
-        this.load.image('floor_cave', 'assets/sprites/terrain/surfaces/RoughHewnRock.png');
-        this.load.image('floor_soil', 'assets/sprites/terrain/surfaces/Soil.png');
-        this.load.image('floor_ancient_concrete', 'assets/sprites/terrain/surfaces/AncientConcrete.png');
-        this.load.image('floor_broken_asphalt', 'assets/sprites/terrain/surfaces/BrokenAsphalt.png');
-        this.load.image('floor_mud', 'assets/sprites/terrain/surfaces/Mud.png');
-        this.load.image('floor_smooth_stone', 'assets/sprites/terrain/surfaces/SmoothStone.png');
-        this.load.image('floor_soil_rich', 'assets/sprites/terrain/surfaces/SoilRich.png');
-        this.load.image('floor_tile_stone', 'assets/sprites/terrain/surfaces/TileStone.png');
-        this.load.image('floor_wood', 'assets/sprites/terrain/surfaces/WoodFloor.png');
+        this.load.image('background_sand', ASSETS.SPRITES.TERRAIN.SURFACES.SAND);
+        this.load.image('floor_cave', ASSETS.SPRITES.TERRAIN.SURFACES.ROUGH_HEWN_ROCK);
+        this.load.image('floor_soil', ASSETS.SPRITES.TERRAIN.SURFACES.SOIL);
+        this.load.image('floor_ancient_concrete', ASSETS.SPRITES.TERRAIN.SURFACES.ANCIENT_CONCRETE);
+        this.load.image('floor_broken_asphalt', ASSETS.SPRITES.TERRAIN.SURFACES.BROKEN_ASPHALT);
+        this.load.image('floor_mud', ASSETS.SPRITES.TERRAIN.SURFACES.MUD);
+        this.load.image('floor_smooth_stone', ASSETS.SPRITES.TERRAIN.SURFACES.SMOOTH_STONE);
+        this.load.image('floor_soil_rich', ASSETS.SPRITES.TERRAIN.SURFACES.SOIL_RICH);
+        this.load.image('floor_tile_stone', ASSETS.SPRITES.TERRAIN.SURFACES.TILE_STONE);
+        this.load.image('floor_wood', ASSETS.SPRITES.TERRAIN.SURFACES.WOOD_FLOOR);
 
         // Load Plants - Bushes/Cacti
-        const plantPath = 'assets/sprites/things/plant';
-        this.load.image('plant_agave', `${plantPath}/Agave.png`);
-        this.load.image('plant_pincushion_cactus', `${plantPath}/PincushionCactus.png`);
-        this.load.image('plant_saguaro_cactus', `${plantPath}/SaguaroCactus.png`);
-        this.load.image('plant_saguaro_cactus_leafless', `${plantPath}/SaguaroCactus_Leafless.png`);
-        this.load.image('plant_alocasia_a', `${plantPath}/AlocasiaA.png`);
-        this.load.image('plant_berry_bush_a', `${plantPath}/BerryBushA.png`);
-        this.load.image('plant_bush_a', `${plantPath}/BushA.png`);
-        this.load.image('plant_grass_a', `${plantPath}/GrassA.png`);
-        this.load.image('plant_grass_b', `${plantPath}/GrassB.png`);
+        this.load.image('plant_agave', ASSETS.SPRITES.PLANTS.AGAVE);
+        this.load.image('plant_pincushion_cactus', ASSETS.SPRITES.PLANTS.PINCUSHION_CACTUS);
+        this.load.image('plant_saguaro_cactus', ASSETS.SPRITES.PLANTS.SAGUARO_CACTUS);
+        this.load.image('plant_saguaro_cactus_leafless', ASSETS.SPRITES.PLANTS.SAGUARO_CACTUS_LEAFLESS);
+        this.load.image('plant_alocasia_a', ASSETS.SPRITES.PLANTS.ALOCASIA_A);
+        this.load.image('plant_berry_bush_a', ASSETS.SPRITES.PLANTS.BERRY_BUSH_A);
+        this.load.image('plant_bush_a', ASSETS.SPRITES.PLANTS.BUSH_A);
+        this.load.image('plant_grass_a', ASSETS.SPRITES.PLANTS.GRASS_A);
+        this.load.image('plant_grass_b', ASSETS.SPRITES.PLANTS.GRASS_B);
 
         // Load Plants - Trees
-        this.load.image('plant_tree_bamboo', `${plantPath}/TreeBamboo.png`);
-        this.load.image('plant_tree_cecropia', `${plantPath}/TreeCecropia.png`);
-        this.load.image('plant_tree_palm', `${plantPath}/TreePalm.png`);
-        this.load.image('plant_tree_teak', `${plantPath}/TreeTeak.png`);
-        this.load.image('plant_tree_willow', `${plantPath}/TreeWillow.png`);
-        this.load.image('plant_tree_birch_a', `${plantPath}/TreeBirchA.png`);
-        this.load.image('plant_tree_oak_immature', `${plantPath}/TreeOakImmature.png`);
+        this.load.image('plant_tree_bamboo', ASSETS.SPRITES.PLANTS.TREE_BAMBOO);
+        this.load.image('plant_tree_cecropia', ASSETS.SPRITES.PLANTS.TREE_CECROPIA);
+        this.load.image('plant_tree_palm', ASSETS.SPRITES.PLANTS.TREE_PALM);
+        this.load.image('plant_tree_teak', ASSETS.SPRITES.PLANTS.TREE_TEAK);
+        this.load.image('plant_tree_willow', ASSETS.SPRITES.PLANTS.TREE_WILLOW);
+        this.load.image('plant_tree_birch_a', ASSETS.SPRITES.PLANTS.TREE_BIRCH_A);
+        this.load.image('plant_tree_oak_immature', ASSETS.SPRITES.PLANTS.TREE_OAK_IMMATURE);
 
         // Load Walls
-        const wallPath = 'assets/sprites/things/buildings/linked';
-        this.load.spritesheet('wall_rock', `${wallPath}/Rock_Atlas.png`, { frameWidth: 80, frameHeight: 80 });
-        this.load.spritesheet('wall_bricks', `${wallPath}/Wall_Atlas_Bricks.png`, { frameWidth: 80, frameHeight: 80 });
-        this.load.spritesheet('wall_planks', `${wallPath}/Wall_Atlas_Planks.png`, { frameWidth: 80, frameHeight: 80 });
-        this.load.spritesheet('wall_smooth', `${wallPath}/Wall_Atlas_Smooth.png`, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_rock', ASSETS.SPRITES.BUILDINGS.LINKED.ROCK_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_bricks', ASSETS.SPRITES.BUILDINGS.LINKED.BRICKS_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_planks', ASSETS.SPRITES.BUILDINGS.LINKED.PLANKS_ATLAS, { frameWidth: 80, frameHeight: 80 });
+        this.load.spritesheet('wall_smooth', ASSETS.SPRITES.BUILDINGS.LINKED.SMOOTH_ATLAS, { frameWidth: 80, frameHeight: 80 });
     }
 
     create() {

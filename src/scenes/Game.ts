@@ -9,7 +9,7 @@ import { BaseMeleeWeapon } from '../objects/items/weapons/base-melee-weapon';
 import { inventorySystem, InventoryItem, ItemInteractionSystem, TimeSystem, LightingSystem, ShadowSystem } from '../systems';
 import { cursorSystem } from '../systems/cursor-system';
 import { ChunkSystem } from '../systems/chunk-system';
-import { DEBUG_SETTINGS, DEPTHS } from '../config/constants';
+import { DEBUG_SETTINGS } from '../config/constants';
 import { HUD } from './hud';
 import { MapService } from '../services/map-service';
 import { BaseRockWall, BaseBrickWall, BasePlankWall, BaseSmoothWall } from '../objects/walls/wall-types';

@@ -196,7 +196,7 @@ export class MapEditor extends Phaser.Scene {
         this.selectTab('tile');
     }
 
-    update(time: number, delta: number) {
+    update(_time: number, delta: number) {
         this.handleCameraMovement(delta);
         this.terrainSystem.update();
         

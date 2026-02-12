@@ -18,7 +18,72 @@ export const HAIR_COLORS = [
 
 export const ASSETS = {
     SPRITES: {
-        HUMANLIKE_BASE_PATH: 'assets/sprites/things/pawn/Humanlike'
+        HUMANLIKE_BASE_PATH: 'assets/sprites/things/pawn/Humanlike',
+        WEAPONS: {
+            RANGED: 'assets/sprites/things/item/equipment/WeaponRanged',
+            ASSAULT_RIFLE: 'assets/sprites/things/item/equipment/WeaponRanged/AssaultRifle.png',
+            AUTOPISTOL: 'assets/sprites/things/item/equipment/WeaponRanged/Autopistol.png',
+            SHOTGUN: 'assets/sprites/things/item/equipment/WeaponRanged/Shotgun.png',
+        },
+        PROJECTILES: {
+            BASE_PATH: 'assets/sprites/things/projectile',
+            HEAVY: 'assets/sprites/things/projectile/Bullet_Big.png',
+            STANDARD: 'assets/sprites/things/projectile/Bullet_Medium.png',
+            BUCKSHOT: 'assets/sprites/things/projectile/Bullet_Shotgun.png',
+            LIGHT: 'assets/sprites/things/projectile/Bullet_Small.png',
+        },
+        UI: {
+            CURSOR: {
+                BASE_PATH: 'assets/sprites/ui/cursor',
+                NONE: 'assets/sprites/ui/cursor/cursor_none.png',
+                HAND: 'assets/sprites/ui/cursor/hand_small_point.png',
+                SWORD: 'assets/sprites/ui/cursor/tool_sword_a.png',
+                TARGET: 'assets/sprites/ui/cursor/target_a.png',
+            }
+        },
+        TERRAIN: {
+            SURFACES: {
+                BASE_PATH: 'assets/sprites/terrain/surfaces',
+                SAND: 'assets/sprites/terrain/surfaces/Sand.png',
+                ROUGH_HEWN_ROCK: 'assets/sprites/terrain/surfaces/RoughHewnRock.png',
+                SOIL: 'assets/sprites/terrain/surfaces/Soil.png',
+                ANCIENT_CONCRETE: 'assets/sprites/terrain/surfaces/AncientConcrete.png',
+                BROKEN_ASPHALT: 'assets/sprites/terrain/surfaces/BrokenAsphalt.png',
+                MUD: 'assets/sprites/terrain/surfaces/Mud.png',
+                SMOOTH_STONE: 'assets/sprites/terrain/surfaces/SmoothStone.png',
+                SOIL_RICH: 'assets/sprites/terrain/surfaces/SoilRich.png',
+                TILE_STONE: 'assets/sprites/terrain/surfaces/TileStone.png',
+                WOOD_FLOOR: 'assets/sprites/terrain/surfaces/WoodFloor.png',
+            }
+        },
+        PLANTS: {
+            BASE_PATH: 'assets/sprites/things/plant',
+            AGAVE: 'assets/sprites/things/plant/Agave.png',
+            PINCUSHION_CACTUS: 'assets/sprites/things/plant/PincushionCactus.png',
+            SAGUARO_CACTUS: 'assets/sprites/things/plant/SaguaroCactus.png',
+            SAGUARO_CACTUS_LEAFLESS: 'assets/sprites/things/plant/SaguaroCactus_Leafless.png',
+            ALOCASIA_A: 'assets/sprites/things/plant/AlocasiaA.png',
+            BERRY_BUSH_A: 'assets/sprites/things/plant/BerryBushA.png',
+            BUSH_A: 'assets/sprites/things/plant/BushA.png',
+            GRASS_A: 'assets/sprites/things/plant/GrassA.png',
+            GRASS_B: 'assets/sprites/things/plant/GrassB.png',
+            TREE_BAMBOO: 'assets/sprites/things/plant/TreeBamboo.png',
+            TREE_CECROPIA: 'assets/sprites/things/plant/TreeCecropia.png',
+            TREE_PALM: 'assets/sprites/things/plant/TreePalm.png',
+            TREE_TEAK: 'assets/sprites/things/plant/TreeTeak.png',
+            TREE_WILLOW: 'assets/sprites/things/plant/TreeWillow.png',
+            TREE_BIRCH_A: 'assets/sprites/things/plant/TreeBirchA.png',
+            TREE_OAK_IMMATURE: 'assets/sprites/things/plant/TreeOakImmature.png',
+        },
+        BUILDINGS: {
+            LINKED: {
+                BASE_PATH: 'assets/sprites/things/buildings/linked',
+                ROCK_ATLAS: 'assets/sprites/things/buildings/linked/Rock_Atlas.png',
+                BRICKS_ATLAS: 'assets/sprites/things/buildings/linked/Wall_Atlas_Bricks.png',
+                PLANKS_ATLAS: 'assets/sprites/things/buildings/linked/Wall_Atlas_Planks.png',
+                SMOOTH_ATLAS: 'assets/sprites/things/buildings/linked/Wall_Atlas_Smooth.png',
+            }
+        }
     }
 };
 

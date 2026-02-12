@@ -161,7 +161,7 @@ export class WallTestScene extends Phaser.Scene {
         });
     }
 
-    update(time: number, delta: number) {
+    update(_time: number, delta: number) {
         if (this.controls) {
             this.controls.update(delta);
         }
