@@ -33,54 +33,68 @@ export const GAME_CONFIG = {
     REAL_SECONDS_PER_GAME_HOUR: 60
 };
 
+// Z-Index Bases
+// The game uses an "infinite" map where objects are sorted by Y coordinate.
+// Since the map can be very large (e.g. 4,000,000 px), we need large gaps between layers.
+// Objects (Characters, Walls, Items) use depth = y (Range: ~ -2,000,000 to +2,000,000)
+const BASES = {
+    TERRAIN: -3_000_000,
+    SHADOW: -2_900_000,
+    BOARD: -2_500_000,
+    GAME_OBJECTS: 0, // Dynamic range around this
+    LIGHTING: 4_000_000,
+    FOG: 5_000_000,
+    UI: 10_000_000,
+    DEBUG: 100_000_000
+};
+
 export const DEPTHS = {
     // Terrain Layers (Base layers, negative values to be below everything)
     TERRAIN: {
-        BASE: -3000000, // General Terrain Base
-        SAND: -3000100,
-        SOIL: -3000095,
-        SOIL_RICH: -3000094,
-        MUD: -3000093,
-        ROCK: -3000090,
-        SMOOTH_STONE: -3000089,
-        ANCIENT_CONCRETE: -3000085,
-        BROKEN_ASPHALT: -3000084,
-        TILE_STONE: -3000083,
-        WOOD_FLOOR: -3000082,
+        BASE: BASES.TERRAIN, // General Terrain Base
+        SAND: BASES.TERRAIN - 100,
+        SOIL: BASES.TERRAIN - 95,
+        SOIL_RICH: BASES.TERRAIN - 94,
+        MUD: BASES.TERRAIN - 93,
+        ROCK: BASES.TERRAIN - 90,
+        SMOOTH_STONE: BASES.TERRAIN - 89,
+        ANCIENT_CONCRETE: BASES.TERRAIN - 85,
+        BROKEN_ASPHALT: BASES.TERRAIN - 84,
+        TILE_STONE: BASES.TERRAIN - 83,
+        WOOD_FLOOR: BASES.TERRAIN - 82,
     },
     
     // Shadows
     SHADOW: {
         OFFSET: -1, // Relative to object
-        SAFE_LAYER: -2900000, // Above terrain, below objects (assuming objects > -2M)
+        SAFE_LAYER: BASES.SHADOW, // Above terrain, below objects
     },
 
-    // Objects are usually sorted by Y (Dynamic)
     // Board/Ground Objects
     BOARD: {
-        GRID: -2500000, // If we ever need a grid on the ground
+        GRID: BASES.BOARD, // If we ever need a grid on the ground
     },
 
     // Overlay / Effect Layers (Positive values above objects)
     LIGHTING: {
-        BASE: 4000000,
-        FLASHLIGHT: 4000000 + 1,
-        LIGHT_RT: 4000000 + 2,
+        BASE: BASES.LIGHTING,
+        FLASHLIGHT: BASES.LIGHTING + 1,
+        LIGHT_RT: BASES.LIGHTING + 2,
     },
     FOG_OF_WAR: {
-        BASE: 5000000,
+        BASE: BASES.FOG,
     },
     
     // UI Layers (Highest)
     UI: {
-        BASE: 10000000,
-        BACKDROP: 10000000 - 10,
-        HUD_BAR: 10000000 + 10,
-        HUD_WINDOW: 10000000 + 20,
-        POPUP: 10001000,
-        TOOLTIP: 10003000,
-        DRAG_ITEM: 10005000,
-        CURSOR: 10010000,
+        BASE: BASES.UI,
+        BACKDROP: BASES.UI - 10,
+        HUD_BAR: BASES.UI + 10,
+        HUD_WINDOW: BASES.UI + 20,
+        POPUP: BASES.UI + 1_000,
+        TOOLTIP: BASES.UI + 3_000,
+        DRAG_ITEM: BASES.UI + 5_000,
+        CURSOR: BASES.UI + 10_000,
     },
     
     // Editor Preview Layers
@@ -88,7 +102,7 @@ export const DEPTHS = {
         PREVIEW_PLANT: 20,
         PREVIEW_OBJECT: 30,
         PREVIEW_DEFAULT: 15,
-        PREVIEW_IMAGE: 10000000, // Same as UI BASE
+        PREVIEW_IMAGE: BASES.UI, // Same as UI BASE
     },
 
     // Combat Indicators
@@ -96,11 +110,11 @@ export const DEPTHS = {
         RELOAD_INDICATOR: 200, // Relative to Player Container
     },
 
-    // Debug / Editor Layers (Very high)
+    // Debug / Editor Layers (Very high, but safe integer)
     DEBUG: {
-        TEXT: 2000, // Relative to something? Or absolute? The usage in structure-generator was 2000.
-        GRID: Number.MAX_VALUE - 100,
-        HIGHLIGHT: Number.MAX_VALUE - 95,
-        TOOL: Number.MAX_VALUE - 90,
+        TEXT: 20_000_000, // 20M
+        GRID: BASES.DEBUG, // 100M
+        HIGHLIGHT: BASES.DEBUG + 5,
+        TOOL: BASES.DEBUG + 10,
     }
 } as const;
