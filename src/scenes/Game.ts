@@ -25,7 +25,7 @@ export class Game extends Phaser.Scene {
     private characterDefinition!: CharacterDefinition;
     public itemInteractionSystem!: ItemInteractionSystem;
     private chunkSystem!: ChunkSystem;
-    private fogOfWarSystem!: FogOfWarSystem;
+    public fogOfWarSystem!: FogOfWarSystem;
     private timeSystem!: TimeSystem;
     private lightingSystem!: LightingSystem;
     private shadowSystem!: ShadowSystem;
@@ -214,6 +214,14 @@ export class Game extends Phaser.Scene {
     }
     
     update(_time: number, delta: number) {
+        if (!this.player) return;
+
+        // Safety check for physics loop
+        if (this.physics.world.isPaused) {
+            console.warn('Physics World is PAUSED! Attempting to resume...');
+            this.physics.world.resume();
+        }
+
         this.player.update();
         this.timeSystem.update(delta);
         this.lightingSystem.update();
@@ -223,7 +231,11 @@ export class Game extends Phaser.Scene {
             this.chunkSystem.update(this.player);
         }
         if (this.fogOfWarSystem) {
-            this.fogOfWarSystem.update();
+            try {
+                this.fogOfWarSystem.update();
+            } catch (e) {
+                console.error('FogOfWarSystem update failed:', e);
+            }
         }
     }
 
@@ -292,13 +304,14 @@ export class Game extends Phaser.Scene {
         const hitbox = (isObj1Bullet ? obj2 : obj1) as Phaser.Physics.Arcade.Sprite;
         
         if (!bullet.active) return;
+        if (!hitbox.active) return;
 
         bullet.destroy();
 
         // Check if hitbox has parentTree
         if ('parentTree' in hitbox) {
             const tree = (hitbox as any).parentTree as Tree;
-            if (tree && typeof tree.takeDamage === 'function') {
+            if (tree && tree.active && typeof tree.takeDamage === 'function') {
                 const damage = (bullet as any).damage || 10;
                 tree.takeDamage(damage);
             }

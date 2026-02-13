@@ -144,6 +144,7 @@ export class FogOfWarSystem {
         // to removeMappedObjects() causes a crash, but NOT removing them leaves ghost obstacles.
         if (hasDestroyedObjects) {
             this.rebuildRaycaster();
+            if (!this.raycaster) return;
         }
 
         // Update last pos
@@ -183,11 +184,11 @@ export class FogOfWarSystem {
 
         // If we just rebuilt the raycaster, it's empty, so we don't need to remove anything.
         // If we didn't rebuild, we need to remove objects that are no longer relevant.
-        if (!hasDestroyedObjects && this.currentMappedObjects.length > 0) {
+        if (!hasDestroyedObjects && this.currentMappedObjects.length > 0 && this.raycaster) {
             this.raycaster.removeMappedObjects(this.currentMappedObjects);
         }
 
-        if (nearbyObjects.length > 0) {
+        if (nearbyObjects.length > 0 && this.raycaster) {
             // Map as static (false) because they don't move per frame
             this.raycaster.mapGameObjects(nearbyObjects, false);
         }
@@ -195,34 +196,78 @@ export class FogOfWarSystem {
         this.currentMappedObjects = nearbyObjects;
     }
 
+    public unmapObject(object: Phaser.GameObjects.GameObject) {
+        // Remove from currentMappedObjects list first
+        if (this.currentMappedObjects) {
+            const index = this.currentMappedObjects.indexOf(object);
+            if (index > -1) {
+                this.currentMappedObjects.splice(index, 1);
+            }
+        }
+
+        // Remove from raycaster safely
+        if (this.raycaster) {
+            try {
+                this.raycaster.removeMappedObjects(object);
+            } catch (e) {
+                // Ignore error if object is already invalid/destroyed
+                console.debug('Failed to unmap object from raycaster:', e);
+            }
+        }
+    }
+
     private rebuildRaycaster() {
         if (this.ray) {
-            this.ray.destroy();
+            try {
+                this.ray.destroy();
+            } catch (e) {
+                console.warn('Failed to destroy ray:', e);
+            }
+            this.ray = null;
         }
         if (this.raycaster) {
-            this.raycaster.destroy();
+            try {
+                this.raycaster.destroy();
+            } catch (e) {
+                // Suppress warning as this often fails due to internal plugin state
+                // when objects are destroyed. We've handled cleanup as best as possible.
+                console.debug('Failed to destroy raycaster:', e);
+            }
+            this.raycaster = null;
         }
 
         // Re-initialize
         // @ts-ignore
         const raycasterPlugin = this.scene.raycasterPlugin;
+        if (!raycasterPlugin) {
+            console.warn('Raycaster plugin not available');
+            return;
+        }
+
         const bounds = this.scene.physics.world.bounds;
 
-        this.raycaster = raycasterPlugin.createRaycaster({
-            debug: false,
-            boundingBox: {
-                x: bounds.x,
-                y: bounds.y,
-                width: bounds.width,
-                height: bounds.height
-            }
-        });
+        try {
+            this.raycaster = raycasterPlugin.createRaycaster({
+                debug: false,
+                boundingBox: {
+                    x: bounds.x,
+                    y: bounds.y,
+                    width: bounds.width,
+                    height: bounds.height
+                }
+            });
 
-        this.ray = this.raycaster.createRay({
-            origin: { x: this.player.x, y: this.player.y }
-        });
-        
-        this.ray.setRayRange(FOW_CONFIG.VISION_RADIUS);
+            this.ray = this.raycaster.createRay({
+                origin: { x: this.player.x, y: this.player.y }
+            });
+            
+            this.ray.setRayRange(FOW_CONFIG.VISION_RADIUS);
+        } catch (e) {
+            console.error('Failed to create raycaster:', e);
+            this.raycaster = null;
+            this.ray = null;
+            return;
+        }
         
         // Clear current mapped objects list as raycaster is fresh
         this.currentMappedObjects = [];

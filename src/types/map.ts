@@ -29,6 +29,7 @@ export enum MapObjectKey {
     WALL_PLANKS = 104,
 
     // 200-299: Plants
+    PLANT_NONE = 200,
     PLANT_TREE_BAMBOO = 201,
     PLANT_TREE_CECROPIA = 202,
     PLANT_TREE_PALM = 203,
@@ -47,6 +48,7 @@ export enum MapObjectKey {
     PLANT_SAGUARO_CACTUS_LEAFLESS = 216,
 
     // 300-399: Weapons
+    OBJECT_NONE = 300,
     WEAPON_ASSAULT_RIFLE = 301,
     WEAPON_AUTOPISTOL = 302,
     WEAPON_SHOTGUN = 303,

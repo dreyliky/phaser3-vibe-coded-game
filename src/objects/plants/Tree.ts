@@ -120,10 +120,18 @@ export class Tree extends BasePlant implements Damageable {
     }
 
     public destroy(fromScene?: boolean) {
-        if (this.bulletHitbox) {
+        // Unmap from FogOfWar before destroying
+        if (this.scene) {
+            const gameScene = this.scene as any;
+            if (gameScene.fogOfWarSystem && this.bulletHitbox) {
+                gameScene.fogOfWarSystem.unmapObject(this.bulletHitbox);
+            }
+        }
+
+        if (this.bulletHitbox && this.bulletHitbox.active) {
             this.bulletHitbox.destroy();
         }
-        if (this.crackGraphics) {
+        if (this.crackGraphics && this.crackGraphics.active) {
             this.crackGraphics.destroy();
         }
         super.destroy(fromScene);

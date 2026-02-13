@@ -184,7 +184,7 @@ export class MapEditor extends Phaser.Scene {
         
         // Tooltip Manager
         this.tooltip = new Tooltip(this);
-        this.uiContainer.add(this.tooltip);
+        this.tooltip.setScrollFactor(0);
         
         this.events.on('tooltip-show', (text: string, x: number, y: number) => {
             this.tooltip.show(text, x, y);
@@ -334,7 +334,7 @@ export class MapEditor extends Phaser.Scene {
         // Dropdown
         this.dropdown = new Dropdown({
             scene: this,
-            x: this.SIDEBAR_WIDTH / 2,
+            x: (this.SIDEBAR_WIDTH - 200) / 2, // Center in sidebar
             y: 250,
             width: 200,
             options: [
@@ -592,6 +592,11 @@ export class MapEditor extends Phaser.Scene {
             return;
         }
 
+        if (this.selectedObject.key === MapObjectKey.PLANT_NONE || this.selectedObject.key === MapObjectKey.OBJECT_NONE) {
+            this.eraseEntity(gx, gy, x, y);
+            return;
+        }
+
         // Layer Logic
         if (this.selectedObject.type === 'tile') {
             this.placeTile(gx, gy, x, y);
@@ -616,6 +621,21 @@ export class MapEditor extends Phaser.Scene {
         );
         if (existingIndex !== -1) {
             this.currentMap.objects.splice(existingIndex, 1);
+        }
+    }
+
+    private eraseEntity(gx: number, gy: number, x: number, y: number) {
+        const radius = this.TILE_SIZE / 2;
+        // Find any non-tile, non-wall object at this location
+        const existingIndex = this.currentMap.objects.findIndex(o => 
+            o.type !== 'tile' && o.type !== 'wall' &&
+            Math.abs(o.x - x) < radius && Math.abs(o.y - y) < radius
+        );
+        
+        if (existingIndex !== -1) {
+            const existing = this.currentMap.objects[existingIndex];
+            this.currentMap.objects.splice(existingIndex, 1);
+            this.renderMapObjects();
         }
     }
 

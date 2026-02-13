@@ -709,6 +709,14 @@ export class BaseLinkedWall extends BaseWall implements Damageable {
     }
 
     public destroy(fromScene?: boolean) {
+        // Unmap from FogOfWar before destroying
+        if (this.scene) {
+            const gameScene = this.scene as any;
+            if (gameScene.fogOfWarSystem) {
+                gameScene.fogOfWarSystem.unmapObject(this);
+            }
+        }
+
         BaseLinkedWall.wallRegistry.delete(this.getKey(this.gridX, this.gridY));
         
         if (!fromScene) {

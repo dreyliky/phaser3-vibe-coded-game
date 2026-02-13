@@ -33,6 +33,7 @@ export const EDITOR_OBJECTS: EditorObjectConfig[] = [
     { key: MapObjectKey.WALL_PLANKS, type: 'wall', name: 'Wood Plank Wall', texture: SPRITE_KEYS.WALLS.PLANKS, frame: 12 },
 
     // --- PLANTS ---
+    { key: MapObjectKey.PLANT_NONE, type: 'plant', name: 'Nothing (Eraser)', texture: SPRITE_KEYS.UI.PIXEL, color: 0x000000 },
     { key: MapObjectKey.PLANT_TREE_BAMBOO, type: 'plant', name: 'Bamboo', texture: SPRITE_KEYS.PLANTS.TREE_BAMBOO },
     { key: MapObjectKey.PLANT_TREE_CECROPIA, type: 'plant', name: 'Cecropia', texture: SPRITE_KEYS.PLANTS.TREE_CECROPIA },
     { key: MapObjectKey.PLANT_TREE_PALM, type: 'plant', name: 'Palm', texture: SPRITE_KEYS.PLANTS.TREE_PALM },
@@ -51,6 +52,7 @@ export const EDITOR_OBJECTS: EditorObjectConfig[] = [
     { key: MapObjectKey.PLANT_SAGUARO_CACTUS_LEAFLESS, type: 'plant', name: 'Saguaro (Dry)', texture: SPRITE_KEYS.PLANTS.SAGUARO_CACTUS_LEAFLESS },
 
     // --- OBJECTS (Weapons) ---
+    { key: MapObjectKey.OBJECT_NONE, type: 'object', subtype: 'misc', name: 'Nothing (Eraser)', texture: SPRITE_KEYS.UI.PIXEL, color: 0x000000 },
     { key: MapObjectKey.WEAPON_ASSAULT_RIFLE, type: 'object', subtype: 'weapon', name: 'Assault Rifle', texture: SPRITE_KEYS.WEAPONS.ASSAULT_RIFLE },
     { key: MapObjectKey.WEAPON_AUTOPISTOL, type: 'object', subtype: 'weapon', name: 'Pistol', texture: SPRITE_KEYS.WEAPONS.AUTOPISTOL },
     { key: MapObjectKey.WEAPON_SHOTGUN, type: 'object', subtype: 'weapon', name: 'Shotgun', texture: SPRITE_KEYS.WEAPONS.SHOTGUN },
